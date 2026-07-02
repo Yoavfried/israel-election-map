@@ -56,9 +56,38 @@ The inspected resources are tabular CSV files. The relevant table includes `Loca
 
 ## Kalpi to Statistical Area
 
-This is conditionally feasible, not guaranteed.
+This is an accepted approximation for the product.
 
 The ballot-result rows include vote counts and kalpi identifiers, but no geometry. A separate official polling-place table found on data.gov.il has address-like fields but no coordinates and does not appear to fully cover Knesset 25 by row count.
+
+The approximation is:
+
+> assign each kalpi to the statistical area containing the polling-place building, then aggregate votes by that statistical area.
+
+This does not represent the exact residential statistical area of the voters assigned to that kalpi, but it should create an interesting and usable exploratory map if caveats are visible.
+
+### Polling-Place Address Coverage
+
+Current evidence does not show full polling-place address coverage for all Knesset 16-25 elections.
+
+The generic official `voting-polls` address table can be matched to ballot-result rows by locality and normalized kalpi number with these approximate match rates:
+
+| Election | Address source status |
+|---|---|
+| Knesset 25 | Generic table matches about 31% of result rows; not enough |
+| Knesset 24 | Generic table matches about 23% of result rows; not enough |
+| Knesset 23 | Generic table matches about 73% of result rows; partial |
+| Knesset 22 | Generic table matches about 74% of result rows; partial |
+| Knesset 21 | Generic table matches about 76% of result rows; partial |
+| Knesset 20 | Generic table matches about 94% of result rows; likely usable with unmatched handling |
+| Knesset 19 | Generic table matches about 96% of result rows; likely usable with unmatched handling |
+| Knesset 18 | Generic table matches about 99.5% of result rows; likely usable |
+| Knesset 17 | Result file itself has an address field for 8,262 of 8,426 rows |
+| Knesset 16 | Generic table matches about 99.2% of comparable result rows; likely usable |
+
+Decision:
+
+Treat K16-K20 as feasible for the polling-place statistical-area approximation, with K17 using the address field from the result file. Treat K21-K25 as unresolved until election-specific polling-place address files are found or a better source is identified.
 
 Feasible pipeline:
 
@@ -121,4 +150,3 @@ Candidate stack:
 5. What official or reliable locality polygon source should be used?
 6. Are pre-2003 locality-level results available from an official archive outside the inspected open-data package?
 7. How should party colors be governed across party splits, mergers, renamed lists, and reused letters?
-

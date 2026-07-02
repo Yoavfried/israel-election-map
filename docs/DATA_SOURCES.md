@@ -58,6 +58,23 @@ Caveats:
 - No polygons.
 - Row count does not match Knesset 25 ballot-result rows, so it should not be assumed to cover 2022.
 
+Observed address coverage:
+
+| Election | Current address coverage assessment |
+|---|---|
+| Knesset 25 | Generic table matches about 31% of result rows |
+| Knesset 24 | Generic table matches about 23% of result rows |
+| Knesset 23 | Generic table matches about 73% of result rows |
+| Knesset 22 | Generic table matches about 74% of result rows |
+| Knesset 21 | Generic table matches about 76% of result rows |
+| Knesset 20 | Generic table matches about 94% of result rows |
+| Knesset 19 | Generic table matches about 96% of result rows |
+| Knesset 18 | Generic table matches about 99.5% of result rows |
+| Knesset 17 | Result file has non-empty `כתובת` values for 8,262 of 8,426 rows |
+| Knesset 16 | Generic table matches about 99.2% of comparable result rows |
+
+The generic-table match uses locality code plus normalized kalpi number. These are match-rate diagnostics, not proof that every matched address is historically exact for that election.
+
 ## Preferred Export Format For Newly Found Polygon Layers
 
 If an official source offers multiple export formats, prefer:
@@ -69,4 +86,3 @@ If an official source offers multiple export formats, prefer:
 5. CSV/JSON only if geometry is explicitly included.
 
 Prefer WGS84 / EPSG:4326 when available.
-
