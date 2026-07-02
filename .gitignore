@@ -1,0 +1,15 @@
+node_modules/
+dist/
+.env
+.env.*
+
+# Local generated data and downloaded source files.
+data/raw/
+data/processed/
+data/cache/
+
+# OS/editor noise.
+.DS_Store
+Thumbs.db
+*.log
+
