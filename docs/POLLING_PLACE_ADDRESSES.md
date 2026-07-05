@@ -105,6 +105,8 @@ The 2022 statistical-area GeoJSON has:
 
 If an ordinary unmatched row belongs to a locality with exactly one 2022 statistical area, it can still be assigned to statistical-area mode through the locality, without a polling-place address.
 
+This shortcut should be applied before geocoding. If a result row's locality is known to have exactly one 2022 statistical area, geocoding the polling-place address cannot change the statistical-area assignment, so it should be skipped unless needed for a separate QA/debug view.
+
 The table below excludes envelope rows and only evaluates ordinary rows without a direct matched address.
 
 | Election | Ordinary rows without direct address | Assignable by single-stat locality | Still unresolved rows | Still unresolved eligible voters | Still unresolved actual voters |
@@ -146,11 +148,48 @@ K17 has 15 ordinary rows with an empty address field. After the single-stat loca
 
 Do not silently apply the `בית אריה` alias in the pipeline until a locality-alias table is added and documented.
 
+## Geocoding Scope
+
+The purpose of geocoding is narrow:
+
+> poll result row -> polling-place address -> point -> 2022 statistical area
+
+Geocoding is only needed where the locality contains multiple 2022 statistical areas and the row has, or can be linked to, a polling-place address. It is not needed for rows already assignable by the single-stat locality shortcut.
+
+This reduces the number of addresses that need geocoding and reduces avoidable geocoding failures. A row-level assignment should store one of these methods:
+
+- `direct_address_geocode`: address was geocoded and point-in-polygon assigned the statistical area.
+- `single_stat_locality`: locality has exactly one 2022 statistical area, so no address/geocode was needed.
+- `unresolved`: ordinary row cannot currently be assigned.
+- `envelope_bucket`: handled outside the mapped polling-place/statistical-area assignment.
+
+## Locality History
+
+Localities can change between elections: names change, codes change, localities split, localities merge, and some localities disappear or are replaced in later CBS layers.
+
+That means matching older election rows to the 2022 statistical-area layer cannot rely only on casual name matching. The pipeline needs an explicit locality crosswalk with provenance.
+
+Minimum crosswalk fields:
+
+- election
+- source locality code and name from the election result file
+- target 2022 locality code and name, when applicable
+- mapping status: exact code, exact name, alias, merge, split, retired, unknown
+- whether the target can use the single-stat locality shortcut
+- notes/source for the decision
+
+Rules:
+
+- Exact current locality-code matches can be automated.
+- Historical aliases, spelling changes, merges, and splits must be reviewed and recorded.
+- A split locality should stay unresolved unless the old locality can be mapped to one 2022 statistical area without ambiguity.
+- A merge can use the single-stat shortcut only if the merged 2022 target has exactly one statistical area, or if a reviewed rule assigns the old locality unambiguously.
+
 ## Implementation Decisions
 
 - Proceed with K16-K25 for both locality and statistical-area modes.
 - Treat the statistical-area map as polling-place geography, not voter-residence geography.
-- For localities with exactly one 2022 statistical area, allow assignment by locality when direct kalpi address assignment is unavailable.
+- Check the single-stat locality shortcut before geocoding; do not geocode addresses that cannot change the statistical-area assignment.
 - Store every statistical-area assignment with provenance: election, address source, match rule, geocoder, coordinate, polygon id, confidence, and failure reason.
 - Store unresolved rows separately with full vote totals and include them in details panels and election-level summaries.
 - Show mapped coverage in the UI so users know how much of the vote total is represented by polygons for the selected election and mode.
@@ -160,4 +199,4 @@ Do not silently apply the `בית אריה` alias in the pipeline until a locali
 - Recovering true election-specific polling-place files for K16 and K18-K21 would materially improve confidence.
 - A geocoding decision is still needed.
 - Locality polygons still need an official or reliable source.
-- Historical locality aliases need an explicit, reviewed mapping table before being used in the pipeline.
+- Historical locality aliases, splits, and merges need an explicit, reviewed mapping table before being used in the pipeline.

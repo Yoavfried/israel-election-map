@@ -107,6 +107,7 @@ Important caveats:
 - Generic-table matches are not proof that every address is historically exact for that election.
 - Address-to-statistical-area assignment remains an approximation: it maps a polling-place building to a statistical area, not each voter's home.
 - For localities with exactly one 2022 statistical area, ordinary rows without a direct address can still be assigned by locality. This is separate from direct polling-place address assignment and should be stored as separate provenance.
+- Historical locality changes matter. Names, codes, splits, merges, and retired localities must be handled through an explicit election-to-2022 locality crosswalk, not casual string matching.
 
 ## K23 Statistical Area Field
 

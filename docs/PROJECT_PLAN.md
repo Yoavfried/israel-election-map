@@ -57,6 +57,8 @@ Use the local 2022 statistical-area GeoJSON as the first statistical-area geomet
 
 For localities that have exactly one `STAT_2022`, locality-level results can be assigned directly to that statistical area when kalpi-level address assignment is unavailable.
 
+Apply this single-stat locality shortcut before geocoding. If a result row's locality has exactly one 2022 statistical area, geocoding its polling-place address cannot change the statistical-area assignment.
+
 Older official national polygon layer:
 
 https://data.gov.il/api/3/action/package_show?id=statistical-area-2008
@@ -73,7 +75,9 @@ The approximation is:
 
 > assign each kalpi to the statistical area containing the polling-place building, then aggregate votes by that statistical area.
 
-For a locality with exactly one 2022 statistical area, a result row can be assigned by locality without geocoding the kalpi address.
+For a locality with exactly one 2022 statistical area, a result row can be assigned by locality without geocoding the kalpi address. The point of geocoding is only to resolve rows in multi-stat-area localities:
+
+> poll result row -> polling-place address -> point -> 2022 statistical area
 
 This does not represent the exact residential statistical area of the voters assigned to that kalpi, but it should create an interesting and usable exploratory map if caveats are visible.
 
@@ -121,7 +125,7 @@ Implementation decision:
 
 - Store assignment method for each row: direct address, single-stat locality, unresolved, or excluded envelope bucket.
 - Do not silently drop actual votes from rows that cannot be placed on a map.
-- Add an explicit locality-alias table before using historical aliases such as `בית אריה` to `בית אריה-עופרים`.
+- Add an explicit locality crosswalk before using historical aliases, splits, or merges, such as `בית אריה` to `בית אריה-עופרים`.
 
 ### K23 AGS Field
 
@@ -138,16 +142,34 @@ Do not join K23 AGS directly to 2022 polygons. Use geocoded polling-place addres
 ## Geocoding And Assignment Pipeline
 
 1. Load official ballot results for K16-K25 from datastore/file resources.
-2. Load election-specific polling-place addresses where available.
-3. Fall back to the generic official polling-place table only where no election-specific table has been found.
-4. Normalize locality codes and kalpi identifiers.
-5. Geocode polling-place addresses to point coordinates.
-6. Run point-in-polygon against the 2022 statistical-area GeoJSON.
-7. For rows without direct address assignment, assign by locality only when the locality has exactly one 2022 statistical area.
-8. Join ballot results to assigned statistical areas.
-9. Aggregate per statistical area and keep per-kalpi contribution details.
-10. Store unresolved rows and their vote totals separately.
-11. Persist assignment provenance: source, match rule, geocoder, confidence, and failure reason.
+2. Normalize locality codes and kalpi identifiers.
+3. Apply an election-to-2022 locality crosswalk for exact matches, reviewed aliases, merges, splits, retired localities, and unknowns.
+4. Assign by locality first when the mapped 2022 locality has exactly one statistical area.
+5. Load election-specific polling-place addresses where available.
+6. Fall back to the generic official polling-place table only where no election-specific table has been found.
+7. Geocode polling-place addresses only for rows in multi-stat-area localities.
+8. Run point-in-polygon against the 2022 statistical-area GeoJSON.
+9. Join ballot results to assigned statistical areas.
+10. Aggregate per statistical area and keep per-kalpi contribution details.
+11. Store unresolved rows and their vote totals separately.
+12. Persist assignment provenance: source, match rule, geocoder, confidence, and failure reason.
+
+## Locality Crosswalk
+
+Localities can change between elections: names change, codes change, localities split, localities merge, and some localities disappear or are represented differently in later CBS layers.
+
+The pipeline needs a reviewed locality crosswalk rather than relying only on exact string matching to the 2022 GeoJSON.
+
+Minimum crosswalk fields:
+
+- election
+- source locality code and name from the election result file
+- target 2022 locality code and name, when applicable
+- mapping status: exact code, exact name, alias, merge, split, retired, unknown
+- whether the target can use the single-stat locality shortcut
+- notes/source for the decision
+
+Splits and ambiguous historical changes should remain unresolved unless a reviewed rule maps the old locality to one 2022 statistical area without ambiguity.
 
 ## Aggregation Model
 
@@ -197,4 +219,4 @@ Candidate stack:
 4. Are pre-2003 locality-level results available from an official archive outside the inspected open-data package?
 5. How should party colors be governed across party splits, mergers, renamed lists, and reused letters?
 6. How should the UI communicate mapped vote coverage without weakening the map-first experience?
-7. Which historical locality aliases should be accepted, such as `בית אריה` to `בית אריה-עופרים`?
+7. Which historical locality aliases, splits, and merges should be accepted in the locality crosswalk?
