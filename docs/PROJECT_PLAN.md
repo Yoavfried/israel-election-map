@@ -53,9 +53,17 @@ Current project raw layer:
 
 Decision:
 
-Use the local 2022 statistical-area GeoJSON as the first statistical-area geometry layer. The UI and metadata should identify it explicitly as the 2022 statistical-area layer.
+The local 2022 statistical-area GeoJSON is useful for diagnostics, but it is not complete enough for the final product. An audit found that it is missing major localities including Haifa, Beer Sheva, Netanya, Herzliya, Kfar Saba, Rahat, Nazareth, Eilat, Tayibe, Umm Batin, and Ar'ara-BaNegev.
 
-For localities that have exactly one `STAT_2022`, locality-level results can be assigned directly to that statistical area when kalpi-level address assignment is unavailable.
+Detailed audit:
+
+- `docs/LOCALITY_STAT_LAYER_AUDIT.md`
+
+Decision:
+
+Obtain or rebuild a complete official 2022 statistical-area polygon layer before implementing final statistical-area mode. The current local GeoJSON can still be used to test pipeline shape and edge cases, but not as the final geography source.
+
+For localities that have exactly one `STAT_2022` in a complete verified layer, locality-level results can be assigned directly to that statistical area when kalpi-level address assignment is unavailable.
 
 Apply this single-stat locality shortcut before geocoding. If a result row's locality has exactly one 2022 statistical area, geocoding its polling-place address cannot change the statistical-area assignment.
 
@@ -106,7 +114,7 @@ For K22-K25, every ordinary row has a direct address match; only envelope rows l
 
 ### Meaningful Ordinary Unresolved Rows
 
-After applying the single-stat locality shortcut and excluding envelope rows, the ordinary unresolved set is:
+Against the current partial GeoJSON, after applying the single-stat locality shortcut and excluding envelope rows, the ordinary unresolved set is:
 
 | Election | Ordinary rows without direct address | Assignable by single-stat locality | Still unresolved rows | Still unresolved actual voters |
 |---|---:|---:|---:|---:|
@@ -126,6 +134,7 @@ Implementation decision:
 - Store assignment method for each row: direct address, single-stat locality, unresolved, or excluded envelope bucket.
 - Do not silently drop actual votes from rows that cannot be placed on a map.
 - Add an explicit locality crosswalk before using historical aliases, splits, or merges, such as `בית אריה` to `בית אריה-עופרים`.
+- Do not treat the current unresolved counts as final coverage numbers until the statistical-area layer is complete.
 
 ### K23 AGS Field
 
@@ -170,6 +179,8 @@ Minimum crosswalk fields:
 - notes/source for the decision
 
 Splits and ambiguous historical changes should remain unresolved unless a reviewed rule maps the old locality to one 2022 statistical area without ambiguity.
+
+The crosswalk also needs to distinguish "not in the current partial GeoJSON" from "not a valid 2022 locality". For example, the current file does not contain Haifa or Beer Sheva, so absence from that file is not meaningful evidence about whether a locality has statistical areas.
 
 ## Aggregation Model
 

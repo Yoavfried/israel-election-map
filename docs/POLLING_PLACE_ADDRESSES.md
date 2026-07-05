@@ -103,6 +103,8 @@ The 2022 statistical-area GeoJSON has:
 | Localities with exactly one `STAT_2022` | 364 |
 | Localities with multiple `STAT_2022` values | 43 |
 
+Important caveat: a later audit showed that the current GeoJSON is incomplete for project needs and is missing major localities such as Haifa, Beer Sheva, Netanya, Herzliya, Kfar Saba, Rahat, Nazareth, Eilat, Tayibe, Umm Batin, and Ar'ara-BaNegev. The single-stat shortcut remains a valid method, but these counts are diagnostic until a complete verified 2022 statistical-area layer is obtained.
+
 If an ordinary unmatched row belongs to a locality with exactly one 2022 statistical area, it can still be assigned to statistical-area mode through the locality, without a polling-place address.
 
 This shortcut should be applied before geocoding. If a result row's locality is known to have exactly one 2022 statistical area, geocoding the polling-place address cannot change the statistical-area assignment, so it should be skipped unless needed for a separate QA/debug view.

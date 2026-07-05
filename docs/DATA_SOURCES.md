@@ -30,7 +30,13 @@ Current project raw layer:
 - 364 localities have exactly one `STAT_2022`.
 - 43 localities have multiple `STAT_2022` values.
 
-This is currently the preferred layer for statistical-area mode because it is the 2022 statistical-area geometry the project already has locally.
+Audit note:
+
+- `docs/LOCALITY_STAT_LAYER_AUDIT.md`
+
+Critical caveat:
+
+This local GeoJSON is not a complete national statistical-area layer for the project. It is missing major localities such as Haifa, Beer Sheva, Netanya, Herzliya, Kfar Saba, Rahat, Nazareth, Eilat, Tayibe, Umm Batin, and Ar'ara-BaNegev. Treat it as a partial/diagnostic layer until its source/export scope is verified or a complete official 2022 statistical-area polygon layer is obtained.
 
 Older official CBS statistical-area polygon layer from the 2008 census:
 
@@ -108,6 +114,7 @@ Important caveats:
 - Address-to-statistical-area assignment remains an approximation: it maps a polling-place building to a statistical area, not each voter's home.
 - For localities with exactly one 2022 statistical area, ordinary rows without a direct address can still be assigned by locality. This is separate from direct polling-place address assignment and should be stored as separate provenance.
 - Historical locality changes matter. Names, codes, splits, merges, and retired localities must be handled through an explicit election-to-2022 locality crosswalk, not casual string matching.
+- The single-stat locality shortcut depends on a complete verified statistical-area layer. Counts from the current local GeoJSON are diagnostic only.
 
 ## K23 Statistical Area Field
 
