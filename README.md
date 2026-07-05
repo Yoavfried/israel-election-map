@@ -7,15 +7,15 @@ The project is currently in data-discovery and foundation setup. The first suppo
 1. Statistical areas
 2. Localities
 
-Kalpi-level results are part of the source data, but the project will not present inferred areas as official kalpi borders. If kalpi-to-area assignment is added, the assignment method and confidence will be shown explicitly.
+Kalpi-level results are part of the source data, but the project will not present inferred areas as official kalpi borders. Statistical-area assignment is an approximation based on polling-place address geocoding plus a single-stat locality shortcut.
 
 ## Current Direction
 
-- Use official Knesset election results from data.gov.il.
-- Start with the confirmed CBS statistical-area polygon layer.
+- Use official Knesset election results from data.gov.il for K16-K25.
+- Use the 2022 statistical-area FileGDB as the canonical statistical-area polygon source.
 - Add locality mode separately.
 - Preserve raw source data and generated/normalized data separately.
-- Keep source metadata and caveats visible in the product.
+- Keep source metadata, assignment method, and mapped/unmapped coverage visible in the product.
 
 ## Repository Layout
 
@@ -26,9 +26,8 @@ Kalpi-level results are part of the source data, but the project will not presen
 
 ## Status
 
-Initial repository setup only. No runnable web app has been scaffolded yet.
+No runnable web app has been scaffolded yet.
 
 ## License
 
 TBD.
-

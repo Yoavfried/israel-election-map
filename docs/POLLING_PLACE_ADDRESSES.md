@@ -4,11 +4,17 @@ Last updated: 2026-07-05
 
 ## Purpose
 
-The statistical-area map needs an approximate kalpi-to-statistical-area assignment. Since official ballot-result rows do not include polygons or coordinates, the primary approach is to attach each kalpi to the address of its polling-place building, geocode that address, and run point-in-polygon against the 2022 statistical-area layer.
+The statistical-area map needs an approximate kalpi-to-statistical-area assignment. Official ballot-result rows include votes and kalpi identifiers, but no kalpi polygons or coordinates.
 
-There is also a shortcut for localities that have exactly one statistical area in the 2022 layer: those locality results can be assigned to that statistical area without a kalpi address.
+The project approach is:
 
-This is intentionally approximate. It maps the polling place, not the voters' residential statistical areas.
+> poll result row -> polling-place address -> geocoded point -> 2022 statistical area
+
+There is also a shortcut:
+
+> if the matched 2022 locality has exactly one statistical area, assign by locality and skip geocoding
+
+This is intentionally approximate. It maps the polling-place building, not each voter's residential statistical area.
 
 ## Sources Found
 
@@ -35,9 +41,8 @@ https://data.gov.il/api/3/action/datastore_search?resource_id=68c4d7e8-2218-48ee
 
 K21 note:
 
-- Historical-looking K21 URLs were found for files such as `election/Documents/table-of-kalpies.csv`, `Kneset20/Documents/kalpies21_b.xls`, `kalpies_full_report.xls`, and `special_kalpies21.xls`.
-- Live requests redirected/failed, and archived downloads inspected during this pass produced small error/playback files rather than usable spreadsheets.
-- K21 should be treated as a fallback-quality election until a real election-specific file is recovered.
+- Historical-looking K21 URLs were found, but live and archived downloads did not yield a usable election-specific spreadsheet during this investigation.
+- K21 remains fallback-quality until a real election-specific file is recovered.
 
 ## Direct Address Matching
 
@@ -53,7 +58,7 @@ Normalization:
 - Split result rows such as `3.1` can match base kalpi `3`.
 - For the generic polling-place table, aliases such as `10 -> 1` are accepted because the generic source uses a different kalpi-number convention.
 
-This measures whether a ballot-result row can be associated with an address-like polling-place record. It does not prove the address is historically exact when the generic table is used.
+This measures whether a ballot-result row can be associated with an address-like polling-place record. It does not prove historical exactness when the generic table is used.
 
 ## Direct Address Coverage
 
@@ -72,13 +77,13 @@ This measures whether a ballot-result row can be associated with an address-like
 
 Interpretation:
 
-- K22-K25: every ordinary row has a matched address; only envelope rows are unmapped by address.
+- K22-K25: every ordinary row has a direct address match; rows without direct addresses are not ordinary polling-place rows.
 - K17: every ordinary row has an address except 15 rows listed below.
 - K16 and K18-K21: matches use the generic polling-place table, so they are provisional. Kalpi numbers and polling-place locations may have changed.
 
 ## Ordinary Rows Without Direct Address
 
-Envelope rows are excluded from this section. The remaining rows are ordinary locality/kalpi rows that did not get a direct address match.
+The table below excludes non-ordinary rows and shows only ordinary locality/kalpi rows that did not get a direct address match.
 
 | Election | Ordinary rows without direct address | Ordinary eligible voters | Ordinary actual voters |
 |---|---:|---:|---:|
@@ -95,21 +100,17 @@ Envelope rows are excluded from this section. The remaining rows are ordinary lo
 
 ## Single-Stat Locality Shortcut
 
-The 2022 statistical-area GeoJSON has:
+The FileGDB-derived 2022 statistical-area layer has:
 
 | Layer measure | Count |
 |---|---:|
-| Localities in the layer | 407 |
-| Localities with exactly one `STAT_2022` | 364 |
-| Localities with multiple `STAT_2022` values | 43 |
+| Locality codes in the layer | 1,283 |
+| Locality codes with exactly one `STAT_2022` | 1,139 |
+| Locality codes with multiple `STAT_2022` values | 144 |
 
-Important caveat: a later audit showed that the current GeoJSON is incomplete for project needs and is missing major localities such as Haifa, Beer Sheva, Netanya, Herzliya, Kfar Saba, Rahat, Nazareth, Eilat, Tayibe, Umm Batin, and Ar'ara-BaNegev. The single-stat shortcut remains a valid method, but these counts are diagnostic until a complete verified 2022 statistical-area layer is obtained.
+If an ordinary row without a direct address belongs to a matched locality with exactly one 2022 statistical area, it can still be assigned to statistical-area mode without geocoding.
 
-If an ordinary unmatched row belongs to a locality with exactly one 2022 statistical area, it can still be assigned to statistical-area mode through the locality, without a polling-place address.
-
-This shortcut should be applied before geocoding. If a result row's locality is known to have exactly one 2022 statistical area, geocoding the polling-place address cannot change the statistical-area assignment, so it should be skipped unless needed for a separate QA/debug view.
-
-The table below excludes envelope rows and only evaluates ordinary rows without a direct matched address.
+This shortcut should be applied before geocoding. If a row's locality has exactly one 2022 statistical area, geocoding its polling-place address cannot change the statistical-area assignment.
 
 | Election | Ordinary rows without direct address | Assignable by single-stat locality | Still unresolved rows | Still unresolved eligible voters | Still unresolved actual voters |
 |---|---:|---:|---:|---:|---:|
@@ -117,59 +118,57 @@ The table below excludes envelope rows and only evaluates ordinary rows without 
 | K24 | 0 | 0 | 0 | 0 | 0 |
 | K23 | 0 | 0 | 0 | 0 | 0 |
 | K22 | 0 | 0 | 0 | 0 | 0 |
-| K21 | 762 | 40 | 722 | 445,825 | 310,426 |
-| K20 | 317 | 15 | 302 | 171,212 | 125,431 |
-| K19 | 136 | 3 | 133 | 67,409 | 46,320 |
-| K18 | 36 | 0 | 36 | 23,500 | 14,146 |
-| K17 | 15 | 1 | 14 | Not available | 4,465 |
+| K21 | 762 | 102 | 660 | 412,944 | 288,511 |
+| K20 | 317 | 38 | 279 | 161,215 | 117,778 |
+| K19 | 136 | 16 | 120 | 61,674 | 42,370 |
+| K18 | 36 | 10 | 26 | 17,089 | 11,189 |
+| K17 | 15 | 2 | 13 | Not available | 4,348 |
 | K16 | 63 | 1 | 62 | 32,122 | 23,549 |
-
-For K17, the one row resolved by this shortcut is `ניצן` kalpi `20`, because `ניצן` appears in the 2022 statistical-area layer with a single `STAT_2022`.
 
 ## K17 Ordinary Rows Without Address
 
-K17 has 15 ordinary rows with an empty address field. After the single-stat locality shortcut, 14 remain unresolved by the current automated rules.
+K17 has 15 ordinary rows with an empty address field.
 
 | Locality | Kalpi | 2022 stat-area status | Voters | Valid | Invalid |
 |---|---:|---|---:|---:|---:|
 | ניצן | 20 | Single-stat locality; assignable by locality | 228 | 226 | 2 |
-| ערערה-בנגב | 50 | Not matched in current 2022 statistical-area GeoJSON | 186 | 180 | 6 |
-| ערערה-בנגב | 9900 | Not matched in current 2022 statistical-area GeoJSON | 175 | 169 | 6 |
-| אום בטין | 10 | Not matched in current 2022 statistical-area GeoJSON | 117 | 114 | 3 |
-| טייבה | 110 | Not matched in current 2022 statistical-area GeoJSON | 353 | 346 | 7 |
-| טייבה | 150 | Not matched in current 2022 statistical-area GeoJSON | 404 | 399 | 5 |
-| טייבה | 250 | Not matched in current 2022 statistical-area GeoJSON | 432 | 426 | 6 |
-| טייבה | 260 | Not matched in current 2022 statistical-area GeoJSON | 360 | 353 | 7 |
-| טייבה | 270 | Not matched in current 2022 statistical-area GeoJSON | 414 | 414 | 0 |
-| טייבה | 280 | Not matched in current 2022 statistical-area GeoJSON | 322 | 319 | 3 |
-| טייבה | 290 | Not matched in current 2022 statistical-area GeoJSON | 301 | 297 | 4 |
-| טייבה | 300 | Not matched in current 2022 statistical-area GeoJSON | 313 | 311 | 2 |
-| טייבה | 310 | Not matched in current 2022 statistical-area GeoJSON | 343 | 341 | 2 |
-| בית אריה | 10 | Exact name not matched; likely alias candidate for `בית אריה-עופרים`, which is single-stat | 375 | 375 | 0 |
-| בית אריה | 30 | Exact name not matched; likely alias candidate for `בית אריה-עופרים`, which is single-stat | 370 | 367 | 3 |
-
-Do not silently apply the `בית אריה` alias in the pipeline until a locality-alias table is added and documented.
+| אום בטין | 10 | Single-stat locality; assignable by locality | 117 | 114 | 3 |
+| ערערה-בנגב | 50 | Matched locality with 3 statistical areas; needs address/geocode, but address is missing | 186 | 180 | 6 |
+| ערערה-בנגב | 9900 | Matched locality with 3 statistical areas; needs address/geocode, but address is missing | 175 | 169 | 6 |
+| טייבה | 110 | Matched locality with 8 statistical areas; needs address/geocode, but address is missing | 353 | 346 | 7 |
+| טייבה | 150 | Matched locality with 8 statistical areas; needs address/geocode, but address is missing | 404 | 399 | 5 |
+| טייבה | 250 | Matched locality with 8 statistical areas; needs address/geocode, but address is missing | 432 | 426 | 6 |
+| טייבה | 260 | Matched locality with 8 statistical areas; needs address/geocode, but address is missing | 360 | 353 | 7 |
+| טייבה | 270 | Matched locality with 8 statistical areas; needs address/geocode, but address is missing | 414 | 414 | 0 |
+| טייבה | 280 | Matched locality with 8 statistical areas; needs address/geocode, but address is missing | 322 | 319 | 3 |
+| טייבה | 290 | Matched locality with 8 statistical areas; needs address/geocode, but address is missing | 301 | 297 | 4 |
+| טייבה | 300 | Matched locality with 8 statistical areas; needs address/geocode, but address is missing | 313 | 311 | 2 |
+| טייבה | 310 | Matched locality with 8 statistical areas; needs address/geocode, but address is missing | 343 | 341 | 2 |
+| בית אריה | 10 | Likely alias for `בית אריה-עופרים`, code 3652, single-stat; requires reviewed crosswalk before assignment | 375 | 375 | 0 |
+| בית אריה | 30 | Likely alias for `בית אריה-עופרים`, code 3652, single-stat; requires reviewed crosswalk before assignment | 370 | 367 | 3 |
 
 ## Geocoding Scope
 
-The purpose of geocoding is narrow:
+Geocoding is only needed where:
 
-> poll result row -> polling-place address -> point -> 2022 statistical area
+- the row is an ordinary row,
+- the row can be linked to a polling-place address,
+- the matched 2022 locality has multiple statistical areas.
 
-Geocoding is only needed where the locality contains multiple 2022 statistical areas and the row has, or can be linked to, a polling-place address. It is not needed for rows already assignable by the single-stat locality shortcut.
+Rows already assignable by the single-stat locality shortcut should not be geocoded unless a separate QA/debug view needs the point.
 
-This reduces the number of addresses that need geocoding and reduces avoidable geocoding failures. A row-level assignment should store one of these methods:
+Row-level assignment should store one method:
 
-- `direct_address_geocode`: address was geocoded and point-in-polygon assigned the statistical area.
-- `single_stat_locality`: locality has exactly one 2022 statistical area, so no address/geocode was needed.
-- `unresolved`: ordinary row cannot currently be assigned.
-- `envelope_bucket`: handled outside the mapped polling-place/statistical-area assignment.
+- `single_stat_locality`
+- `direct_address_geocode`
+- `reviewed_crosswalk_single_stat`
+- `unresolved`
 
 ## Locality History
 
-Localities can change between elections: names change, codes change, localities split, localities merge, and some localities disappear or are replaced in later CBS layers.
+Localities can change between elections: names change, codes change, localities split, localities merge, and some localities disappear or are represented differently in later CBS layers.
 
-That means matching older election rows to the 2022 statistical-area layer cannot rely only on casual name matching. The pipeline needs an explicit locality crosswalk with provenance.
+The pipeline needs an explicit locality crosswalk with provenance.
 
 Minimum crosswalk fields:
 
@@ -187,18 +186,9 @@ Rules:
 - A split locality should stay unresolved unless the old locality can be mapped to one 2022 statistical area without ambiguity.
 - A merge can use the single-stat shortcut only if the merged 2022 target has exactly one statistical area, or if a reviewed rule assigns the old locality unambiguously.
 
-## Implementation Decisions
-
-- Proceed with K16-K25 for both locality and statistical-area modes.
-- Treat the statistical-area map as polling-place geography, not voter-residence geography.
-- Check the single-stat locality shortcut before geocoding; do not geocode addresses that cannot change the statistical-area assignment.
-- Store every statistical-area assignment with provenance: election, address source, match rule, geocoder, coordinate, polygon id, confidence, and failure reason.
-- Store unresolved rows separately with full vote totals and include them in details panels and election-level summaries.
-- Show mapped coverage in the UI so users know how much of the vote total is represented by polygons for the selected election and mode.
-
 ## Current Blockers
 
 - Recovering true election-specific polling-place files for K16 and K18-K21 would materially improve confidence.
-- A geocoding decision is still needed.
+- A geocoding provider and cache/review policy is still needed.
 - Locality polygons still need an official or reliable source.
-- Historical locality aliases, splits, and merges need an explicit, reviewed mapping table before being used in the pipeline.
+- Historical locality aliases, splits, and merges need a reviewed crosswalk before they are used in the production pipeline.

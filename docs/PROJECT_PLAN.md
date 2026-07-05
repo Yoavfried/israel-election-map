@@ -4,16 +4,16 @@ Last updated: 2026-07-05
 
 ## Goal
 
-Build a local-first election visualization website for Israeli Knesset elections from 2003 onward. A user should be able to choose an election, switch between geography modes, inspect mapped results, and drill into vote distribution details.
+Build a local-first election visualization website for Israeli Knesset elections from 2003 onward. A user should be able to choose an election, switch geography modes, inspect mapped results, and drill into vote distribution details.
 
 Required geography modes:
 
-1. Statistical areas, using the local 2022 statistical-area polygons.
+1. Statistical areas, using 2022 statistical-area polygons.
 2. Localities.
 
 This is not a K23-only prototype. K16-K25 are the implementation target.
 
-## Data Findings
+## Confirmed Data Direction
 
 Official Knesset election data exists in the data.gov.il `votes-knesset` package:
 
@@ -34,44 +34,35 @@ Confirmed coverage:
 | Knesset 17 | 2006 | XLS | Aggregate from ballot rows, with name-normalization caveats |
 | Knesset 16 | 2003 | XLS | Aggregate from ballot rows |
 
-Current locality-mode decision:
+Locality-mode decision:
 
 - Use official locality-level resources for K19-K25.
 - Generate locality totals from ballot rows for K16-K18.
-- Keep pre-2003 locality availability as an open research item; the current product scope starts at K16 / 2003.
+- Keep pre-2003 locality availability as an open research item; current product scope starts at K16 / 2003.
 
 ## Statistical Areas
 
-Current project raw layer:
+Canonical raw polygon source:
 
-- `data/raw/statistical-areas-2022.geojson`
-- 1,776 features.
-- Useful properties observed: `SEMEL_YISHUV`, `STAT_2022`, `YISHUV_STAT_2022`.
-- 407 localities appear in the layer.
-- 364 localities have exactly one 2022 statistical area.
-- 43 localities have multiple 2022 statistical areas.
+- `data/raw/ezorim_statistiim_2022.gdb`
+- Layer: `statistical_areas_2022`
+- 3,842 polygon features.
+- 3,739 unique locality/statistical-area pairs.
+- 1,283 represented locality codes.
+- 1,139 single-stat locality codes.
+- 144 multi-stat locality codes.
 
 Decision:
 
-The local 2022 statistical-area GeoJSON is useful for diagnostics, but it is not complete enough for the final product. An audit found that it is missing major localities including Haifa, Beer Sheva, Netanya, Herzliya, Kfar Saba, Rahat, Nazareth, Eilat, Tayibe, Umm Batin, and Ar'ara-BaNegev.
+Use this FileGDB as the canonical 2022 statistical-area source. The previous `data/raw/statistical-areas-2022.geojson` was a partial export and is no longer a project source.
 
 Detailed audit:
 
 - `docs/LOCALITY_STAT_LAYER_AUDIT.md`
 
-Decision:
+For localities that have exactly one `STAT_2022`, locality-level or kalpi-level rows can be assigned directly to that statistical area when no finer address assignment is needed.
 
-Obtain or rebuild a complete official 2022 statistical-area polygon layer before implementing final statistical-area mode. The current local GeoJSON can still be used to test pipeline shape and edge cases, but not as the final geography source.
-
-For localities that have exactly one `STAT_2022` in a complete verified layer, locality-level results can be assigned directly to that statistical area when kalpi-level address assignment is unavailable.
-
-Apply this single-stat locality shortcut before geocoding. If a result row's locality has exactly one 2022 statistical area, geocoding its polling-place address cannot change the statistical-area assignment.
-
-Older official national polygon layer:
-
-https://data.gov.il/api/3/action/package_show?id=statistical-area-2008
-
-The 2008 layer remains useful as a fallback/reference layer, but it should not replace the 2022 layer unless the 2022 geometry proves unusable.
+Apply this single-stat locality shortcut before geocoding. If a result row's matched 2022 locality has exactly one statistical area, geocoding its polling-place address cannot change the statistical-area assignment.
 
 ## Kalpi to Statistical Area
 
@@ -81,17 +72,13 @@ The ballot-result rows include vote counts and kalpi identifiers, but no geometr
 
 The approximation is:
 
-> assign each kalpi to the statistical area containing the polling-place building, then aggregate votes by that statistical area.
+> assign each kalpi to the statistical area containing the polling-place building, then aggregate votes by statistical area
 
-For a locality with exactly one 2022 statistical area, a result row can be assigned by locality without geocoding the kalpi address. The point of geocoding is only to resolve rows in multi-stat-area localities:
+This does not represent the exact residential statistical area of the voters assigned to that kalpi. The UI should expose mapped coverage and assignment provenance.
 
-> poll result row -> polling-place address -> point -> 2022 statistical area
+## Address Coverage
 
-This does not represent the exact residential statistical area of the voters assigned to that kalpi, but it should create an interesting and usable exploratory map if caveats are visible.
-
-### Direct Address Coverage
-
-Detailed findings are documented in:
+Detailed findings:
 
 - `docs/POLLING_PLACE_ADDRESSES.md`
 
@@ -110,11 +97,11 @@ Direct address-source summary:
 | K17 | 2006 | Address field in official result file | 98.05% | 179,177 (5.62%) |
 | K16 | 2003 | Generic official polling-place table | 97.31% | 182,385 (5.70%) |
 
-For K22-K25, every ordinary row has a direct address match; only envelope rows lack direct addresses. K17 has 15 ordinary rows with an empty address field. K16 and K18-K21 use generic-table fallback matching and remain lower confidence until election-specific address files are recovered.
+For K22-K25, every ordinary row has a direct address match. K17 has 15 ordinary rows with an empty address field. K16 and K18-K21 use generic-table fallback matching and remain lower confidence until election-specific address files are recovered.
 
-### Meaningful Ordinary Unresolved Rows
+## Meaningful Ordinary Unresolved Rows
 
-Against the current partial GeoJSON, after applying the single-stat locality shortcut and excluding envelope rows, the ordinary unresolved set is:
+After applying the FileGDB-derived single-stat locality shortcut and excluding non-ordinary rows:
 
 | Election | Ordinary rows without direct address | Assignable by single-stat locality | Still unresolved rows | Still unresolved actual voters |
 |---|---:|---:|---:|---:|
@@ -122,52 +109,55 @@ Against the current partial GeoJSON, after applying the single-stat locality sho
 | K24 | 0 | 0 | 0 | 0 |
 | K23 | 0 | 0 | 0 | 0 |
 | K22 | 0 | 0 | 0 | 0 |
-| K21 | 762 | 40 | 722 | 310,426 |
-| K20 | 317 | 15 | 302 | 125,431 |
-| K19 | 136 | 3 | 133 | 46,320 |
-| K18 | 36 | 0 | 36 | 14,146 |
-| K17 | 15 | 1 | 14 | 4,465 |
+| K21 | 762 | 102 | 660 | 288,511 |
+| K20 | 317 | 38 | 279 | 117,778 |
+| K19 | 136 | 16 | 120 | 42,370 |
+| K18 | 36 | 10 | 26 | 11,189 |
+| K17 | 15 | 2 | 13 | 4,348 |
 | K16 | 63 | 1 | 62 | 23,549 |
 
-Implementation decision:
+Implementation decisions:
 
-- Store assignment method for each row: direct address, single-stat locality, unresolved, or excluded envelope bucket.
+- Store assignment method for each row: single-stat locality, direct address geocode, reviewed crosswalk, or unresolved.
 - Do not silently drop actual votes from rows that cannot be placed on a map.
 - Add an explicit locality crosswalk before using historical aliases, splits, or merges, such as `בית אריה` to `בית אריה-עופרים`.
-- Do not treat the current unresolved counts as final coverage numbers until the statistical-area layer is complete.
+- Expose mapped/unmapped coverage in the UI.
 
-### K23 AGS Field
+## K23 AGS Field
 
-The K23 polling-place report includes an AGS-like field, but it is not compatible enough with the local 2022 statistical-area polygons:
+The K23 polling-place report includes an `אג"ס` field, but it is not compatible enough with the 2022 polygons for direct joining:
 
-- K23 unique locality+AGS pairs: 1,570.
-- Matching pairs in the 2022 polygon layer: 589.
-- Unique-pair match rate: 37.5%.
+- K23 rows with `אג"ס`: 10,631.
+- Unique K23 locality+`אג"ס` pairs: 2,701.
+- Unique 2022 locality+`STAT_2022` pairs: 3,739.
+- Row match rate: 5,379 / 10,631, or 50.60%.
+- Unique-pair match rate: 1,053 / 2,701, or 38.99%.
 
 Decision:
 
-Do not join K23 AGS directly to 2022 polygons. Use geocoded polling-place addresses plus point-in-polygon for direct-address rows, and use the single-stat locality shortcut only where the 2022 layer has exactly one statistical area for the locality.
+Keep K23 `אג"ס` as source metadata only. Use geocoded polling-place addresses plus point-in-polygon for multi-stat localities, and use the single-stat locality shortcut only where the 2022 layer has exactly one statistical area for the locality.
 
 ## Geocoding And Assignment Pipeline
 
-1. Load official ballot results for K16-K25 from datastore/file resources.
-2. Normalize locality codes and kalpi identifiers.
-3. Apply an election-to-2022 locality crosswalk for exact matches, reviewed aliases, merges, splits, retired localities, and unknowns.
-4. Assign by locality first when the mapped 2022 locality has exactly one statistical area.
-5. Load election-specific polling-place addresses where available.
-6. Fall back to the generic official polling-place table only where no election-specific table has been found.
-7. Geocode polling-place addresses only for rows in multi-stat-area localities.
-8. Run point-in-polygon against the 2022 statistical-area GeoJSON.
-9. Join ballot results to assigned statistical areas.
-10. Aggregate per statistical area and keep per-kalpi contribution details.
-11. Store unresolved rows and their vote totals separately.
-12. Persist assignment provenance: source, match rule, geocoder, confidence, and failure reason.
+1. Load official ballot results for K16-K25.
+2. Normalize locality codes, locality names, and kalpi identifiers.
+3. Load the 2022 statistical-area FileGDB and generate a web-friendly polygon layer plus locality/stat metadata.
+4. Apply an election-to-2022 locality crosswalk for exact matches, reviewed aliases, merges, splits, retired localities, and unknowns.
+5. Assign by locality first when the mapped 2022 locality has exactly one statistical area.
+6. Load election-specific polling-place addresses where available.
+7. Fall back to the generic official polling-place table only where no election-specific table has been found.
+8. Geocode polling-place addresses only for rows in multi-stat localities.
+9. Run point-in-polygon against the 2022 statistical-area polygons.
+10. Join ballot results to assigned statistical areas.
+11. Aggregate per statistical area and keep per-kalpi contribution details.
+12. Store unresolved rows and their vote totals separately.
+13. Persist assignment provenance: source, match rule, geocoder, confidence, and failure reason.
 
 ## Locality Crosswalk
 
 Localities can change between elections: names change, codes change, localities split, localities merge, and some localities disappear or are represented differently in later CBS layers.
 
-The pipeline needs a reviewed locality crosswalk rather than relying only on exact string matching to the 2022 GeoJSON.
+The pipeline needs a reviewed locality crosswalk rather than relying only on exact string matching.
 
 Minimum crosswalk fields:
 
@@ -180,8 +170,6 @@ Minimum crosswalk fields:
 
 Splits and ambiguous historical changes should remain unresolved unless a reviewed rule maps the old locality to one 2022 statistical area without ambiguity.
 
-The crosswalk also needs to distinguish "not in the current partial GeoJSON" from "not a valid 2022 locality". For example, the current file does not contain Haifa or Beer Sheva, so absence from that file is not meaningful evidence about whether a locality has statistical areas.
-
 ## Aggregation Model
 
 For each statistical area:
@@ -189,7 +177,7 @@ For each statistical area:
 - Sum eligible voters, voters, invalid votes, valid votes, and party votes.
 - Store the number of contributing kalpis.
 - Store each kalpi contribution for drill-down.
-- Keep unresolved kalpis and envelope rows separately.
+- Keep unresolved rows separately.
 
 For localities:
 

@@ -4,133 +4,103 @@ Last updated: 2026-07-05
 
 ## Purpose
 
-This note audits whether election localities from K16-K25 can be found in the current local 2022 statistical-area GeoJSON:
+This note audits whether election localities from K16-K25 can be found in the current 2022 statistical-area polygon source:
 
-- `data/raw/statistical-areas-2022.geojson`
+- `data/raw/ezorim_statistiim_2022.gdb`
 
-This matters because the statistical-area pipeline depends on knowing whether each election locality maps to:
+This matters because the statistical-area pipeline needs to know whether each election locality maps to:
 
-- exactly one 2022 statistical area, in which case no address geocoding is needed, or
-- multiple 2022 statistical areas, in which case polling-place address geocoding is needed, or
-- no known 2022 statistical-area locality, in which case the row is unresolved until a complete layer or a locality crosswalk fixes it.
+- exactly one 2022 statistical area, where no polling-place geocoding is needed,
+- multiple 2022 statistical areas, where polling-place address geocoding is needed, or
+- no matched 2022 locality, where an explicit locality crosswalk is required.
 
-## GeoJSON Shape
+## Source Shape
 
-The current file is a GeoJSON `FeatureCollection`.
-
-Each feature is one statistical-area polygon, not one locality. The useful properties are:
-
-| Property | Meaning |
-|---|---|
-| `SEMEL_YISHUV` | Locality code |
-| `SHEM_YISHUV` | Locality name in Hebrew |
-| `SHEM_YISHUV_ENGLISH` | Locality name in English |
-| `STAT_2022` | 2022 statistical-area code within locality |
-| `YISHUV_STAT_2022` | Combined locality/statistical-area code |
-| `ROVA` | Quarter/borough code where present |
-| `TAT_ROVA` | Sub-quarter code where present |
-| `COD_TIFKUD` | Function/type code |
-
-Observed size:
+The current FileGDB has one layer, `statistical_areas_2022`.
 
 | Measure | Count |
 |---|---:|
-| GeoJSON features | 1,776 |
-| Localities represented by `SEMEL_YISHUV` | 407 |
-| Represented localities with one `STAT_2022` | 364 |
-| Represented localities with multiple `STAT_2022` values | 43 |
+| Polygon features | 3,842 |
+| Unique locality/statistical-area pairs | 3,739 |
+| Locality codes represented by `SEMEL_YISHUV` | 1,283 |
+| Locality codes with one `STAT_2022` | 1,139 |
+| Locality codes with multiple `STAT_2022` values | 144 |
 
-## Matching Method Used In Audit
+The source includes the major localities that were missing from the old partial GeoJSON:
+
+| Locality | Code | 2022 statistical areas |
+|---|---:|---:|
+| חיפה | 4000 | 106 |
+| באר שבע | 9000 | 83 |
+| נתניה | 7400 | 73 |
+| הרצלייה | 6400 | 36 |
+| כפר סבא | 6900 | 32 |
+| רהט | 1161 | 21 |
+| נצרת | 7300 | 24 |
+| אילת | 2600 | 25 |
+| טייבה | 2730 | 8 |
+| אום בטין | 1358 | 1 |
+| ערערה-בנגב | 1192 | 3 |
+| בית אריה-עופרים | 3652 | 1 |
+
+## Matching Method
 
 For each K16-K25 ballot-result file:
 
 1. Exclude envelope rows from this locality audit.
-2. Aggregate result rows by locality.
-3. If the result row has `סמל ישוב`, match it exactly to GeoJSON `SEMEL_YISHUV`.
-4. If no locality code exists, as in K17, match normalized `שם ישוב` exactly to GeoJSON `SHEM_YISHUV`.
-5. Do not apply aliases, splits, merges, or historical name fixes in this audit.
+2. Aggregate result rows by election locality.
+3. Match by locality code to `SEMEL_YISHUV` when the result file exposes a code.
+4. Fall back to exact normalized locality name only when no locality code is available. This mainly affects K17.
+5. Do not apply historical aliases, splits, merges, retired-locality rules, or spelling fixes in this audit.
 
-This is deliberately strict. It tells us what matches automatically and what requires a reviewed election-to-2022 locality crosswalk.
-
-## Critical Finding
-
-The current 2022 GeoJSON is not a complete national statistical-area layer for this project.
-
-It is missing major localities that must exist in a complete product dataset, including:
-
-| Locality searched | Result in current GeoJSON |
-|---|---|
-| חיפה | No match |
-| באר שבע | No match |
-| נתניה | No match |
-| הרצליה | No match |
-| כפר סבא | No match |
-| רהט | No match |
-| נצרת | No match |
-| אילת | No match |
-| טייבה | No match |
-| אום בטין | No match |
-| ערערה-בנגב / ערערה | No match |
-
-Examples that do exist:
-
-| Locality | Code | 2022 statistical areas |
-|---|---:|---:|
-| ירושלים | 3000 | 243 |
-| תל אביב -יפו | 5000 | 157 |
-| אשדוד | 70 | 71 |
-| בית אריה-עופרים | 3652 | 1 |
-| ניצן | 351 | 1 |
-
-Therefore, all current one-stat-locality counts are diagnostic only. They are valid for the localities present in this file, but the file cannot be the final statistical-area base layer.
+This is deliberately strict. It measures automatic coverage before the reviewed locality crosswalk exists.
 
 ## Election Locality Match Summary
 
-The table below compares ordinary election localities to the current GeoJSON. Because the GeoJSON is incomplete, the unmatched counts are very large.
+| Election | Election localities | Code matches | Name matches | Unmatched localities | Matched single-stat localities | Matched multi-stat localities | Matched voters | Unmatched voters |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| K25 | 1,215 | 1,186 | 0 | 29 | 1,042 | 144 | 4,311,724 | 20,062 |
+| K24 | 1,214 | 1,186 | 0 | 28 | 1,042 | 144 | 3,997,838 | 13,015 |
+| K23 | 1,213 | 1,184 | 0 | 29 | 1,040 | 144 | 4,267,860 | 17,066 |
+| K22 | 1,213 | 1,184 | 0 | 29 | 1,040 | 144 | 4,166,688 | 16,038 |
+| K21 | 1,213 | 1,184 | 0 | 29 | 1,040 | 144 | 4,089,267 | 10,203 |
+| K20 | 1,195 | 1,165 | 0 | 30 | 1,021 | 144 | 4,007,940 | 12,199 |
+| K19 | 1,184 | 1,155 | 0 | 29 | 1,011 | 144 | 3,607,970 | 9,887 |
+| K18 | 1,156 | 1,130 | 0 | 26 | 989 | 141 | 3,222,827 | 6,841 |
+| K17 | 1,149 | 0 | 1,055 | 94 | 937 | 118 | 2,442,550 | 569,705 |
+| K16 | 1,172 | 1,115 | 2 | 55 | 973 | 144 | 3,015,072 | 27,405 |
 
-| Election | Election localities | Code matches | Name matches | Unmatched localities | Matched voters | Unmatched voters |
-|---|---:|---:|---:|---:|---:|---:|
-| K25 | 1,215 | 355 | 0 | 860 | 2,268,834 | 2,062,952 |
-| K24 | 1,214 | 354 | 0 | 860 | 2,136,446 | 1,874,407 |
-| K23 | 1,213 | 355 | 0 | 858 | 2,203,107 | 2,081,819 |
-| K22 | 1,213 | 355 | 0 | 858 | 2,178,994 | 2,003,732 |
-| K21 | 1,213 | 356 | 0 | 857 | 2,175,486 | 1,923,984 |
-| K20 | 1,195 | 352 | 0 | 843 | 2,090,335 | 1,929,804 |
-| K19 | 1,184 | 348 | 0 | 836 | 1,908,890 | 1,708,967 |
-| K18 | 1,156 | 347 | 0 | 809 | 1,699,808 | 1,529,860 |
-| K17 | 1,149 | 0 | 326 | 823 | 1,260,872 | 1,751,383 |
-| K16 | 1,172 | 346 | 2 | 824 | 1,562,760 | 1,479,717 |
+Interpretation:
 
-K17 has no locality code field in the datastore result shape used here, so this audit falls back to exact name matching for K17. That is why K17 has name matches instead of code matches.
+- K16 and K18-K25 have strong automatic locality-code coverage against the 2022 layer.
+- K17 is different because the current datastore shape used here does not expose the same locality-code field. Exact name matching leaves many real localities unmatched due spelling and historical-name differences, for example `תל אביב - יפו`, `הרצליה`, and `מודיעין-מכבים-רעו`.
+- The K17 unmatched-voter number is therefore mostly a crosswalk problem, not evidence that those voters cannot be mapped.
 
-## K17 Locality Examples
+## K17 Addressless Rows
 
-For the 15 K17 ordinary rows with empty address:
+The K17 result file has 15 ordinary rows with an empty address field. Against the FileGDB-derived 2022 layer:
 
-| K17 locality | Current GeoJSON result | Interpretation |
-|---|---|---|
-| ניצן | Exists as `ניצן`, code `351`, one statistical area | Assignable by locality |
-| בית אריה | Exact name not present; `בית אריה-עופרים`, code `3652`, has one statistical area | Likely crosswalk alias, but must be explicitly reviewed |
-| אום בטין | Not present by exact name | Unresolved against current GeoJSON |
-| טייבה | Not present by exact name | Unresolved against current GeoJSON |
-| ערערה-בנגב | Not present by exact name | Unresolved against current GeoJSON |
-
-This is not evidence that `אום בטין`, `טייבה`, or `ערערה-בנגב` have multiple statistical areas. It only means they are not represented in the current GeoJSON under those names.
+- 2 rows are assignable by the single-stat locality shortcut: `ניצן` and `אום בטין`.
+- 11 rows are in matched multi-stat localities: `ערערה-בנגב` has 3 statistical areas and `טייבה` has 8.
+- 2 rows are `בית אריה`, which is a likely historical/name alias for `בית אריה-עופרים` code 3652, a single-stat locality. Do not apply that automatically until the crosswalk records it.
 
 ## Consequences
 
-1. Obtain or rebuild a complete official 2022 statistical-area polygon layer before implementing final statistical-area mode.
-2. Treat the current GeoJSON as partial until its source/export scope is verified.
-3. Build an election-to-2022 locality crosswalk before using locality-based assignment.
-4. Apply the single-stat locality shortcut only after matching to a complete verified statistical-area layer.
-5. Use address geocoding only for rows whose verified 2022 locality has multiple statistical areas.
+1. Use the FileGDB as the canonical 2022 statistical-area source.
+2. Do not use the old partial GeoJSON for coverage calculations.
+3. Apply the single-stat locality shortcut before geocoding.
+4. Geocode polling-place addresses only for rows in matched multi-stat localities.
+5. Build a reviewed election-to-2022 locality crosswalk for historical spelling, name, split, merge, and retired-locality cases.
+6. Store assignment provenance so the UI can distinguish exact-code, exact-name, reviewed-crosswalk, geocoded, and unresolved records.
 
 ## Generated Audit Files
 
-The working audit generated local scratch files under the Codex workspace:
+The working audit generated scratch files under the Codex workspace:
 
+- `work/stat_area_counts_by_locality.json`
+- `work/localities_by_stat_area_count.csv`
 - `work/locality-stat-layer-audit-summary.json`
 - `work/locality-stat-layer-unmatched.csv`
 - `work/k{election}-locality-to-stat-layer-audit.json`
 
-These files are diagnostics and are not currently committed to the project.
+These files are diagnostics and are not committed to the project.
