@@ -10,14 +10,14 @@ Fill or edit `review` and `Notes` as needed.
 
 | review | rows | solution |
 | --- | --- | --- |
-| TRUE | 88 | Use approved locality match; historical split rows become composite locality unions. |
+| TRUE | 88 | Use approved locality match; historical split rows with multiple possible matches require address geocoding into current polygons. |
 | TRIBE | 35 | Custom tribal/dispersed-settlement point-size polygon. |
 | GAZA | 13 | Custom Gaza evacuated-localities point-size polygon. |
 | ENVELOPE | 12 | Special non-geographic bucket, handled like envelope votes. |
 | N.S. | 3 | Custom Northern Samaria evacuated-localities point-size polygon. |
 | HEBRON | 2 | Custom Hebron point-size polygon. |
 | (blank) | 1 | One row: Ma'ale Shomron maps to Karnei Shomron based on note. |
-| SH | 1 | Composite of Etz Efraim and Sha'arei Tikva. |
+| SH | 1 | Use polling-place addresses to assign Sha'ar Shomron rows to current polygons. |
 
 ## Full Review Table
 

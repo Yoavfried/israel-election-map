@@ -103,7 +103,7 @@ For K22-K25, every ordinary row has a direct address match. K17 has 15 ordinary 
 
 After applying the reviewed locality crosswalk, custom buckets, and the FileGDB-derived single-stat locality shortcut:
 
-| Election | Non-envelope rows without direct address | Assigned by single-stat | Assigned by custom/composite | Still missing address rows | Still missing actual voters |
+| Election | Non-envelope rows without direct address | Assigned by single-stat | Assigned by custom point | Still missing address rows | Still missing actual voters |
 |---|---:|---:|---:|---:|---:|
 | K25 | 0 | 0 | 0 | 0 | 0 |
 | K24 | 0 | 0 | 0 | 0 | 0 |
@@ -112,7 +112,7 @@ After applying the reviewed locality crosswalk, custom buckets, and the FileGDB-
 | K21 | 762 | 103 | 6 | 653 | 287,550 |
 | K20 | 317 | 39 | 5 | 273 | 116,744 |
 | K19 | 136 | 16 | 1 | 119 | 42,261 |
-| K18 | 36 | 0 | 34 | 2 | 952 |
+| K18 | 36 | 0 | 0 | 36 | 14,146 |
 | K17 | 15 | 4 | 0 | 11 | 3,603 |
 | K16 | 63 | 3 | 4 | 56 | 21,938 |
 
@@ -125,7 +125,7 @@ Full coverage artifacts:
 
 Implementation decisions:
 
-- Store assignment method for each row: single-stat locality, direct address geocode needed, custom point-size polygon, composite current-locality union, special non-geographic, official envelope, or unresolved.
+- Store assignment method for each row: single-stat locality, direct address geocode needed, address-geocode-to-current-polygons, custom point-size polygon, special non-geographic, official envelope, or unresolved.
 - Do not silently drop actual votes from rows that cannot be placed on a map.
 - Use the reviewed locality resolution plan before deciding whether a row needs address geocoding.
 - Expose mapped/unmapped coverage in the UI.
@@ -151,11 +151,11 @@ Keep K23 `אג"ס` as source metadata only. Use geocoded polling-place addresses
 3. Load the 2022 statistical-area FileGDB and generate a web-friendly polygon layer plus locality/stat metadata.
 4. Apply the reviewed locality resolution plan for exact matches, aliases, merges, splits, custom buckets, and non-geographic buckets.
 5. Assign by locality first when the mapped 2022 locality has exactly one statistical area.
-6. Assign reviewed custom point-size polygon and composite current-locality union rows without geocoding.
+6. Assign reviewed custom point-size polygon rows without geocoding.
 7. Keep official envelope and reviewed special non-geographic rows outside geographic polygon assignment.
 8. Load election-specific polling-place addresses where available.
 9. Fall back to the generic official polling-place table only where no election-specific table has been found.
-10. Geocode polling-place addresses only for rows in multi-stat localities that still need address-level assignment.
+10. Geocode polling-place addresses for rows in multi-stat localities and reviewed address-target sets that still need address-level assignment.
 11. Run point-in-polygon against the 2022 statistical-area polygons.
 12. Join ballot results to assigned statistical areas, custom geographies, or non-geographic buckets.
 13. Aggregate per geography and keep per-kalpi/source-row contribution details.
@@ -183,11 +183,11 @@ Minimum crosswalk fields:
 - election
 - source locality code and name from the election result file
 - target 2022 locality code and name, when applicable
-- mapping status: exact code, exact name, alias, merge, split/composite, custom point bucket, non-geographic, retired, unknown
+- mapping status: exact code, exact name, alias, merge, split/address-target-set, custom point bucket, non-geographic, retired, unknown
 - whether the target can use the single-stat locality shortcut
 - notes/source for the decision
 
-Reviewed split localities are modeled as composite current-locality unions. Their votes are not divided across child localities unless a later reviewed rule provides a defensible allocation.
+Reviewed split localities and `שער שומרון` are modeled as address-target sets. Their rows should be assigned by polling-place geocoding into the correct current polygon. Do not join current polygons, and do not split votes heuristically.
 
 ## Aggregation Model
 
@@ -237,4 +237,4 @@ Candidate stack:
 4. Are pre-2003 locality-level results available from an official archive outside the inspected open-data package?
 5. How should party colors be governed across party splits, mergers, renamed lists, and reused letters?
 6. How should the UI communicate mapped vote coverage without weakening the map-first experience?
-7. How should custom point-size polygon buckets and composite current-locality unions be drawn and explained in the UI?
+7. How should custom point-size polygon buckets be drawn and explained in the UI?

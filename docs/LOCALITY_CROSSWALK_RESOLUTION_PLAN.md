@@ -16,14 +16,14 @@ Derived full-resolution CSV:
 
 | review | rows | solution |
 | --- | --- | --- |
-| TRUE | 88 | Use approved locality match; historical split rows become composite locality unions. |
+| TRUE | 88 | Use approved locality match; historical split rows with multiple possible matches require address geocoding into current polygons. |
 | TRIBE | 35 | Custom tribal/dispersed-settlement point-size polygon. |
 | GAZA | 13 | Custom Gaza evacuated-localities point-size polygon. |
 | ENVELOPE | 12 | Special non-geographic bucket, handled like envelope votes. |
 | N.S. | 3 | Custom Northern Samaria evacuated-localities point-size polygon. |
 | HEBRON | 2 | Custom Hebron point-size polygon. |
 | (blank) | 1 | One row: Ma'ale Shomron maps to Karnei Shomron based on note. |
-| SH | 1 | Composite of Etz Efraim and Sha'arei Tikva. |
+| SH | 1 | Use polling-place addresses to assign Sha'ar Shomron rows to current polygons. |
 
 ## Solution Counts
 
@@ -32,29 +32,24 @@ Derived full-resolution CSV:
 | accepted_locality_match | 85 |
 | custom_point_size_polygon | 53 |
 | special_non_geographic | 12 |
-| composite_current_locality_union | 5 |
+| address_geocode_to_current_polygons | 5 |
 
 ## Custom Geometry Buckets
 
 | custom geometry id | solution | rows | example source rows |
 | --- | --- | --- | --- |
 | custom:tribal_negev | custom_point_size_polygon | 35 | מסעודין אל-עזאזמה [939] \| אבו רוקייק )שבט( [961] \| אעצם )שבט( [963] \| אבו רובייעה )שבט( [966] \| הוואשלה )שבט( [1169] |
-| custom:historical_union:שגור | composite_current_locality_union | 1 | שגור |
-| custom:historical_union:באקה-ג'ת | composite_current_locality_union | 1 | באקה-ג'ת |
-| custom:historical_union:עיר כרמל | composite_current_locality_union | 1 | עיר כרמל |
-| custom:shaar_shomron_union | composite_current_locality_union | 1 | שער שומרון [3826] |
 | custom:hebron | custom_point_size_polygon | 2 | חברון [3400] \| חברון |
-| custom:historical_union:קציר-חריש | composite_current_locality_union | 1 | קציר-חריש |
 | custom:gaza_evacuated_localities | custom_point_size_polygon | 13 | נווה דקלים [5427] \| ניסנית [5426] \| אלי סיני [5428] \| בני עצמון [5425] \| גדיד [5429] |
 | custom:northern_samaria_evacuated_localities | custom_point_size_polygon | 3 | חומש [3642] \| גנים [3758] \| כדים [3729] |
 
 ## Implementation Decisions
 
 - Accepted single-locality matches use the reviewed 2022 locality name.
-- Accepted historical split rows do not distribute votes across child localities. They become composite current-locality union geometries.
+- Accepted historical split rows with multiple possible current matches must be assigned by polling-place address/geocode into current polygons. Do not join polygons and do not split votes heuristically.
 - `TRIBE`, `GAZA`, `N.S.`, and `HEBRON` become custom point-size polygon buckets. The visual design can be decided later, but the data model treats each bucket as a synthetic geography with preserved source-row contributions.
 - `ENVELOPE` rows are non-geographic and should be handled like envelope/special votes: included in totals and details, not assigned to map polygons.
-- `SH` represents `שער שומרון`; use a composite of `עץ אפרים` and `שערי תקווה`.
+- `SH` represents `שער שומרון`; use polling-place addresses to assign each row to the relevant current polygon, usually `עץ אפרים` or `שערי תקווה`.
 - The blank reviewed row with note `שכונה בקרני שומרון` is resolved to `קרני שומרון`.
 
 ## Full Resolution Table
@@ -76,19 +71,19 @@ Derived full-resolution CSV:
 | יהוד-נווה אפרים | TRUE | יהוד | accepted_locality_match | יהוד |  | Use the reviewed 2022 locality match. |  |
 | אבו רוקייק )שבט( [961] | TRIBE |  | custom_point_size_polygon | custom:tribal_negev | custom:tribal_negev | Aggregate all TRIBE rows per election into a single tribal/dispersed-settlement custom area and preserve source-row contributions. | add to tribal point polygon |
 | אעצם )שבט( [963] | TRIBE |  | custom_point_size_polygon | custom:tribal_negev | custom:tribal_negev | Aggregate all TRIBE rows per election into a single tribal/dispersed-settlement custom area and preserve source-row contributions. | add to tribal point polygon |
-| שגור | TRUE | בענה \| דייר אל-אסד \| מג'ד אל-כרום | composite_current_locality_union | בענה \| דייר אל-אסד \| מג'ד אל-כרום | custom:historical_union:שגור | Use the listed 2022 localities as one composite geography. Do not split this source row's votes across child localities. |  |
+| שגור | TRUE | בענה \| דייר אל-אסד \| מג'ד אל-כרום | address_geocode_to_current_polygons | בענה \| דייר אל-אסד \| מג'ד אל-כרום |  | Use each ballot row's polling-place address and point-in-polygon result to assign votes to the correct current 2022 polygon. Do not join polygons and do not split votes heuristically. |  |
 | קרית שמונה | TRUE | קריית שמונה | accepted_locality_match | קריית שמונה |  | Use the reviewed 2022 locality match. |  |
 | אבו רובייעה )שבט( [966] | TRIBE |  | custom_point_size_polygon | custom:tribal_negev | custom:tribal_negev | Aggregate all TRIBE rows per election into a single tribal/dispersed-settlement custom area and preserve source-row contributions. | add to tribal point polygon |
 | קרית מלאכי | TRUE | קריית מלאכי | accepted_locality_match | קריית מלאכי |  | Use the reviewed 2022 locality match. |  |
 | אבו קורינאת )שבט( [968] | TRUE | אבו קורינאת (יישוב) | accepted_locality_match | אבו קורינאת (יישוב) |  | Use the reviewed 2022 locality match. |  |
-| באקה-ג'ת | TRUE | באקה אל-גרביה \| ג'ת | composite_current_locality_union | באקה אל-גרביה \| ג'ת | custom:historical_union:באקה-ג'ת | Use the listed 2022 localities as one composite geography. Do not split this source row's votes across child localities. |  |
+| באקה-ג'ת | TRUE | באקה אל-גרביה \| ג'ת | address_geocode_to_current_polygons | באקה אל-גרביה \| ג'ת |  | Use each ballot row's polling-place address and point-in-polygon result to assign votes to the correct current 2022 polygon. Do not join polygons and do not split votes heuristically. |  |
 | קרית טבעון | TRUE | קריית טבעון | accepted_locality_match | קריית טבעון |  | Use the reviewed 2022 locality match. |  |
-| עיר כרמל | TRUE | דאלית אל-כרמל \| עספיא | composite_current_locality_union | דאלית אל-כרמל \| עספיא | custom:historical_union:עיר כרמל | Use the listed 2022 localities as one composite geography. Do not split this source row's votes across child localities. |  |
+| עיר כרמל | TRUE | דאלית אל-כרמל \| עספיא | address_geocode_to_current_polygons | דאלית אל-כרמל \| עספיא |  | Use each ballot row's polling-place address and point-in-polygon result to assign votes to the correct current 2022 polygon. Do not join polygons and do not split votes heuristically. |  |
 | צורן-קדימה | TRUE | קדימה-צורן | accepted_locality_match | קדימה-צורן |  | Use the reviewed 2022 locality match. |  |
 | בנימינה-גבעת עדה | TRUE | בנימינה-גבעת עדה* | accepted_locality_match | בנימינה-גבעת עדה* |  | Use the reviewed 2022 locality match. |  |
 | מכבים-רעות [1273] | TRUE | מודיעין-מכבים-רעות* | accepted_locality_match | מודיעין-מכבים-רעות* |  | Use the reviewed 2022 locality match. |  |
 | הוואשלה )שבט( [1169] | TRIBE |  | custom_point_size_polygon | custom:tribal_negev | custom:tribal_negev | Aggregate all TRIBE rows per election into a single tribal/dispersed-settlement custom area and preserve source-row contributions. | add to tribal point polygon |
-| שער שומרון [3826] | SH |  | composite_current_locality_union | עץ אפרים \| שערי תקווה | custom:shaar_shomron_union | Represent Sha'ar Shomron as a composite of the 2022 stat-layer localities Etz Efraim and Sha'arei Tikva. Do not split this source row's votes. | עץ אפרים and שערי תקווה united in to שער שומרון |
+| שער שומרון [3826] | SH |  | address_geocode_to_current_polygons | עץ אפרים \| שערי תקווה |  | Use each Sha'ar Shomron ballot row's polling-place address and point-in-polygon result to assign it to the relevant current polygon, usually Etz Efraim or Sha'arei Tikva. | עץ אפרים and שערי תקווה united in to שער שומרון |
 | קרית עקרון | TRUE | קריית עקרון | accepted_locality_match | קריית עקרון |  | Use the reviewed 2022 locality match. |  |
 | אטרש )שבט( [965] | TRIBE |  | custom_point_size_polygon | custom:tribal_negev | custom:tribal_negev | Aggregate all TRIBE rows per election into a single tribal/dispersed-settlement custom area and preserve source-row contributions. | add to tribal point polygon |
 | אבו ג'ווייעד (שבט) [967] | TRIBE |  | custom_point_size_polygon | custom:tribal_negev | custom:tribal_negev | Aggregate all TRIBE rows per election into a single tribal/dispersed-settlement custom area and preserve source-row contributions. | add to tribal point polygon |
@@ -109,7 +104,7 @@ Derived full-resolution CSV:
 | רמת אפעל | TRUE | רמת גן | accepted_locality_match | רמת גן |  | Use the reviewed 2022 locality match. |  |
 | נווה אפרים [1062] | TRUE | יהוד | accepted_locality_match | יהוד |  | Use the reviewed 2022 locality match. |  |
 | בית אריה | TRUE | בית אריה-עופרים | accepted_locality_match | בית אריה-עופרים |  | Use the reviewed 2022 locality match. |  |
-| קציר-חריש | TRUE | קציר \| חריש | composite_current_locality_union | קציר \| חריש | custom:historical_union:קציר-חריש | Use the listed 2022 localities as one composite geography. Do not split this source row's votes across child localities. |  |
+| קציר-חריש | TRUE | קציר \| חריש | address_geocode_to_current_polygons | קציר \| חריש |  | Use each ballot row's polling-place address and point-in-polygon result to assign votes to the correct current 2022 polygon. Do not join polygons and do not split votes heuristically. |  |
 | ג'נאביב )שבט( [976] | TRIBE |  | custom_point_size_polygon | custom:tribal_negev | custom:tribal_negev | Aggregate all TRIBE rows per election into a single tribal/dispersed-settlement custom area and preserve source-row contributions. | add to tribal point polygon |
 | כאוכב אבו אל-היג' | TRUE | כאוכב אבו אל-היג'א | accepted_locality_match | כאוכב אבו אל-היג'א |  | Use the reviewed 2022 locality match. |  |
 | מחנה יפה [1415] | ENVELOPE |  | special_non_geographic | special:envelope_votes |  | Treat like envelope/special votes: include in totals and details, but keep out of geographic polygon assignment. | camp votes can be treated like envelope votes |

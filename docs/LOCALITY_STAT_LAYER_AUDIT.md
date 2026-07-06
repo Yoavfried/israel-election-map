@@ -95,8 +95,8 @@ The K17 result file has 15 non-envelope rows with an empty address field. Agains
 2. Do not use the old partial GeoJSON for coverage calculations.
 3. Apply the reviewed locality resolution plan before deciding whether a row needs geocoding.
 4. Apply the single-stat locality shortcut before geocoding.
-5. Geocode polling-place addresses only for rows in matched multi-stat localities that are not covered by custom/composite/non-geographic rules.
-6. Store assignment provenance so the UI can distinguish exact-code, exact-name, reviewed-crosswalk, custom/composite, geocoded, non-geographic, and unresolved records.
+5. Geocode polling-place addresses only for rows in matched multi-stat localities or reviewed address-target sets that are not covered by custom point or non-geographic rules.
+6. Store assignment provenance so the UI can distinguish exact-code, exact-name, reviewed-crosswalk, address-target-set, custom point, geocoded, non-geographic, and unresolved records.
 
 ## Generated Audit Files
 

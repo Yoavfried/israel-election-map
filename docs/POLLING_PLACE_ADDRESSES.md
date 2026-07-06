@@ -121,7 +121,7 @@ Full reviewed assignment outputs:
 
 After applying the reviewed locality resolution plan, the remaining non-envelope address gap is:
 
-| Election | Non-envelope rows without direct address | Assigned by single-stat | Assigned by custom/composite | Still missing address rows | Still missing eligible voters | Still missing actual voters |
+| Election | Non-envelope rows without direct address | Assigned by single-stat | Assigned by custom point | Still missing address rows | Still missing eligible voters | Still missing actual voters |
 |---|---:|---:|---:|---:|---:|---:|
 | K25 | 0 | 0 | 0 | 0 | 0 | 0 |
 | K24 | 0 | 0 | 0 | 0 | 0 | 0 |
@@ -130,7 +130,7 @@ After applying the reviewed locality resolution plan, the remaining non-envelope
 | K21 | 762 | 103 | 6 | 653 | 409,279 | 287,550 |
 | K20 | 317 | 39 | 5 | 273 | 157,603 | 116,744 |
 | K19 | 136 | 16 | 1 | 119 | 60,951 | 42,261 |
-| K18 | 36 | 0 | 34 | 2 | 1,287 | 952 |
+| K18 | 36 | 0 | 0 | 36 | 23,500 | 14,146 |
 | K17 | 15 | 4 | 0 | 11 | Not available | 3,603 |
 | K16 | 63 | 3 | 4 | 56 | 30,028 | 21,938 |
 
@@ -173,8 +173,8 @@ Row-level assignment should store one method:
 
 - `single_stat_locality`
 - `direct_address_geocode_needed`
+- `address_geocode_to_current_polygons`
 - `custom_point_size_polygon`
-- `composite_current_locality_union`
 - `special_non_geographic`
 - `official_envelope`
 - `unresolved`
@@ -198,7 +198,7 @@ Rules:
 
 - Exact current locality-code matches can be automated.
 - Historical aliases, spelling changes, merges, and splits must be reviewed and recorded.
-- Reviewed split localities are represented as composite current-locality unions. Do not split their votes across child localities.
+- Reviewed split localities and `שער שומרון` are address-target sets: use each ballot row's address/geocoded point to assign it to the correct current polygon. Do not join current polygons, and do not split votes heuristically.
 - Reviewed custom buckets (`TRIBE`, `GAZA`, `N.S.`, `HEBRON`) are assigned to synthetic point-size polygon geographies and preserve source-row contributions.
 - A merge can use the single-stat shortcut only if the merged 2022 target has exactly one statistical area, or if a reviewed rule assigns the old locality unambiguously.
 
