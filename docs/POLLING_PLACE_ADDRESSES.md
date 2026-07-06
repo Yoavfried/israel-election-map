@@ -27,7 +27,7 @@ This is intentionally approximate. It maps the polling-place building, not each 
 | K21 / 2019 Apr | Generic official `voting-polls` table | Fallback only; not election-specific |
 | K20 / 2015 | Generic official `voting-polls` table | Fallback only; not election-specific |
 | K19 / 2013 | Generic official `voting-polls` table | Fallback only; not election-specific |
-| K18 / 2009 | `data/raw/archive_knesset18_kalpilist18.pdf` | Election-specific scanned list with embedded OCR text layer; extraction prototype is viable |
+| K18 / 2009 | `data/raw/archive_knesset18_kalpilist18.pdf` | Election-specific scanned list with embedded OCR text layer; row-level reconciliation is complete for ordinary rows |
 | K17 / 2006 | Address field inside official ballot-result file plus `data/raw/archive_knesset17_kalpies-list17-*.pdf` | Election-specific; high confidence for addressed rows, targeted scan extraction recovered place names for the 11 remaining multi-stat rows |
 | K16 / 2003 | Generic official `voting-polls` table | Fallback only; not election-specific |
 
@@ -64,8 +64,9 @@ K18 update, 2026-07-06:
 
 - The newly added `archive_knesset18_kalpilist18.pdf` is an election-specific polling-place list.
 - It is scanned, but it has an embedded OCR text layer with usable word coordinates.
-- A coordinate-based prototype extracted 9,466 rows and matched 9,081 / 9,264 official K18 result keys (98.0%) before final cleanup.
-- The K18 coverage rows below still reflect the earlier generic fallback baseline. They should be regenerated after the K18 extraction script is finalized and reviewed.
+- The current extractor writes a raw OCR table CSV and a resolved official-row CSV.
+- Row-level reconciliation matches 9,263 / 9,263 ordinary official K18 result rows.
+- The only official K18 result row without a physical polling-place address is the special non-geographic `מעטפות כפולות` row, with 186,919 actual voters.
 
 ## Direct Address Coverage
 
@@ -78,7 +79,7 @@ K18 update, 2026-07-06:
 | K21 | 2019 Apr | Generic official polling-place table | 10,765 | 9,698 | 1,067 | 90.09% | 467,046 (7.37%) | 567,589 (13.08%) |
 | K20 | 2015 | Generic official polling-place table | 10,414 | 9,804 | 610 | 94.14% | 176,373 (3.00%) | 362,617 (8.52%) |
 | K19 | 2013 | Generic official polling-place table | 10,109 | 9,747 | 362 | 96.42% | 68,407 (1.21%) | 260,957 (6.81%) |
-| K18 | 2009 | Generic official polling-place table, pre-PDF baseline | 9,264 | 9,227 | 37 | 99.60% | 210,419 (3.85%) | 201,065 (5.88%) |
+| K18 | 2009 | Official scanned polling-place PDF extraction | 9,264 | 9,263 | 1 | 99.99% | 186,919 (3.42%) | 186,919 (5.47%) |
 | K17 | 2006 | Address field in official result file | 8,426 | 8,262 | 164 | 98.05% | Not available | 179,177 (5.62%) |
 | K16 | 2003 | Generic official polling-place table | 7,886 | 7,674 | 212 | 97.31% | 191,007 (3.92%) | 182,385 (5.70%) |
 
@@ -86,7 +87,8 @@ Interpretation:
 
 - K22-K25: every ordinary row has a direct address match; rows without direct addresses are not ordinary polling-place rows.
 - K17: every ordinary row has an address except 15 rows listed below.
-- K16 and K18-K21: matches use the generic polling-place table, so they are provisional. Kalpi numbers and polling-place locations may have changed.
+- K18: every ordinary row has a direct address match from the election-specific scanned PDF; the only row without an address is non-geographic.
+- K16 and K19-K21: matches use the generic polling-place table, so they are provisional. Kalpi numbers and polling-place locations may have changed.
 
 ## Ordinary Rows Without Direct Address
 
@@ -101,7 +103,7 @@ The table below excludes non-ordinary rows and shows only ordinary locality/kalp
 | K21 | 762 | 467,046 | 326,806 |
 | K20 | 317 | 176,373 | 129,708 |
 | K19 | 136 | 68,407 | 47,160 |
-| K18 | 36 | 23,500 | 14,146 |
+| K18 | 0 | 0 | 0 |
 | K17 | 15 | Not available | 4,693 |
 | K16 | 63 | 32,711 | 24,089 |
 
@@ -137,7 +139,7 @@ After applying the reviewed locality resolution plan, the remaining non-envelope
 | K21 | 762 | 103 | 6 | 653 | 409,279 | 287,550 |
 | K20 | 317 | 39 | 5 | 273 | 157,603 | 116,744 |
 | K19 | 136 | 16 | 1 | 119 | 60,951 | 42,261 |
-| K18 | 36 | 0 | 0 | 36 | 23,500 | 14,146 |
+| K18 | 0 | 0 | 0 | 0 | 0 | 0 |
 | K17 | 15 | 4 | 0 | 11 | Not available | 3,603 |
 | K16 | 63 | 3 | 4 | 56 | 30,028 | 21,938 |
 
@@ -226,7 +228,6 @@ Rules:
 ## Current Blockers
 
 - Recovering true election-specific polling-place files for K16 and K19-K21 would materially improve confidence.
-- Finalizing and reviewing the K18 PDF extraction is now the next step for replacing the generic K18 fallback.
 - A geocoding provider and cache/review policy is still needed.
 - Locality polygons still need an official or reliable source.
 - The frontend still needs a visual design for custom point-size polygon buckets.

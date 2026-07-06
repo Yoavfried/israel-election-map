@@ -93,11 +93,11 @@ Direct address-source summary:
 | K21 | 2019 Apr | Generic official polling-place table | 90.09% | 567,589 (13.08%) |
 | K20 | 2015 | Generic official polling-place table | 94.14% | 362,617 (8.52%) |
 | K19 | 2013 | Generic official polling-place table | 96.42% | 260,957 (6.81%) |
-| K18 | 2009 | Generic official polling-place table | 99.60% | 201,065 (5.88%) |
+| K18 | 2009 | Official scanned polling-place PDF extraction | 99.99% | 186,919 (5.47%) |
 | K17 | 2006 | Address field in official result file | 98.05% | 179,177 (5.62%) |
 | K16 | 2003 | Generic official polling-place table | 97.31% | 182,385 (5.70%) |
 
-For K22-K25, every ordinary row has a direct address match. K17 has 15 ordinary rows with an empty address field. K16 and K18-K21 use generic-table fallback matching and remain lower confidence until election-specific address files are recovered.
+For K22-K25 and K18, every ordinary row has a direct address match. K17 has 15 ordinary rows with an empty address field. K16 and K19-K21 use generic-table fallback matching and remain lower confidence until election-specific address files are recovered.
 
 ## Reviewed Assignment Coverage
 
@@ -112,7 +112,7 @@ After applying the reviewed locality crosswalk, custom buckets, and the FileGDB-
 | K21 | 762 | 103 | 6 | 653 | 287,550 |
 | K20 | 317 | 39 | 5 | 273 | 116,744 |
 | K19 | 136 | 16 | 1 | 119 | 42,261 |
-| K18 | 36 | 0 | 0 | 36 | 14,146 |
+| K18 | 0 | 0 | 0 | 0 | 0 |
 | K17 | 15 | 4 | 0 | 11 | 3,603 |
 | K16 | 63 | 3 | 4 | 56 | 21,938 |
 
@@ -231,7 +231,7 @@ Candidate stack:
 
 ## Open Questions
 
-1. Can usable election-specific polling-place address files be recovered for K16 and K18-K21?
+1. Can usable election-specific polling-place address files be recovered for K16 and K19-K21?
 2. Which geocoder should be used for polling-place addresses, and can we cache/review results legally and reproducibly?
 3. What official or reliable locality polygon source should be used?
 4. Are pre-2003 locality-level results available from an official archive outside the inspected open-data package?

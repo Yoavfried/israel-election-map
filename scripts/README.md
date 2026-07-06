@@ -12,4 +12,4 @@ Planned scripts:
 
 Current prototypes:
 
-- `extract_k18_polling_places.py` extracts the scanned/OCRed K18 polling-place PDF into CSV and can validate extracted locality/kalpi keys against the official K18 result datastore. It requires Python with `pdfplumber`.
+- `extract_k18_polling_places.py` extracts the scanned/OCRed K18 polling-place PDF into a raw table CSV, then reconciles it to the official K18 result datastore. `--validate` currently matches all 9,263 ordinary official K18 result rows and leaves only the special non-geographic row unmapped. It requires Python with `pdfplumber`.
