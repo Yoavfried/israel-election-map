@@ -17,6 +17,11 @@ Review table:
 - `docs/LOCALITY_CROSSWALK_APPROVAL_TABLE.md`
 - `docs/LOCALITY_CROSSWALK_APPROVAL_TABLE.csv`
 
+Resolution plan:
+
+- `docs/LOCALITY_CROSSWALK_RESOLUTION_PLAN.md`
+- `docs/LOCALITY_CROSSWALK_RESOLUTION_PLAN.csv`
+
 ## Summary
 
 - Unique unmatched locality identities: 155

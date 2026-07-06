@@ -164,6 +164,11 @@ Current review artifact:
 - `docs/LOCALITY_CROSSWALK_APPROVAL_TABLE.md`
 - `docs/LOCALITY_CROSSWALK_APPROVAL_TABLE.csv`
 
+Current resolution artifact:
+
+- `docs/LOCALITY_CROSSWALK_RESOLUTION_PLAN.md`
+- `docs/LOCALITY_CROSSWALK_RESOLUTION_PLAN.csv`
+
 Minimum crosswalk fields:
 
 - election
