@@ -159,6 +159,11 @@ Localities can change between elections: names change, codes change, localities 
 
 The pipeline needs a reviewed locality crosswalk rather than relying only on exact string matching.
 
+Current review artifact:
+
+- `docs/LOCALITY_CROSSWALK_APPROVAL_TABLE.md`
+- `docs/LOCALITY_CROSSWALK_APPROVAL_TABLE.csv`
+
 Minimum crosswalk fields:
 
 - election

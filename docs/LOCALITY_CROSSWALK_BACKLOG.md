@@ -12,6 +12,11 @@ Tracked CSV:
 
 - `docs/LOCALITY_CROSSWALK_BACKLOG.csv`
 
+Review table:
+
+- `docs/LOCALITY_CROSSWALK_APPROVAL_TABLE.md`
+- `docs/LOCALITY_CROSSWALK_APPROVAL_TABLE.csv`
+
 ## Summary
 
 - Unique unmatched locality identities: 155
