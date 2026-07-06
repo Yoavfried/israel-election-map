@@ -1,6 +1,6 @@
 # Polling-Place Address Coverage
 
-Last updated: 2026-07-05
+Last updated: 2026-07-06
 
 ## Purpose
 
@@ -108,26 +108,38 @@ The FileGDB-derived 2022 statistical-area layer has:
 | Locality codes with exactly one `STAT_2022` | 1,139 |
 | Locality codes with multiple `STAT_2022` values | 144 |
 
-If an ordinary row without a direct address belongs to a matched locality with exactly one 2022 statistical area, it can still be assigned to statistical-area mode without geocoding.
+If a row belongs to a reviewed 2022 locality with exactly one statistical area, it can be assigned to statistical-area mode without geocoding.
 
 This shortcut should be applied before geocoding. If a row's locality has exactly one 2022 statistical area, geocoding its polling-place address cannot change the statistical-area assignment.
 
-| Election | Ordinary rows without direct address | Assignable by single-stat locality | Still unresolved rows | Still unresolved eligible voters | Still unresolved actual voters |
-|---|---:|---:|---:|---:|---:|
-| K25 | 0 | 0 | 0 | 0 | 0 |
-| K24 | 0 | 0 | 0 | 0 | 0 |
-| K23 | 0 | 0 | 0 | 0 | 0 |
-| K22 | 0 | 0 | 0 | 0 | 0 |
-| K21 | 762 | 102 | 660 | 412,944 | 288,511 |
-| K20 | 317 | 38 | 279 | 161,215 | 117,778 |
-| K19 | 136 | 16 | 120 | 61,674 | 42,370 |
-| K18 | 36 | 10 | 26 | 17,089 | 11,189 |
-| K17 | 15 | 2 | 13 | Not available | 4,348 |
-| K16 | 63 | 1 | 62 | 32,122 | 23,549 |
+Full reviewed assignment outputs:
 
-## K17 Ordinary Rows Without Address
+- `docs/STATISTICAL_AREA_ASSIGNMENT_COVERAGE.md`
+- `docs/LOCALITY_SINGLE_STAT_ASSIGNMENTS.csv`
+- `docs/STATISTICAL_AREA_ASSIGNMENT_COVERAGE.csv`
+- `docs/ADDRESSLESS_ROWS_AFTER_REVIEWED_ASSIGNMENT.csv`
 
-K17 has 15 ordinary rows with an empty address field.
+After applying the reviewed locality resolution plan, the remaining non-envelope address gap is:
+
+| Election | Non-envelope rows without direct address | Assigned by single-stat | Assigned by custom/composite | Still missing address rows | Still missing eligible voters | Still missing actual voters |
+|---|---:|---:|---:|---:|---:|---:|
+| K25 | 0 | 0 | 0 | 0 | 0 | 0 |
+| K24 | 0 | 0 | 0 | 0 | 0 | 0 |
+| K23 | 0 | 0 | 0 | 0 | 0 | 0 |
+| K22 | 0 | 0 | 0 | 0 | 0 | 0 |
+| K21 | 762 | 103 | 6 | 653 | 409,279 | 287,550 |
+| K20 | 317 | 39 | 5 | 273 | 157,603 | 116,744 |
+| K19 | 136 | 16 | 1 | 119 | 60,951 | 42,261 |
+| K18 | 36 | 0 | 34 | 2 | 1,287 | 952 |
+| K17 | 15 | 4 | 0 | 11 | Not available | 3,603 |
+| K16 | 63 | 3 | 4 | 56 | 30,028 | 21,938 |
+
+## K17 Non-Envelope Rows Without Address
+
+K17 has 15 non-envelope rows with an empty address field. After the reviewed locality resolution:
+
+- 4 rows are assignable without geocoding: `ניצן`, `אום בטין`, and two `בית אריה` rows.
+- 11 rows remain unresolved because they are in multi-stat localities and have no address.
 
 | Locality | Kalpi | 2022 stat-area status | Voters | Valid | Invalid |
 |---|---:|---|---:|---:|---:|
@@ -144,14 +156,14 @@ K17 has 15 ordinary rows with an empty address field.
 | טייבה | 290 | Matched locality with 8 statistical areas; needs address/geocode, but address is missing | 301 | 297 | 4 |
 | טייבה | 300 | Matched locality with 8 statistical areas; needs address/geocode, but address is missing | 313 | 311 | 2 |
 | טייבה | 310 | Matched locality with 8 statistical areas; needs address/geocode, but address is missing | 343 | 341 | 2 |
-| בית אריה | 10 | Likely alias for `בית אריה-עופרים`, code 3652, single-stat; requires reviewed crosswalk before assignment | 375 | 375 | 0 |
-| בית אריה | 30 | Likely alias for `בית אריה-עופרים`, code 3652, single-stat; requires reviewed crosswalk before assignment | 370 | 367 | 3 |
+| בית אריה | 10 | Reviewed alias for `בית אריה-עופרים`, code 3652, single-stat; assignable by locality | 375 | 375 | 0 |
+| בית אריה | 30 | Reviewed alias for `בית אריה-עופרים`, code 3652, single-stat; assignable by locality | 370 | 367 | 3 |
 
 ## Geocoding Scope
 
 Geocoding is only needed where:
 
-- the row is an ordinary row,
+- the row is not an official envelope or reviewed non-geographic special row,
 - the row can be linked to a polling-place address,
 - the matched 2022 locality has multiple statistical areas.
 
@@ -160,8 +172,11 @@ Rows already assignable by the single-stat locality shortcut should not be geoco
 Row-level assignment should store one method:
 
 - `single_stat_locality`
-- `direct_address_geocode`
-- `reviewed_crosswalk_single_stat`
+- `direct_address_geocode_needed`
+- `custom_point_size_polygon`
+- `composite_current_locality_union`
+- `special_non_geographic`
+- `official_envelope`
 - `unresolved`
 
 ## Locality History
@@ -183,7 +198,8 @@ Rules:
 
 - Exact current locality-code matches can be automated.
 - Historical aliases, spelling changes, merges, and splits must be reviewed and recorded.
-- A split locality should stay unresolved unless the old locality can be mapped to one 2022 statistical area without ambiguity.
+- Reviewed split localities are represented as composite current-locality unions. Do not split their votes across child localities.
+- Reviewed custom buckets (`TRIBE`, `GAZA`, `N.S.`, `HEBRON`) are assigned to synthetic point-size polygon geographies and preserve source-row contributions.
 - A merge can use the single-stat shortcut only if the merged 2022 target has exactly one statistical area, or if a reviewed rule assigns the old locality unambiguously.
 
 ## Current Blockers
@@ -191,4 +207,4 @@ Rules:
 - Recovering true election-specific polling-place files for K16 and K18-K21 would materially improve confidence.
 - A geocoding provider and cache/review policy is still needed.
 - Locality polygons still need an official or reliable source.
-- Historical locality aliases, splits, and merges need a reviewed crosswalk before they are used in the production pipeline.
+- The frontend still needs a visual design for custom point-size polygon buckets.

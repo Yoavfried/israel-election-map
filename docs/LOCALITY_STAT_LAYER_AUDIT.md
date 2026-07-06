@@ -1,12 +1,17 @@
 # Locality to 2022 Statistical-Area Layer Audit
 
-Last updated: 2026-07-05
+Last updated: 2026-07-06
 
 ## Purpose
 
 This note audits whether election localities from K16-K25 can be found in the current 2022 statistical-area polygon source:
 
 - `data/raw/ezorim_statistiim_2022.gdb`
+
+This is the strict automatic baseline. Production assignment now applies the reviewed locality resolution plan on top of this baseline:
+
+- `docs/LOCALITY_CROSSWALK_RESOLUTION_PLAN.md`
+- `docs/STATISTICAL_AREA_ASSIGNMENT_COVERAGE.md`
 
 This matters because the statistical-area pipeline needs to know whether each election locality maps to:
 
@@ -78,20 +83,20 @@ Interpretation:
 
 ## K17 Addressless Rows
 
-The K17 result file has 15 ordinary rows with an empty address field. Against the FileGDB-derived 2022 layer:
+The K17 result file has 15 non-envelope rows with an empty address field. Against the FileGDB-derived 2022 layer plus the reviewed locality resolution:
 
 - 2 rows are assignable by the single-stat locality shortcut: `ניצן` and `אום בטין`.
 - 11 rows are in matched multi-stat localities: `ערערה-בנגב` has 3 statistical areas and `טייבה` has 8.
-- 2 rows are `בית אריה`, which is a likely historical/name alias for `בית אריה-עופרים` code 3652, a single-stat locality. Do not apply that automatically until the crosswalk records it.
+- 2 rows are `בית אריה`, now reviewed as an alias for `בית אריה-עופרים` code 3652, a single-stat locality.
 
 ## Consequences
 
 1. Use the FileGDB as the canonical 2022 statistical-area source.
 2. Do not use the old partial GeoJSON for coverage calculations.
-3. Apply the single-stat locality shortcut before geocoding.
-4. Geocode polling-place addresses only for rows in matched multi-stat localities.
-5. Build a reviewed election-to-2022 locality crosswalk for historical spelling, name, split, merge, and retired-locality cases.
-6. Store assignment provenance so the UI can distinguish exact-code, exact-name, reviewed-crosswalk, geocoded, and unresolved records.
+3. Apply the reviewed locality resolution plan before deciding whether a row needs geocoding.
+4. Apply the single-stat locality shortcut before geocoding.
+5. Geocode polling-place addresses only for rows in matched multi-stat localities that are not covered by custom/composite/non-geographic rules.
+6. Store assignment provenance so the UI can distinguish exact-code, exact-name, reviewed-crosswalk, custom/composite, geocoded, non-geographic, and unresolved records.
 
 ## Generated Audit Files
 

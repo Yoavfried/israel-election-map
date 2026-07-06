@@ -1,6 +1,6 @@
 # Data Sources
 
-Last updated: 2026-07-05
+Last updated: 2026-07-06
 
 ## Election Results
 
@@ -61,6 +61,8 @@ Previous local source:
 Detailed audit:
 
 - `docs/LOCALITY_STAT_LAYER_AUDIT.md`
+- `docs/STATISTICAL_AREA_ASSIGNMENT_COVERAGE.md`
+- `docs/LOCALITY_SINGLE_STAT_ASSIGNMENTS.csv`
 
 Older official CBS statistical-area polygon layer from the 2008 census:
 

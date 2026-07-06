@@ -22,6 +22,11 @@ Resolution plan:
 - `docs/LOCALITY_CROSSWALK_RESOLUTION_PLAN.md`
 - `docs/LOCALITY_CROSSWALK_RESOLUTION_PLAN.csv`
 
+Reviewed assignment coverage:
+
+- `docs/STATISTICAL_AREA_ASSIGNMENT_COVERAGE.md`
+- `docs/LOCALITY_SINGLE_STAT_ASSIGNMENTS.csv`
+
 ## Summary
 
 - Unique unmatched locality identities: 155
