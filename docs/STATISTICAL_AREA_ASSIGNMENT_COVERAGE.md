@@ -19,6 +19,11 @@ Full CSV outputs:
 - `docs/STATISTICAL_AREA_ASSIGNMENT_COVERAGE.csv`
 - `docs/ADDRESSLESS_ROWS_AFTER_REVIEWED_ASSIGNMENT.csv`
 
+2026-07-06 source update:
+
+- New K18 scanned polling-place PDF extraction is viable but not yet integrated into the generated coverage tables below. The current K18 rows are still the pre-PDF generic-fallback baseline.
+- New K17 scanned polling-place PDFs recover polling-place names for the 11 remaining multi-stat rows. Those rows still need geocoding/review because the scan address column is `0`, not a street address.
+
 The full single-stat mapping has 2,166 source locality identities from K16-K25 that resolve to exactly one 2022 statistical area.
 
 | Match method | Source locality identities |
@@ -72,6 +77,6 @@ This table excludes official envelope rows. `Still missing address` means the ro
 
 - K22-K25 have no remaining non-envelope address gap after reviewed assignment.
 - K21, K20, K19, and K16 still depend on the generic polling-place fallback, so their unresolved rows are mostly multi-stat localities where a direct historical address is still needed.
-- K18 no longer assigns addressless historical split rows by joined polygons. Those rows require address-level placement, so 36 rows / 14,146 actual voters remain unresolved until better addresses are recovered.
-- K17 improves after the reviewed crosswalk: `ניצן`, `אום בטין`, and two `בית אריה` rows are assignable without geocoding; 11 multi-stat rows remain unresolved.
+- K18 no longer assigns addressless historical split rows by joined polygons. The newly added K18 scanned polling-place PDF should replace the generic fallback after the extraction script is finalized and reviewed.
+- K17 improves after the reviewed crosswalk: `ניצן`, `אום בטין`, and two `בית אריה` rows are assignable without geocoding. The 11 remaining multi-stat rows now have recovered polling-place names from the K17 scans, but still need geocoding/review.
 - Custom point-size polygon buckets are data-assigned now. Their visual treatment is a frontend design decision for later.

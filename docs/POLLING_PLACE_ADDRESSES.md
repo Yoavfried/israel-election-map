@@ -27,8 +27,8 @@ This is intentionally approximate. It maps the polling-place building, not each 
 | K21 / 2019 Apr | Generic official `voting-polls` table | Fallback only; not election-specific |
 | K20 / 2015 | Generic official `voting-polls` table | Fallback only; not election-specific |
 | K19 / 2013 | Generic official `voting-polls` table | Fallback only; not election-specific |
-| K18 / 2009 | Generic official `voting-polls` table | Fallback only; not election-specific |
-| K17 / 2006 | Address field inside official ballot-result file | Election-specific; high confidence for addressed rows |
+| K18 / 2009 | `data/raw/archive_knesset18_kalpilist18.pdf` | Election-specific scanned list with embedded OCR text layer; extraction prototype is viable |
+| K17 / 2006 | Address field inside official ballot-result file plus `data/raw/archive_knesset17_kalpies-list17-*.pdf` | Election-specific; high confidence for addressed rows, targeted scan extraction recovered place names for the 11 remaining multi-stat rows |
 | K16 / 2003 | Generic official `voting-polls` table | Fallback only; not election-specific |
 
 Official election results package:
@@ -60,6 +60,13 @@ Normalization:
 
 This measures whether a ballot-result row can be associated with an address-like polling-place record. It does not prove historical exactness when the generic table is used.
 
+K18 update, 2026-07-06:
+
+- The newly added `archive_knesset18_kalpilist18.pdf` is an election-specific polling-place list.
+- It is scanned, but it has an embedded OCR text layer with usable word coordinates.
+- A coordinate-based prototype extracted 9,466 rows and matched 9,081 / 9,264 official K18 result keys (98.0%) before final cleanup.
+- The K18 coverage rows below still reflect the earlier generic fallback baseline. They should be regenerated after the K18 extraction script is finalized and reviewed.
+
 ## Direct Address Coverage
 
 | Election | Year | Address source | Poll rows | Rows with direct address | Rows without direct address | Poll coverage | Eligible voters without direct address | Actual voters without direct address |
@@ -71,7 +78,7 @@ This measures whether a ballot-result row can be associated with an address-like
 | K21 | 2019 Apr | Generic official polling-place table | 10,765 | 9,698 | 1,067 | 90.09% | 467,046 (7.37%) | 567,589 (13.08%) |
 | K20 | 2015 | Generic official polling-place table | 10,414 | 9,804 | 610 | 94.14% | 176,373 (3.00%) | 362,617 (8.52%) |
 | K19 | 2013 | Generic official polling-place table | 10,109 | 9,747 | 362 | 96.42% | 68,407 (1.21%) | 260,957 (6.81%) |
-| K18 | 2009 | Generic official polling-place table | 9,264 | 9,227 | 37 | 99.60% | 210,419 (3.85%) | 201,065 (5.88%) |
+| K18 | 2009 | Generic official polling-place table, pre-PDF baseline | 9,264 | 9,227 | 37 | 99.60% | 210,419 (3.85%) | 201,065 (5.88%) |
 | K17 | 2006 | Address field in official result file | 8,426 | 8,262 | 164 | 98.05% | Not available | 179,177 (5.62%) |
 | K16 | 2003 | Generic official polling-place table | 7,886 | 7,674 | 212 | 97.31% | 191,007 (3.92%) | 182,385 (5.70%) |
 
@@ -139,25 +146,39 @@ After applying the reviewed locality resolution plan, the remaining non-envelope
 K17 has 15 non-envelope rows with an empty address field. After the reviewed locality resolution:
 
 - 4 rows are assignable without geocoding: `ניצן`, `אום בטין`, and two `בית אריה` rows.
-- 11 rows remain unresolved because they are in multi-stat localities and have no address.
+- The 11 remaining rows are in multi-stat localities, so locality-only assignment is not enough.
+- The newly added K17 scanned polling-place lists locate those 11 rows and provide polling-place names. Their scanned address column is still `0`, so these should be geocoded as `polling-place name + locality` and manually reviewed.
+
+Single-stat rows:
 
 | Locality | Kalpi | 2022 stat-area status | Voters | Valid | Invalid |
 |---|---:|---|---:|---:|---:|
 | ניצן | 20 | Single-stat locality; assignable by locality | 228 | 226 | 2 |
 | אום בטין | 10 | Single-stat locality; assignable by locality | 117 | 114 | 3 |
-| ערערה-בנגב | 50 | Matched locality with 3 statistical areas; needs address/geocode, but address is missing | 186 | 180 | 6 |
-| ערערה-בנגב | 9900 | Matched locality with 3 statistical areas; needs address/geocode, but address is missing | 175 | 169 | 6 |
-| טייבה | 110 | Matched locality with 8 statistical areas; needs address/geocode, but address is missing | 353 | 346 | 7 |
-| טייבה | 150 | Matched locality with 8 statistical areas; needs address/geocode, but address is missing | 404 | 399 | 5 |
-| טייבה | 250 | Matched locality with 8 statistical areas; needs address/geocode, but address is missing | 432 | 426 | 6 |
-| טייבה | 260 | Matched locality with 8 statistical areas; needs address/geocode, but address is missing | 360 | 353 | 7 |
-| טייבה | 270 | Matched locality with 8 statistical areas; needs address/geocode, but address is missing | 414 | 414 | 0 |
-| טייבה | 280 | Matched locality with 8 statistical areas; needs address/geocode, but address is missing | 322 | 319 | 3 |
-| טייבה | 290 | Matched locality with 8 statistical areas; needs address/geocode, but address is missing | 301 | 297 | 4 |
-| טייבה | 300 | Matched locality with 8 statistical areas; needs address/geocode, but address is missing | 313 | 311 | 2 |
-| טייבה | 310 | Matched locality with 8 statistical areas; needs address/geocode, but address is missing | 343 | 341 | 2 |
 | בית אריה | 10 | Reviewed alias for `בית אריה-עופרים`, code 3652, single-stat; assignable by locality | 375 | 375 | 0 |
 | בית אריה | 30 | Reviewed alias for `בית אריה-עופרים`, code 3652, single-stat; assignable by locality | 370 | 367 | 3 |
+
+Rows recovered from the K17 scans:
+
+| Locality | Result kalpi | PDF source | PDF kalpi | Scanned address column | Polling-place name | Voters | Valid | Invalid |
+|---|---:|---|---|---|---|---:|---:|---:|
+| ערערה-בנגב | 50 | part 2 page 133 | `005-0` | `0` | `בי"ס אבן סינא` | 186 | 180 | 6 |
+| ערערה-בנגב | 9900 | part 2 page 133 | `990-0` | `0` | `בי"ס אבן סינא` | 175 | 169 | 6 |
+| טייבה | 110 | part 1 page 123 | `011-0` | `0` | `בי"ס אבן-סינא ב'` | 353 | 346 | 7 |
+| טייבה | 150 | part 1 page 123 | `015-0` | `0` | `בי"ס אבן-סינא ב'` | 404 | 399 | 5 |
+| טייבה | 250 | part 1 page 123 | `025-0` | `0` | `בי"ס חט"ב אל-סלאם` | 432 | 426 | 6 |
+| טייבה | 260 | part 1 page 123 | `026-0` | `0` | `בי"ס חט"ב אל-סלאם` | 360 | 353 | 7 |
+| טייבה | 270 | part 1 page 123 | `027-0` | `0` | `בי"ס חט"ב אל-סלאם` | 414 | 414 | 0 |
+| טייבה | 280 | part 1 page 123 | `028-0` | `0` | `בי"ס אבן-סינא ב'` | 322 | 319 | 3 |
+| טייבה | 290 | part 1 page 123 | `029-0` | `0` | `בי"ס אבן-סינא ב'` | 301 | 297 | 4 |
+| טייבה | 300 | part 1 page 123 | `030-0` | `0` | `בי"ס אל-חכמה` | 313 | 311 | 2 |
+| טייבה | 310 | part 1 page 123 | `031-0` | `0` | `בי"ס אל-חכמה` | 343 | 341 | 2 |
+
+Sanity checks:
+
+- K17 PDF kalpi notation maps `011-0` to result kalpi `110`, `015-0` to `150`, and `990-0` to `9900`.
+- The surrounding rows on the same pages align with the official result locality and kalpi sequences.
+- These rows are no longer unknown polling places, but they still need geocoding/review because the scan does not provide street-level addresses.
 
 ## Geocoding Scope
 
@@ -204,7 +225,8 @@ Rules:
 
 ## Current Blockers
 
-- Recovering true election-specific polling-place files for K16 and K18-K21 would materially improve confidence.
+- Recovering true election-specific polling-place files for K16 and K19-K21 would materially improve confidence.
+- Finalizing and reviewing the K18 PDF extraction is now the next step for replacing the generic K18 fallback.
 - A geocoding provider and cache/review policy is still needed.
 - Locality polygons still need an official or reliable source.
 - The frontend still needs a visual design for custom point-size polygon buckets.

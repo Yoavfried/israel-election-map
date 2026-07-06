@@ -99,8 +99,8 @@ Address sources currently available:
 | K21 / 2019 Apr | Generic official `voting-polls` table | Medium; not election-specific |
 | K20 / 2015 | Generic official `voting-polls` table | Medium; not election-specific |
 | K19 / 2013 | Generic official `voting-polls` table | Medium; not election-specific |
-| K18 / 2009 | Generic official `voting-polls` table | Medium; not election-specific |
-| K17 / 2006 | Address field inside official ballot-result file | High for addressed rows |
+| K18 / 2009 | `data/raw/archive_knesset18_kalpilist18.pdf` | High-potential election-specific source; embedded OCR text layer, extraction prototype reached 98.0% key coverage before manual cleanup |
+| K17 / 2006 | Address field inside official ballot-result file plus `data/raw/archive_knesset17_kalpies-list17-*.pdf` | High for addressed rows; targeted scan review recovered polling-place names for the 11 remaining multi-stat rows |
 | K16 / 2003 | Generic official `voting-polls` table | Medium; not election-specific |
 
 Generic official polling-place datastore resource:
@@ -108,6 +108,19 @@ Generic official polling-place datastore resource:
 https://data.gov.il/api/3/action/datastore_search?resource_id=68c4d7e8-2218-48ee-996f-2db2f72b2395
 
 Observed generic-table fields include locality code, kalpi code, street, house number, polling-place description, regional committee, and district. It has no coordinates and no polygons.
+
+New scanned/PDF sources added on 2026-07-06:
+
+| Election | Raw file | Extraction status |
+|---|---|---|
+| K18 / 2009 | `data/raw/archive_knesset18_kalpilist18.pdf` | 304-page official polling-place list. It is scanned, but has an embedded OCR text layer with word coordinates. A coordinate-based prototype extracted 9,466 rows and matched 9,081 / 9,264 official result keys (98.0%) before final cleanup. Remaining misses are mostly OCR cleanup cases, not missing source coverage. |
+| K17 / 2006 | `data/raw/archive_knesset17_kalpies-list17-1.pdf`, `data/raw/archive_knesset17_kalpies-list17-2.pdf` | Image-only scans. Full OCR is not available locally yet, but targeted visual extraction is practical. The 11 previously unresolved multi-stat rows were located in the scans and have polling-place names, although their address column is `0` rather than a street address. |
+
+Reproducible K18 prototype:
+
+```bash
+python scripts/extract_k18_polling_places.py --validate
+```
 
 ## K23 Statistical Area Field
 
