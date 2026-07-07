@@ -31,5 +31,8 @@ Dependency note:
 
 Known current input gap:
 
-- K22-K24 election-specific polling-place address files are not currently present under `data/raw`, so their geocoding-input rows are marked `missing_address_source`.
 - `data/processed/geocoding/geocoded_points.csv` does not exist yet, so final outputs are partial until reviewed coordinates are added.
+
+Source guardrail:
+
+- `normalize_polling_places.py` fails by default if any required K17-K25 polling-place source is missing. Use `--allow-missing` only for research/debug runs where partial coverage is intentional.

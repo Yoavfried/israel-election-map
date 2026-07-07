@@ -25,9 +25,9 @@ Current product scope is K17-K25. K16 / 2003 is deferred until a usable election
 | Election | Address source | Current status |
 |---|---|---|
 | K25 / 2022 | Official K25 polling-place XLSX in `data/raw` | Election-specific; high confidence |
-| K24 / 2021 | Not currently present in `data/raw` | Blocked until election-specific file is recovered |
-| K23 / 2020 | Not currently present in `data/raw` | Blocked until election-specific file is recovered |
-| K22 / 2019 Sep | Not currently present in `data/raw` | Blocked until election-specific file is recovered |
+| K24 / 2021 | `data/raw/archive_knesset24_kalpies_report_tofes_b_18_3_21.xlsx` | Election-specific archived official XLSX; high confidence |
+| K23 / 2020 | `data/raw/archive_knesset23_kalpies_report_19_1_20_1.xlsx` | Election-specific archived official XLSX; high confidence; includes AGS metadata |
+| K22 / 2019 Sep | `data/raw/archive_knesset22_kalpies_report_tofes_b_6th_edition_15_9.xlsx` | Election-specific archived official XLSX; high confidence |
 | K21 / 2019 Apr | Archived official K21 polling-place XLS | Election-specific; high confidence |
 | K20 / 2015 | `data/raw/archive_knesset20_tell_the_polls_9_3.xls` | Election-specific archived official XLS; high confidence |
 | K19 / 2013 | `data/raw/archive_knesset19_all_stations.pdf` | Election-specific archived official Excel-generated PDF; high confidence after parser cleanup |
@@ -89,6 +89,55 @@ Reconciliation:
 - Ordinary geographic rows without address: 0.
 - Match by locality code + kalpi number. Do not require eligible-voter equality; 226 matched rows have eligibility-count mismatches between the source PDF and the final result rows.
 
+### K24 / 2021
+
+Primary source:
+
+https://web.archive.org/web/20211106033352id_/https://bechirot24.bechirot.gov.il/election/Kneset24/Documents/%D7%9B%D7%A0%D7%A1%D7%AA%2024/kalpies_report_tofes_b_18.3.21.xlsx
+
+Local raw file:
+
+- `data/raw/archive_knesset24_kalpies_report_tofes_b_18_3_21.xlsx`
+
+Reconciliation:
+
+- Source polling-place rows: 12,127.
+- Rows with address: 12,127.
+- Geocode-needed rows linked to ready address strings: 10,195.
+
+### K23 / 2020
+
+Primary source:
+
+https://web.archive.org/web/20210119095351id_/https://bechirot23.bechirot.gov.il/election/Kneset20/Documents/%D7%9B%D7%A0%D7%A1%D7%AA%2023/kalpies_report_19_1_20_1.xlsx
+
+Local raw file:
+
+- `data/raw/archive_knesset23_kalpies_report_19_1_20_1.xlsx`
+
+Reconciliation:
+
+- Source polling-place rows: 10,631.
+- Rows with address: 10,631.
+- Rows with AGS source metadata: 8,031.
+- Geocode-needed rows linked to ready address strings: 8,967.
+
+### K22 / 2019 Sep
+
+Primary source:
+
+https://web.archive.org/web/20191113005230id_/https://bechirot22.bechirot.gov.il/election/Kneset20/Documents/%D7%9B%D7%A0%D7%A1%D7%AA%2022/kalpies_report_tofes_b_6th_edition_15_9.xlsx
+
+Local raw file:
+
+- `data/raw/archive_knesset22_kalpies_report_tofes_b_6th_edition_15_9.xlsx`
+
+Reconciliation:
+
+- Source polling-place rows: 10,543.
+- Rows with address: 10,543.
+- Geocode-needed rows linked to ready address strings: 8,881.
+
 ### K21 / 2019 Apr
 
 Primary source:
@@ -121,16 +170,16 @@ This table reflects the address sources currently present under `data/raw` and p
 | Election | Source rows | Rows with street address | Place-only rows | Missing election-specific source |
 |---|---:|---:|---:|---|
 | K25 | 11,547 | 11,540 | 2 | No |
-| K24 | 0 | 0 | 0 | Yes |
-| K23 | 0 | 0 | 0 | Yes |
-| K22 | 0 | 0 | 0 | Yes |
+| K24 | 12,127 | 12,127 | 0 | No |
+| K23 | 10,631 | 10,631 | 0 | No |
+| K22 | 10,543 | 10,543 | 0 | No |
 | K21 | 10,459 | 10,459 | 0 | No |
 | K20 | 10,464 | 10,464 | 0 | No |
 | K19 | 10,239 | 10,233 | 6 | No |
 | K18 | 9,263 | 9,248 | 15 | No |
 | K17 | 8,262 | 8,262 | 0 | No |
 
-K22-K24 are not treated as address-covered in the current pipeline. Older investigation notes that assumed local K22-K24 address files existed are superseded by the current generated `missing_address_sources.csv` output.
+K22-K24 address reports were recovered in an earlier research pass, then were stranded in the old Codex scratch folder during project-folder reorganization. They are now copied into `data/raw` and parsed by the pipeline.
 
 ## Geocoding Input Readiness
 
@@ -139,9 +188,9 @@ This table covers only rows that need address-level point-in-polygon assignment 
 | Election | Ready address rows | Place-only rows | Missing address rows | Missing-address actual voters |
 |---|---:|---:|---:|---:|
 | K25 | 9,834 | 0 | 0 | 0 |
-| K24 | 0 | 0 | 10,195 | 3,433,896 |
-| K23 | 0 | 0 | 8,967 | 3,680,687 |
-| K22 | 0 | 0 | 8,881 | 3,590,594 |
+| K24 | 10,195 | 0 | 0 | 0 |
+| K23 | 8,967 | 0 | 0 | 0 |
+| K22 | 8,881 | 0 | 0 | 0 |
 | K21 | 8,808 | 0 | 0 | 0 |
 | K20 | 8,519 | 0 | 0 | 0 |
 | K19 | 8,309 | 6 | 0 | 0 |
@@ -150,10 +199,9 @@ This table covers only rows that need address-level point-in-polygon assignment 
 
 Interpretation:
 
-- K25, K21, and K20 have ready address strings for all rows that need geocoding.
+- K22-K25 and K20-K21 have ready address strings for all rows that need geocoding.
 - K19 and K18 have a small number of place-only rows that need manual/reviewed geocoding.
 - K17 has 11 multi-stat rows without a usable street address.
-- K22-K24 need election-specific address files before their multi-stat rows can be geocoded.
 
 ## K17 Remaining Rows
 
@@ -232,7 +280,6 @@ Rules:
 
 ## Current Blockers
 
-- Recovering election-specific K22-K24 polling-place address files.
 - Geocoding/reviewing the 11 K17 place-name-only rows.
 - Building and reviewing the geocoding cache for addressed K17-K25 multi-stat localities.
 - Designing custom point-size polygon buckets in the frontend.

@@ -20,7 +20,7 @@ Kalpi-level results are part of the source data, but the project will not presen
 - Preserve raw source data and generated/normalized data separately.
 - Keep source metadata, assignment method, and mapped/unmapped coverage visible in the product.
 
-Current K17-K25 statistical-area status: row assignment is classified for every result row, but address-level geocoding is still pending. K22-K24 currently lack election-specific polling-place address files in `data/raw`; K17 has 11 multi-stat rows without a usable street address.
+Current K17-K25 statistical-area status: row assignment is classified for every result row, but address-level geocoding is still pending. K22-K25 and K20-K21 have ready address strings for rows that need geocoding; K17 has 11 multi-stat rows without a usable street address.
 
 Current core docs:
 

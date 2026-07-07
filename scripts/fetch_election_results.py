@@ -7,12 +7,13 @@ import sys
 import urllib.request
 from urllib.parse import urlencode
 
-from pipeline_common import ELECTIONS, PROCESSED_DIR, RAW_DIR, ensure_dir, safe_filename, write_csv, write_json
+from pipeline_common import ELECTIONS, PROCESSED_DIR, RAW_DIR, ensure_dir, read_json, safe_filename, write_csv, write_json
 
 
 PACKAGE_URL = "https://data.gov.il/api/3/action/package_show?id=26f9fa06-fcd7-4173-8df5-65797b63e857"
 DATASTORE_URL = "https://data.gov.il/api/3/action/datastore_search"
 USER_AGENT = "Mozilla/5.0 israel-election-map data pipeline"
+MANIFEST_JSON = PROCESSED_DIR / "manifest" / "election_result_resources.json"
 
 
 def fetch_json(url: str) -> dict:
@@ -60,12 +61,31 @@ def download_datastore(resource_id: str, out_path: Path, overwrite: bool) -> tup
     return "datastore_downloaded", len(records)
 
 
+def cached_manifest_rows() -> list[dict]:
+    if not MANIFEST_JSON.exists():
+        return []
+    rows = read_json(MANIFEST_JSON)
+    for row in rows:
+        local_path = RAW_DIR.parent / row["local_path"]
+        if not local_path.exists():
+            return []
+    return rows
+
+
 def main() -> None:
     sys.stdout.reconfigure(encoding="utf-8")
     parser = argparse.ArgumentParser()
     parser.add_argument("--overwrite", action="store_true")
     parser.add_argument("--metadata-only", action="store_true")
     args = parser.parse_args()
+
+    if not args.overwrite and not args.metadata_only:
+        rows = cached_manifest_rows()
+        if rows:
+            print(f"resources={len(rows)}")
+            for row in rows:
+                print(f"{row['election']}: cached_manifest rows={row['row_count']} -> {row['local_path']}")
+            return
 
     package = fetch_json(PACKAGE_URL)
     resources = package["result"]["resources"]

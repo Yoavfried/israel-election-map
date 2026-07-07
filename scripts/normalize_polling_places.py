@@ -18,6 +18,9 @@ HEBREW_RE = re.compile(r"[\u0590-\u05ff]")
 
 ADDRESS_SOURCES = {
     "K25": RAW_DIR / "election-25_kalpi-places_kalpies_list_10_7_nagish.xlsx",
+    "K24": RAW_DIR / "archive_knesset24_kalpies_report_tofes_b_18_3_21.xlsx",
+    "K23": RAW_DIR / "archive_knesset23_kalpies_report_19_1_20_1.xlsx",
+    "K22": RAW_DIR / "archive_knesset22_kalpies_report_tofes_b_6th_edition_15_9.xlsx",
     "K21": RAW_DIR / "archive_knesset21_kalpies_full_report.xls",
     "K20": RAW_DIR / "archive_knesset20_tell_the_polls_9_3.xls",
     "K19": RAW_DIR / "archive_knesset19_all_stations.pdf",
@@ -205,12 +208,13 @@ def read_k17_result_addresses(path: Path) -> list[dict[str, Any]]:
 def main() -> None:
     sys.stdout.reconfigure(encoding="utf-8")
     parser = argparse.ArgumentParser()
-    parser.parse_args()
+    parser.add_argument("--allow-missing", action="store_true")
+    args = parser.parse_args()
 
     rows: list[dict[str, Any]] = []
     missing_sources: list[dict[str, Any]] = []
 
-    for election in ["K25", "K21", "K20"]:
+    for election in ["K25", "K24", "K23", "K22", "K21", "K20"]:
         path = ADDRESS_SOURCES[election]
         if path.exists():
             rows.extend(read_excel_source(election, path))
@@ -232,18 +236,13 @@ def main() -> None:
     else:
         missing_sources.append({"election": "K17", "expected_path": str(ADDRESS_SOURCES["K17"]), "reason": "missing_file"})
 
-    for election in ["K24", "K23", "K22"]:
-        missing_sources.append(
-            {
-                "election": election,
-                "expected_path": "",
-                "reason": "election_specific_address_file_not_in_raw_data",
-            }
-        )
-
     rows.sort(key=lambda item: (item["election"], item["source_locality_code"], item["source_kalpi"], item["source_row_id"]))
     write_csv(OUT_DIR / "polling_place_addresses.csv", rows, FIELDS)
     write_csv(OUT_DIR / "missing_address_sources.csv", missing_sources, ["election", "expected_path", "reason"])
+
+    if missing_sources and not args.allow_missing:
+        missing = ", ".join(f"{item['election']} ({item['reason']})" for item in missing_sources)
+        raise SystemExit(f"Missing required polling-place address source files: {missing}")
 
     summary = []
     for election in sorted({row["election"] for row in rows}, reverse=True):

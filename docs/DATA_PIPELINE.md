@@ -74,9 +74,9 @@ Geocoding input readiness:
 | Election | Ready address rows | Place-only rows | Missing address rows | Missing-address actual voters |
 |---|---:|---:|---:|---:|
 | K25 | 9,834 | 0 | 0 | 0 |
-| K24 | 0 | 0 | 10,195 | 3,433,896 |
-| K23 | 0 | 0 | 8,967 | 3,680,687 |
-| K22 | 0 | 0 | 8,881 | 3,590,594 |
+| K24 | 10,195 | 0 | 0 | 0 |
+| K23 | 8,967 | 0 | 0 | 0 |
+| K22 | 8,881 | 0 | 0 | 0 |
 | K21 | 8,808 | 0 | 0 | 0 |
 | K20 | 8,519 | 0 | 0 | 0 |
 | K19 | 8,309 | 6 | 0 | 0 |
@@ -85,7 +85,6 @@ Geocoding input readiness:
 
 ## Current Blockers
 
-- K22-K24 election-specific polling-place address files are not present in `data/raw`, and this pass did not recover them from data.gov.il or obvious Internet Archive URL patterns.
 - K17 has 11 geocode-needed rows with no address in the official result file.
 - K19 has 6 place-only geocode-needed rows from the PDF extraction.
 - K18 has 11 place-only geocode-needed rows from the OCR/PDF extraction.

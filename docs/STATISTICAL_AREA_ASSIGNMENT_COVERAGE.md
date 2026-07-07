@@ -55,9 +55,9 @@ This table covers only rows that require address-level geocoding.
 | Election | Ready address rows | Place-only rows | Missing address rows | Missing-address actual voters |
 |---|---:|---:|---:|---:|
 | K25 | 9,834 | 0 | 0 | 0 |
-| K24 | 0 | 0 | 10,195 | 3,433,896 |
-| K23 | 0 | 0 | 8,967 | 3,680,687 |
-| K22 | 0 | 0 | 8,881 | 3,590,594 |
+| K24 | 10,195 | 0 | 0 | 0 |
+| K23 | 8,967 | 0 | 0 | 0 |
+| K22 | 8,881 | 0 | 0 | 0 |
 | K21 | 8,808 | 0 | 0 | 0 |
 | K20 | 8,519 | 0 | 0 | 0 |
 | K19 | 8,309 | 6 | 0 | 0 |
@@ -83,8 +83,7 @@ Because `data/processed/geocoding/geocoded_points.csv` does not exist yet, the f
 ## Interpretation
 
 - Assignment classification has no unresolved rows for K17-K25.
-- K22-K24 are blocked for geocoding because election-specific polling-place address files are not currently present in `data/raw`.
-- K25, K21, and K20 have ready geocoding inputs for all rows that need address-level assignment.
+- K22-K25 and K20-K21 have ready geocoding inputs for all rows that need address-level assignment.
 - K19 and K18 have a small number of place-only rows that need manual/reviewed geocoding.
 - K17 has 11 rows in multi-stat localities with no usable street address; these still need manual resolution or an additional source.
 - Custom point-size polygon buckets are assigned now. Their visual treatment is a frontend decision.

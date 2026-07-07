@@ -94,9 +94,9 @@ Address sources currently available:
 | Election | Address source | Source quality |
 |---|---|---|
 | K25 / 2022 | Official K25 polling-place XLSX in `data/raw` | High |
-| K24 / 2021 | Not currently present in `data/raw` | Blocked until election-specific file is recovered |
-| K23 / 2020 | Not currently present in `data/raw` | Blocked until election-specific file is recovered |
-| K22 / 2019 Sep | Not currently present in `data/raw` | Blocked until election-specific file is recovered |
+| K24 / 2021 | Archived official K24 polling-place XLSX | High |
+| K23 / 2020 | Archived official K23 polling-place XLSX | High; includes AGS source metadata for 8,031 rows |
+| K22 / 2019 Sep | Archived official K22 polling-place XLSX | High |
 | K21 / 2019 Apr | Archived official K21 polling-place XLS | High |
 | K20 / 2015 | `data/raw/archive_knesset20_tell_the_polls_9_3.xls` | High; election-specific archived official XLS |
 | K19 / 2013 | `data/raw/archive_knesset19_all_stations.pdf` | High; election-specific archived official Excel-generated PDF |
@@ -113,6 +113,9 @@ The generic resource has locality code, kalpi code, street, house number, pollin
 
 | Election | Local raw file | Source capture | Notes |
 |---|---|---|---|
+| K24 | `data/raw/archive_knesset24_kalpies_report_tofes_b_18_3_21.xlsx` | `https://web.archive.org/web/20211106033352id_/https://bechirot24.bechirot.gov.il/election/Kneset24/Documents/%D7%9B%D7%A0%D7%A1%D7%AA%2024/kalpies_report_tofes_b_18.3.21.xlsx` | Primary K24 address source; 12,127 rows with address/place coverage. |
+| K23 | `data/raw/archive_knesset23_kalpies_report_19_1_20_1.xlsx` | `https://web.archive.org/web/20210119095351id_/https://bechirot23.bechirot.gov.il/election/Kneset20/Documents/%D7%9B%D7%A0%D7%A1%D7%AA%2023/kalpies_report_19_1_20_1.xlsx` | Primary K23 address source; 10,631 rows with address/place coverage and AGS metadata on 8,031 rows. |
+| K22 | `data/raw/archive_knesset22_kalpies_report_tofes_b_6th_edition_15_9.xlsx` | `https://web.archive.org/web/20191113005230id_/https://bechirot22.bechirot.gov.il/election/Kneset20/Documents/%D7%9B%D7%A0%D7%A1%D7%AA%2022/kalpies_report_tofes_b_6th_edition_15_9.xlsx` | Primary K22 address source; 10,543 rows with address/place coverage. |
 | K21 | `data/raw/archive_knesset21_kalpies_full_report.xls` | `https://web.archive.org/web/20221202061209id_/https://bechirot21.bechirot.gov.il/election/Kneset20/Documents/kalpies_full_report.xls` | Primary K21 address source. |
 | K21 | `data/raw/archive_knesset21_ballots_table.csv` | `https://web.archive.org/web/20221201110430id_/https://bechirot21.bechirot.gov.il/election/Documents/%D7%98%D7%91%D7%9C%D7%AA%20%D7%A7%D7%9C%D7%A4%D7%99%D7%95%D7%AA.csv` | K21 ballot table with polling-place cluster/name and metadata. |
 | K21 | `data/raw/archive_knesset21_special_kalpies.xls` | `https://web.archive.org/web/20221205071624id_/https://bechirot21.bechirot.gov.il/election/Kneset20/Documents/special_kalpies21.xls` | K21 accessible/special ballot subset. |
