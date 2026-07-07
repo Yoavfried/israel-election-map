@@ -14,6 +14,8 @@ Kalpi-level results are part of the source data, but the project will not presen
 - Use official Knesset election results from data.gov.il for K17-K25.
 - K16 / 2003 is deferred until a usable election-specific polling-place address source is recovered.
 - Use the 2022 statistical-area FileGDB as the canonical statistical-area polygon source.
+- Derive locality polygons by dissolving the 2022 statistical-area polygons; locality mode must not show internal statistical-area borders.
+- Build both statistical-area and locality totals from the row-level ballot pipeline, not from official locality aggregate files.
 - Use the reviewed locality crosswalk and single-stat locality assignment table before geocoding.
 - Add locality mode separately.
 - Preserve raw source data and generated/normalized data separately.

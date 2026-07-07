@@ -35,8 +35,9 @@ Confirmed current-scope coverage:
 
 Locality-mode decision:
 
-- Use official locality-level resources for K19-K25.
-- Generate locality totals from ballot rows for K17-K18.
+- Do not use official locality-level aggregates as product input.
+- Build locality totals from the same row-level pipeline used for statistical areas: ballot row -> address/place source -> coordinate or reviewed shortcut -> 2022 statistical area -> dissolved 2022 locality.
+- Keep official locality-level resources as QA/reference metadata only.
 - Keep K16 and pre-2003 locality availability as later research items; current product scope starts at K17 / 2006.
 
 ## Statistical Areas
@@ -54,6 +55,12 @@ Canonical raw polygon source:
 Decision:
 
 Use this FileGDB as the canonical 2022 statistical-area source. The previous `data/raw/statistical-areas-2022.geojson` was a partial export and is no longer a project source.
+
+Locality geometry decision:
+
+- Derive locality geometries by dissolving/unioning the 2022 statistical-area polygons by 2022 locality code/name.
+- In locality mode, internal statistical-area boundaries must not be visible; the dissolved locality should render as one visual polygon or multipolygon.
+- Do not introduce a separate official locality polygon layer for the current implementation unless later QA shows the dissolved 2022 statistical-area layer is insufficient.
 
 Detailed audit:
 
@@ -74,6 +81,23 @@ The approximation is:
 > assign each kalpi to the statistical area containing the polling-place building, then aggregate votes by statistical area
 
 This does not represent the exact residential statistical area of the voters assigned to that kalpi. The UI should expose mapped coverage and assignment provenance.
+
+## Synthetic Geographies
+
+Some reviewed source rows are real geographic concepts but do not map cleanly to a 2022 locality/statistical-area polygon in the current layer. They should be represented as explicit synthetic point-size geometries, visible only for relevant elections:
+
+| Bucket | Geometry direction |
+|---|---|
+| `TRIBE` | Small synthetic polygon/point-size marker in the north Negev |
+| `HEBRON` | Small synthetic polygon/point-size marker in central Hebron |
+| `N.S.` | Small synthetic polygon/point-size marker in north Samaria |
+| `GAZA` | Small synthetic polygon/point-size marker in the Gaza Strip |
+
+Implementation rules:
+
+- Preserve source-row contributions and assignment provenance.
+- Do not merge these rows into normal 2022 statistical-area or locality polygons.
+- Tune the visual design later so these buckets are visible without pretending to be precise borders.
 
 ## Address Coverage
 
@@ -162,6 +186,13 @@ Keep K23 AGS as source metadata only. Use geocoded polling-place addresses plus 
 13. Store unresolved rows and their vote totals separately.
 14. Persist assignment provenance: source, match rule, geocoder, confidence, and failure reason.
 
+Geocoding provider decision status:
+
+- Use GovMap as the first candidate for the geocoding spike because it supports Hebrew address search and can return point geometry/centroid data.
+- Before bulk geocoding, confirm API key flow, rate limits, cache/publication terms, returned coordinate systems, and WGS84 conversion.
+- Do not use Google as the primary geocoder for public downloadable coordinates unless its storage and redistribution constraints are explicitly cleared.
+- Do not use public Nominatim for bulk geocoding; reconsider only a self-hosted/open-data workflow if GovMap is insufficient.
+
 ## Locality Crosswalk
 
 Localities can change between elections: names change, codes change, localities split, localities merge, and some localities disappear or are represented differently in later CBS layers.
@@ -202,8 +233,9 @@ For each statistical area:
 
 For localities:
 
-- Use official locality resources where available.
-- Aggregate ballot rows where separate locality resources are unavailable.
+- Aggregate statistical-area results into 2022 locality results.
+- Preserve the contributing statistical areas and source ballot rows for drill-down.
+- Keep official locality resources as QA/reference metadata, not as product totals.
 
 ## Frontend Direction
 
@@ -235,8 +267,7 @@ Candidate stack:
 
 1. Should K16 be added later if a usable election-specific polling-place address/list source is recovered?
 2. Which geocoder should be used for polling-place addresses, and can we cache/review results legally and reproducibly?
-3. What official or reliable locality polygon source should be used?
-4. Are pre-2003 locality-level results available from an official archive outside the inspected open-data package?
-5. How should party colors be governed across party splits, mergers, renamed lists, and reused letters?
-6. How should the UI communicate mapped vote coverage without weakening the map-first experience?
-7. How should custom point-size polygon buckets be drawn and explained in the UI?
+3. Are pre-2003 locality-level results available from an official archive outside the inspected open-data package?
+4. How should party colors be governed across party splits, mergers, renamed lists, and reused letters?
+5. How should the UI communicate mapped vote coverage without weakening the map-first experience?
+6. How should custom point-size polygon buckets be drawn and explained in the UI?

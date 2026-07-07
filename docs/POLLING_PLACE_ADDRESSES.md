@@ -8,13 +8,15 @@ The statistical-area map needs an approximate kalpi-to-statistical-area assignme
 
 The project approach is:
 
-> poll result row -> polling-place address -> geocoded point -> 2022 statistical area
+> poll result row -> polling-place address/place source -> geocoded point -> 2022 statistical area -> dissolved 2022 locality
 
 There is also a shortcut:
 
 > if the reviewed 2022 locality has exactly one statistical area, assign by locality and skip geocoding
 
 This is intentionally approximate. It maps the polling-place building, not each voter's residential statistical area.
+
+Both statistical-area and locality product totals should be generated from this row-level assignment pipeline. Official locality aggregate files are useful as QA/reference material, but they are not product input totals.
 
 Current product scope is K17-K25. K16 / 2003 is deferred until a usable election-specific polling-place address source is recovered.
 
@@ -199,6 +201,18 @@ Row-level assignment should store one method:
 - `official_envelope`
 - `unresolved`
 
+## Geocoding Provider Research
+
+GovMap is the preferred first geocoding candidate because it is Israeli, supports Hebrew address search, and its documented search API can return point geometry/centroid data. Before bulk geocoding, run a small representative spike and confirm:
+
+- API key flow and rate limits.
+- Whether cached/reviewed coordinates may be stored and published in the project's public data outputs.
+- Which coordinate system is returned in each geometry field, and the correct conversion to WGS84 longitude/latitude.
+- Accuracy on older polling-place addresses, school/place names, and reviewed address-target-set cases.
+- Fallback policy for ambiguous or failed results.
+
+Google geocoding should not be the primary source for public downloadable coordinates unless its storage and redistribution constraints are explicitly cleared. Public Nominatim should not be used for bulk geocoding; a self-hosted/open-data fallback can be reconsidered if needed.
+
 ## Locality History
 
 Localities can change between elections: names change, codes change, localities split, localities merge, and some localities disappear or are represented differently in later CBS layers.
@@ -217,5 +231,4 @@ Rules:
 
 - Geocoding/reviewing the 11 K17 place-name-only rows.
 - Building and reviewing the geocoding cache for addressed K17-K25 multi-stat localities.
-- Choosing an official or reliable locality polygon source.
 - Designing custom point-size polygon buckets in the frontend.
