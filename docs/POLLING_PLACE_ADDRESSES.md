@@ -12,7 +12,7 @@ The project approach is:
 
 There is also a shortcut:
 
-> if the matched 2022 locality has exactly one statistical area, assign by locality and skip geocoding
+> if the reviewed 2022 locality has exactly one statistical area, assign by locality and skip geocoding
 
 This is intentionally approximate. It maps the polling-place building, not each voter's residential statistical area.
 
@@ -25,64 +25,108 @@ This is intentionally approximate. It maps the polling-place building, not each 
 | K23 / 2020 | Archived official K23 polling-place XLSX | Election-specific; high confidence |
 | K22 / 2019 Sep | Archived official K22 polling-place XLSX | Election-specific; high confidence |
 | K21 / 2019 Apr | Archived official K21 polling-place XLS | Election-specific; high confidence |
-| K20 / 2015 | Generic official `voting-polls` table | Fallback only; not election-specific |
-| K19 / 2013 | Generic official `voting-polls` table | Fallback only; not election-specific |
-| K18 / 2009 | `data/raw/archive_knesset18_kalpilist18.pdf` | Election-specific scanned list with embedded OCR text layer; row-level reconciliation is complete for ordinary rows |
-| K17 / 2006 | Address field inside official ballot-result file plus `data/raw/archive_knesset17_kalpies-list17-*.pdf` | Election-specific; high confidence for addressed rows, targeted scan extraction recovered place names for the 11 remaining multi-stat rows |
-| K16 / 2003 | Generic official `voting-polls` table | Fallback only; not election-specific |
+| K20 / 2015 | `data/raw/archive_knesset20_tell_the_polls_9_3.xls` | Election-specific archived official XLS; high confidence |
+| K19 / 2013 | `data/raw/archive_knesset19_all_stations.pdf` | Election-specific archived official Excel-generated PDF; high confidence after parser cleanup |
+| K18 / 2009 | `data/raw/archive_knesset18_kalpilist18.pdf` | Election-specific scanned PDF with embedded OCR text; reconciliation complete for ordinary rows |
+| K17 / 2006 | Address field inside official ballot-result file plus `data/raw/archive_knesset17_kalpies-list17-*.pdf` | Election-specific; high confidence for addressed rows; targeted scan extraction recovered names for 11 remaining multi-stat rows |
+| K16 / 2003 | No usable election-specific polling-place address source found yet | Not solved for polling-place geocoding |
 
 Official election results package:
 
 https://data.gov.il/api/3/action/package_show?id=26f9fa06-fcd7-4173-8df5-65797b63e857
 
-Generic official polling-place datastore resource:
+Generic official polling-place datastore resource, kept as research-only fallback metadata:
 
 https://data.gov.il/api/3/action/datastore_search?resource_id=68c4d7e8-2218-48ee-996f-2db2f72b2395
 
-K21 update, 2026-07-07:
+The generic table is not election-specific. It should not be used as production direct-address coverage for elections where an election-specific source is unavailable.
 
-- Recovered election-specific archived official K21 polling-place files from `bechirot21.bechirot.gov.il`.
-- Saved raw files:
-  - `data/raw/archive_knesset21_kalpies_full_report.xls`
-  - `data/raw/archive_knesset21_ballots_table.csv`
-  - `data/raw/archive_knesset21_special_kalpies.xls`
-  - `data/raw/archive_knesset21_kalpies_committee_summary.xls`
-- `archive_knesset21_kalpies_full_report.xls` is the direct address source. It includes locality code/name, kalpi number, polling-place address, polling-place name, accessibility flags, and eligible voters.
-- Exact locality-code + kalpi matching against the official K21 ballot-result datastore covers 10,459 / 10,765 result rows.
-- The unmatched rows are 305 official envelope rows plus one ordinary row: `נורית` [833], kalpi 1, with 98 eligible voters and 82 actual voters. `נורית` is a reviewed single-stat locality, so it is still assignable without geocoding.
+## Recovered 2026-07-07 Sources
 
-Archived source captures:
+### K20 / 2015
 
-- `https://web.archive.org/web/20221202061209id_/https://bechirot21.bechirot.gov.il/election/Kneset20/Documents/kalpies_full_report.xls`
-- `https://web.archive.org/web/20221201110430id_/https://bechirot21.bechirot.gov.il/election/Documents/%D7%98%D7%91%D7%9C%D7%AA%20%D7%A7%D7%9C%D7%A4%D7%99%D7%95%D7%AA.csv`
-- `https://web.archive.org/web/20221205071624id_/https://bechirot21.bechirot.gov.il/election/Kneset20/Documents/special_kalpies21.xls`
-- `https://web.archive.org/web/20221202061132id_/https://bechirot21.bechirot.gov.il/election/Kneset20/Documents/kalpies21_b.xls`
+Primary source:
 
-## Direct Address Matching
+https://web.archive.org/web/20160330183320id_/http://bechirot.gov.il/election/Kneset20/Documents/TellThePolls.9.3.xls
 
-Coverage is measured against official ballot-result rows.
+Local raw file:
 
-Match key:
+- `data/raw/archive_knesset20_tell_the_polls_9_3.xls`
 
-- locality code
-- normalized kalpi number
+Observed fields include committee code/name, election locality code/name, kalpi code, polling-place address, polling-place name, accessibility flags, eligible voters, split metadata, and joined-to metadata.
 
-Normalization:
+Reconciliation:
 
-- Split result rows such as `3.1` can match base kalpi `3`.
-- For the generic polling-place table, aliases such as `10 -> 1` are accepted because the generic source uses a different kalpi-number convention.
+- Official K20 ballot-result rows: 10,414.
+- Source polling-place rows: 10,464.
+- Direct exact locality-code + kalpi matches: 10,003.
+- Split rows resolved by locality + base kalpi + eligible voters: 116.
+- Total matched rows: 10,119.
+- Unmatched rows: 295, all special-envelope rows.
+- Ordinary geographic rows without address: 0.
 
-This measures whether a ballot-result row can be associated with an address-like polling-place record. It does not prove historical exactness when the generic table is used.
+### K19 / 2013
 
-K18 update, 2026-07-06:
+Primary source:
 
-- The newly added `archive_knesset18_kalpilist18.pdf` is an election-specific polling-place list.
-- It is scanned, but it has an embedded OCR text layer with usable word coordinates.
-- The current extractor writes a raw OCR table CSV and a resolved official-row CSV.
-- Row-level reconciliation matches 9,263 / 9,263 ordinary official K18 result rows.
-- The only official K18 result row without a physical polling-place address is the special non-geographic `מעטפות כפולות` row, with 186,919 actual voters.
+https://web.archive.org/web/20130123205035id_/http://www.bechirot.gov.il:80/elections19/heb/about/AllStations.pdf
+
+Local raw file:
+
+- `data/raw/archive_knesset19_all_stations.pdf`
+
+The PDF title is `מקומות הקלפי - רשימה סופית נכון ל- 13.12.12`. It was generated from Excel and contains extractable table text, not just scanned images. RTL extraction corrupts some long names, so parsing should trust locality code and extract the numeric kalpi prefix from the kalpi column.
+
+Reconciliation:
+
+- Official K19 ballot-result rows: 10,109.
+- Parsed unique polling-place rows: 10,239.
+- Matched result rows: 9,881.
+- Unmatched rows: 228, all special-envelope rows.
+- Ordinary geographic rows without address: 0.
+- Match by locality code + kalpi number. Do not require eligible-voter equality; 226 matched rows have eligibility-count mismatches between the source PDF and the final result rows.
+
+### K21 / 2019 Apr
+
+Primary source:
+
+https://web.archive.org/web/20221202061209id_/https://bechirot21.bechirot.gov.il/election/Kneset20/Documents/kalpies_full_report.xls
+
+Local raw files:
+
+- `data/raw/archive_knesset21_kalpies_full_report.xls`
+- `data/raw/archive_knesset21_ballots_table.csv`
+- `data/raw/archive_knesset21_special_kalpies.xls`
+- `data/raw/archive_knesset21_kalpies_committee_summary.xls`
+
+Reconciliation:
+
+- The direct address source has 10,459 unique locality-code + kalpi rows.
+- The official K21 ballot-result datastore has 10,765 rows.
+- Direct address matching covers 10,459 rows.
+- The 306 unmatched result rows are 305 special-envelope rows plus `נורית` [833], kalpi 1, with 98 eligible voters and 82 actual voters.
+- `נורית` is a reviewed single-stat locality, so it is still assignable without geocoding.
+
+### K16 / 2003
+
+No usable full polling-place address source was found.
+
+Evidence checked:
+
+- The official K16 datastore has 7,886 rows and fields for locality code, kalpi code, eligible voters, actual voters, invalid/valid votes, locality name, and party votes. It has no address or polling-place place-name columns.
+- The old Knesset archive confirms voter-location lookup existed through public notices, voter messages, and phone information centers.
+- The old K16 result UI exposes some polling-place names, for example Jerusalem entries, but not street addresses and not a complete national archived list.
+- Wayback searches for `elections16`, `AllStations`, `kalpi`, `poll`, `station`, `mikum`, `makom`, `place`, and related old Knesset paths did not find a national polling-place address file.
+
+Current K16 decision:
+
+- Do not count generic-table matches as production address coverage.
+- Use locality-level/single-stat/custom-bucket assignment where possible.
+- Keep K16 multi-stat rows unresolved until a real K16 source is recovered.
 
 ## Direct Address Coverage
+
+Coverage is measured against official ballot-result rows. Rows without direct address include special-envelope rows unless noted separately.
 
 | Election | Year | Address source | Poll rows | Rows with direct address | Rows without direct address | Poll coverage | Eligible voters without direct address | Actual voters without direct address |
 |---|---:|---|---:|---:|---:|---:|---:|---:|
@@ -91,121 +135,75 @@ K18 update, 2026-07-06:
 | K23 | 2020 | Archived official polling-place XLSX | 11,179 | 10,631 | 548 | 95.10% | 0 (0.00%) | 330,209 (7.15%) |
 | K22 | 2019 Sep | Archived official polling-place XLSX | 10,901 | 10,539 | 362 | 96.68% | 0 (0.00%) | 282,442 (6.33%) |
 | K21 | 2019 Apr | Archived official polling-place XLS | 10,765 | 10,459 | 306 | 97.16% | 98 (0.00%) | 240,865 (5.55%) |
-| K20 | 2015 | Generic official polling-place table | 10,414 | 9,804 | 610 | 94.14% | 176,373 (3.00%) | 362,617 (8.52%) |
-| K19 | 2013 | Generic official polling-place table | 10,109 | 9,747 | 362 | 96.42% | 68,407 (1.21%) | 260,957 (6.81%) |
+| K20 | 2015 | Archived official K20 TellThePolls XLS | 10,414 | 10,119 | 295 | 97.17% | 0 (0.00%) | 234,599 (5.51%) |
+| K19 | 2013 | Archived official K19 AllStations PDF | 10,109 | 9,881 | 228 | 97.74% | 0 (0.00%) | 215,789 (5.63%) |
 | K18 | 2009 | Official scanned polling-place PDF extraction | 9,264 | 9,263 | 1 | 99.99% | 186,919 (3.42%) | 186,919 (5.47%) |
 | K17 | 2006 | Address field in official result file | 8,426 | 8,262 | 164 | 98.05% | Not available | 179,177 (5.62%) |
-| K16 | 2003 | Generic official polling-place table | 7,886 | 7,674 | 212 | 97.31% | 191,007 (3.92%) | 182,385 (5.70%) |
+| K16 | 2003 | No usable election-specific source | 7,886 | 0 | 7,886 | 0.00% | 4,878,371 (100.00%) | 3,200,773 (100.00%) |
 
 Interpretation:
 
-- K22-K25: every ordinary row has a direct address match; rows without direct addresses are not ordinary polling-place rows.
-- K17: every ordinary row has an address except 15 rows listed below.
-- K18: every ordinary row has a direct address match from the election-specific scanned PDF; the only row without an address is non-geographic.
-- K16 and K19-K20: matches use the generic polling-place table, so they are provisional. Kalpi numbers and polling-place locations may have changed.
-- K21: every ordinary row has a direct address match except `נורית` [833], kalpi 1, which is assignable by the single-stat locality shortcut.
+- K19-K25 and K18: every ordinary geographic row now has a direct election-specific address source, except K21 `נורית`, which is assignable by the single-stat shortcut.
+- K17: every ordinary row has an address except 15 rows. Four are assignable by the single-stat shortcut. Eleven have recovered polling-place names from scans but still need geocoding/review.
+- K16: no production-grade polling-place address source is available yet.
 
-## Ordinary Rows Without Direct Address
+## Remaining Address Gap After Reviewed Assignment
 
-The table below excludes non-ordinary rows and shows only ordinary locality/kalpi rows that did not get a direct address match.
+This table excludes official envelope rows. `Still missing address` means the row is non-envelope, is not covered by single-stat locality assignment, is not covered by a custom point bucket, and lacks a direct address needed for multi-stat or reviewed address-target-set geocoding.
 
-| Election | Ordinary rows without direct address | Ordinary eligible voters | Ordinary actual voters |
-|---|---:|---:|---:|
-| K25 | 0 | 0 | 0 |
-| K24 | 0 | 0 | 0 |
-| K23 | 0 | 0 | 0 |
-| K22 | 0 | 0 | 0 |
-| K21 | 1 | 98 | 82 |
-| K20 | 317 | 176,373 | 129,708 |
-| K19 | 136 | 68,407 | 47,160 |
-| K18 | 0 | 0 | 0 |
-| K17 | 15 | Not available | 4,693 |
-| K16 | 63 | 32,711 | 24,089 |
+| Election | Year | Non-envelope rows without direct address | Assigned by single-stat | Assigned by custom point | Special non-geographic | Still missing address rows | Still missing eligible voters | Still missing actual voters | Actual voters lost from map |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| K25 | 2022 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0.00% |
+| K24 | 2021 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0.00% |
+| K23 | 2020 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0.00% |
+| K22 | 2019 Sep | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0.00% |
+| K21 | 2019 Apr | 1 | 1 | 0 | 0 | 0 | 0 | 0 | 0.00% |
+| K20 | 2015 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0.00% |
+| K19 | 2013 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0.00% |
+| K18 | 2009 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0.00% |
+| K17 | 2006 | 15 | 4 | 0 | 0 | 11 | Not available | 3,603 | 0.11% |
+| K16 | 2003 | 7,737 | 1,209 | 53 | 3 | 6,472 | 4,186,620 | 2,674,963 | 83.57% |
 
-## Single-Stat Locality Shortcut
+K16 note: the non-envelope count includes one zero-vote control/malformed row. It does not affect voter totals.
 
-The FileGDB-derived 2022 statistical-area layer has:
+## K17 Remaining Rows
 
-| Layer measure | Count |
-|---|---:|
-| Locality codes in the layer | 1,283 |
-| Locality codes with exactly one `STAT_2022` | 1,139 |
-| Locality codes with multiple `STAT_2022` values | 144 |
+K17 has 15 non-envelope rows with an empty address field.
 
-If a row belongs to a reviewed 2022 locality with exactly one statistical area, it can be assigned to statistical-area mode without geocoding.
+Rows assignable without geocoding:
 
-This shortcut should be applied before geocoding. If a row's locality has exactly one 2022 statistical area, geocoding its polling-place address cannot change the statistical-area assignment.
+| Locality | Kalpi | Rule |
+|---|---:|---|
+| ניצן | 20 | Single-stat locality |
+| אום בטין | 10 | Single-stat locality |
+| בית אריה | 10 | Reviewed alias for בית אריה-עופרים, single-stat |
+| בית אריה | 30 | Reviewed alias for בית אריה-עופרים, single-stat |
 
-Full reviewed assignment outputs:
+Rows recovered from the K17 scanned lists but still needing geocoding/review:
 
-- `docs/STATISTICAL_AREA_ASSIGNMENT_COVERAGE.md`
-- `docs/LOCALITY_SINGLE_STAT_ASSIGNMENTS.csv`
-- `docs/STATISTICAL_AREA_ASSIGNMENT_COVERAGE.csv`
-- `docs/ADDRESSLESS_ROWS_AFTER_REVIEWED_ASSIGNMENT.csv`
-
-After applying the reviewed locality resolution plan, the remaining non-envelope address gap is:
-
-| Election | Non-envelope rows without direct address | Assigned by single-stat | Assigned by custom point | Still missing address rows | Still missing eligible voters | Still missing actual voters |
-|---|---:|---:|---:|---:|---:|---:|
-| K25 | 0 | 0 | 0 | 0 | 0 | 0 |
-| K24 | 0 | 0 | 0 | 0 | 0 | 0 |
-| K23 | 0 | 0 | 0 | 0 | 0 | 0 |
-| K22 | 0 | 0 | 0 | 0 | 0 | 0 |
-| K21 | 1 | 1 | 0 | 0 | 0 | 0 |
-| K20 | 317 | 39 | 5 | 273 | 157,603 | 116,744 |
-| K19 | 136 | 16 | 1 | 119 | 60,951 | 42,261 |
-| K18 | 0 | 0 | 0 | 0 | 0 | 0 |
-| K17 | 15 | 4 | 0 | 11 | Not available | 3,603 |
-| K16 | 63 | 3 | 4 | 56 | 30,028 | 21,938 |
-
-## K17 Non-Envelope Rows Without Address
-
-K17 has 15 non-envelope rows with an empty address field. After the reviewed locality resolution:
-
-- 4 rows are assignable without geocoding: `ניצן`, `אום בטין`, and two `בית אריה` rows.
-- The 11 remaining rows are in multi-stat localities, so locality-only assignment is not enough.
-- The newly added K17 scanned polling-place lists locate those 11 rows and provide polling-place names. Their scanned address column is still `0`, so these should be geocoded as `polling-place name + locality` and manually reviewed.
-
-Single-stat rows:
-
-| Locality | Kalpi | 2022 stat-area status | Voters | Valid | Invalid |
-|---|---:|---|---:|---:|---:|
-| ניצן | 20 | Single-stat locality; assignable by locality | 228 | 226 | 2 |
-| אום בטין | 10 | Single-stat locality; assignable by locality | 117 | 114 | 3 |
-| בית אריה | 10 | Reviewed alias for `בית אריה-עופרים`, code 3652, single-stat; assignable by locality | 375 | 375 | 0 |
-| בית אריה | 30 | Reviewed alias for `בית אריה-עופרים`, code 3652, single-stat; assignable by locality | 370 | 367 | 3 |
-
-Rows recovered from the K17 scans:
-
-| Locality | Result kalpi | PDF source | PDF kalpi | Scanned address column | Polling-place name | Voters | Valid | Invalid |
-|---|---:|---|---|---|---|---:|---:|---:|
-| ערערה-בנגב | 50 | part 2 page 133 | `005-0` | `0` | `בי"ס אבן סינא` | 186 | 180 | 6 |
-| ערערה-בנגב | 9900 | part 2 page 133 | `990-0` | `0` | `בי"ס אבן סינא` | 175 | 169 | 6 |
-| טייבה | 110 | part 1 page 123 | `011-0` | `0` | `בי"ס אבן-סינא ב'` | 353 | 346 | 7 |
-| טייבה | 150 | part 1 page 123 | `015-0` | `0` | `בי"ס אבן-סינא ב'` | 404 | 399 | 5 |
-| טייבה | 250 | part 1 page 123 | `025-0` | `0` | `בי"ס חט"ב אל-סלאם` | 432 | 426 | 6 |
-| טייבה | 260 | part 1 page 123 | `026-0` | `0` | `בי"ס חט"ב אל-סלאם` | 360 | 353 | 7 |
-| טייבה | 270 | part 1 page 123 | `027-0` | `0` | `בי"ס חט"ב אל-סלאם` | 414 | 414 | 0 |
-| טייבה | 280 | part 1 page 123 | `028-0` | `0` | `בי"ס אבן-סינא ב'` | 322 | 319 | 3 |
-| טייבה | 290 | part 1 page 123 | `029-0` | `0` | `בי"ס אבן-סינא ב'` | 301 | 297 | 4 |
-| טייבה | 300 | part 1 page 123 | `030-0` | `0` | `בי"ס אל-חכמה` | 313 | 311 | 2 |
-| טייבה | 310 | part 1 page 123 | `031-0` | `0` | `בי"ס אל-חכמה` | 343 | 341 | 2 |
-
-Sanity checks:
-
-- K17 PDF kalpi notation maps `011-0` to result kalpi `110`, `015-0` to `150`, and `990-0` to `9900`.
-- The surrounding rows on the same pages align with the official result locality and kalpi sequences.
-- These rows are no longer unknown polling places, but they still need geocoding/review because the scan does not provide street-level addresses.
+| Locality | Result kalpi | PDF source | Scanned address column | Polling-place name |
+|---|---:|---|---|---|
+| ערערה-בנגב | 50 | part 2 page 133 | `0` | ביה"ס אבן סינא |
+| ערערה-בנגב | 9900 | part 2 page 133 | `0` | ביה"ס אבן סינא |
+| טייבה | 110 | part 1 page 123 | `0` | ביה"ס אבן-סינא ב' |
+| טייבה | 150 | part 1 page 123 | `0` | ביה"ס אבן-סינא ב' |
+| טייבה | 250 | part 1 page 123 | `0` | ביה"ס חט"ב אל-סלאם |
+| טייבה | 260 | part 1 page 123 | `0` | ביה"ס חט"ב אל-סלאם |
+| טייבה | 270 | part 1 page 123 | `0` | ביה"ס חט"ב אל-סלאם |
+| טייבה | 280 | part 1 page 123 | `0` | ביה"ס אבן-סינא ב' |
+| טייבה | 290 | part 1 page 123 | `0` | ביה"ס אבן-סינא ב' |
+| טייבה | 300 | part 1 page 123 | `0` | ביה"ס אל-חכמה |
+| טייבה | 310 | part 1 page 123 | `0` | ביה"ס אל-חכמה |
 
 ## Geocoding Scope
 
 Geocoding is only needed where:
 
-- the row is not an official envelope or reviewed non-geographic special row,
-- the row can be linked to a polling-place address,
-- the matched 2022 locality has multiple statistical areas.
+- the row is not an official envelope or reviewed non-geographic row,
+- the row can be linked to a polling-place address or place name,
+- the reviewed 2022 locality has multiple statistical areas or the row is an address-target-set case.
 
-Rows already assignable by the single-stat locality shortcut should not be geocoded unless a separate QA/debug view needs the point.
+Rows already assignable by the single-stat locality shortcut should not be geocoded unless a QA/debug view needs the point.
 
 Row-level assignment should store one method:
 
@@ -223,15 +221,6 @@ Localities can change between elections: names change, codes change, localities 
 
 The pipeline needs an explicit locality crosswalk with provenance.
 
-Minimum crosswalk fields:
-
-- election
-- source locality code and name from the election result file
-- target 2022 locality code and name, when applicable
-- mapping status: exact code, exact name, alias, merge, split, retired, unknown
-- whether the target can use the single-stat locality shortcut
-- notes/source for the decision
-
 Rules:
 
 - Exact current locality-code matches can be automated.
@@ -242,7 +231,7 @@ Rules:
 
 ## Current Blockers
 
-- Recovering true election-specific polling-place files for K16, K19, and K20 would materially improve confidence.
-- A geocoding provider and cache/review policy is still needed.
-- Locality polygons still need an official or reliable source.
-- The frontend still needs a visual design for custom point-size polygon buckets.
+- Recovering a usable K16 polling-place address/list source.
+- Building and reviewing the geocoding cache for K17-K25 multi-stat localities.
+- Choosing an official or reliable locality polygon source.
+- Designing custom point-size polygon buckets in the frontend.

@@ -68,7 +68,7 @@ Apply this single-stat locality shortcut before geocoding. If a result row's mat
 
 This is an accepted approximation for the product.
 
-The ballot-result rows include vote counts and kalpi identifiers, but no geometry. Polling-place address data plus the single-stat locality shortcut is good enough to support a first-pass approximation for every election from K16 through K25, with different confidence levels by election.
+The ballot-result rows include vote counts and kalpi identifiers, but no geometry. Polling-place address data plus the single-stat locality shortcut supports a first-pass approximation for K17-K25. K16 remains only partially mappable until a real K16 polling-place address/list source is recovered.
 
 The approximation is:
 
@@ -91,13 +91,17 @@ Direct address-source summary:
 | K23 | 2020 | Archived official polling-place XLSX | 95.10% | 330,209 (7.15%) |
 | K22 | 2019 Sep | Archived official polling-place XLSX | 96.68% | 282,442 (6.33%) |
 | K21 | 2019 Apr | Archived official K21 polling-place XLS | 97.16% | 240,865 (5.55%) |
-| K20 | 2015 | Generic official polling-place table | 94.14% | 362,617 (8.52%) |
-| K19 | 2013 | Generic official polling-place table | 96.42% | 260,957 (6.81%) |
+| K20 | 2015 | Archived official K20 TellThePolls XLS | 97.17% | 234,599 (5.51%) |
+| K19 | 2013 | Archived official K19 AllStations PDF | 97.74% | 215,789 (5.63%) |
 | K18 | 2009 | Official scanned polling-place PDF extraction | 99.99% | 186,919 (5.47%) |
 | K17 | 2006 | Address field in official result file | 98.05% | 179,177 (5.62%) |
-| K16 | 2003 | Generic official polling-place table | 97.31% | 182,385 (5.70%) |
+| K16 | 2003 | No usable election-specific source | 0.00% | 3,200,773 (100.00%) |
 
-For K22-K25, K21, and K18, every ordinary row has a direct address match except K21 `נורית` [833], kalpi 1, which is still assignable by the single-stat locality shortcut. K17 has 15 ordinary rows with an empty address field. K16 and K19-K20 use generic-table fallback matching and remain lower confidence until election-specific address files are recovered.
+Interpretation:
+
+- K19-K25 and K18 have election-specific address sources covering every ordinary geographic row, except K21 `נורית`, which is still assignable by single-stat locality.
+- K17 has 15 ordinary rows with an empty address field. Four are assignable by single-stat locality; 11 have recovered polling-place names from scans and need geocoding/review.
+- K16 has no usable polling-place address source yet. Generic-table matches are kept as research-only metadata, not production coverage.
 
 ## Reviewed Assignment Coverage
 
@@ -110,11 +114,11 @@ After applying the reviewed locality crosswalk, custom buckets, and the FileGDB-
 | K23 | 0 | 0 | 0 | 0 | 0 |
 | K22 | 0 | 0 | 0 | 0 | 0 |
 | K21 | 1 | 1 | 0 | 0 | 0 |
-| K20 | 317 | 39 | 5 | 273 | 116,744 |
-| K19 | 136 | 16 | 1 | 119 | 42,261 |
+| K20 | 0 | 0 | 0 | 0 | 0 |
+| K19 | 0 | 0 | 0 | 0 | 0 |
 | K18 | 0 | 0 | 0 | 0 | 0 |
 | K17 | 15 | 4 | 0 | 11 | 3,603 |
-| K16 | 63 | 3 | 4 | 56 | 21,938 |
+| K16 | 7,737 | 1,209 | 53 | 6,472 | 2,674,963 |
 
 Full coverage artifacts:
 
@@ -154,7 +158,7 @@ Keep K23 `אג"ס` as source metadata only. Use geocoded polling-place addresses
 6. Assign reviewed custom point-size polygon rows without geocoding.
 7. Keep official envelope and reviewed special non-geographic rows outside geographic polygon assignment.
 8. Load election-specific polling-place addresses where available.
-9. Fall back to the generic official polling-place table only where no election-specific table has been found.
+9. Keep the generic official polling-place table as research-only fallback metadata unless an election-specific validation step approves it.
 10. Geocode polling-place addresses for rows in multi-stat localities and reviewed address-target sets that still need address-level assignment.
 11. Run point-in-polygon against the 2022 statistical-area polygons.
 12. Join ballot results to assigned statistical areas, custom geographies, or non-geographic buckets.
@@ -231,7 +235,7 @@ Candidate stack:
 
 ## Open Questions
 
-1. Can usable election-specific polling-place address files be recovered for K16, K19, and K20?
+1. Can a usable election-specific polling-place address/list source be recovered for K16?
 2. Which geocoder should be used for polling-place addresses, and can we cache/review results legally and reproducibly?
 3. What official or reliable locality polygon source should be used?
 4. Are pre-2003 locality-level results available from an official archive outside the inspected open-data package?

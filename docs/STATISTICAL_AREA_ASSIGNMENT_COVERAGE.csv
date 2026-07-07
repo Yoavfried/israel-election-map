@@ -1,11 +1,11 @@
-﻿election,year,address_source,source_address_rows,total_poll_rows,direct_address_rows,official_envelope_rows,single_stat_locality_rows,direct_address_geocode_needed_rows,custom_point_polygon_rows,special_non_geographic_rows,unresolved_rows,total_actual_voters,unresolved_actual_voters,unresolved_actual_voters_pct,unresolved_eligible_voters,unresolved_eligible_voters_pct
+election,year,address_source,source_address_rows,total_poll_rows,direct_address_rows,official_envelope_rows,single_stat_locality_rows,direct_address_geocode_needed_rows,custom_point_polygon_rows,special_non_geographic_rows,unresolved_rows,total_actual_voters,unresolved_actual_voters,unresolved_actual_voters_pct,unresolved_eligible_voters,unresolved_eligible_voters_pct
 K25,2022,Official K25 polling-place XLSX,11542,12545,11707,838,1825,9812,63,7,0,4794593,0,0.00%,0,0.00%
 K24,2021,Archived official K24 polling-place XLSX,12127,12926,12127,799,1887,10171,62,7,0,4436365,0,0.00%,0,0.00%
 K23,2020,Archived official K23 polling-place XLSX,10631,11179,10631,548,1622,8948,54,7,0,4615135,0,0.00%,0,0.00%
 K22,2019 Sep,Archived official K22 polling-place XLSX,10543,10901,10539,362,1616,8862,54,7,0,4465168,0,0.00%,0,0.00%
 K21,2019 Apr,Archived official K21 polling-place XLS,10459,10765,10459,305,1610,8789,54,7,0,4340253,0,0.00%,0,0.00%
-K20,2015,Generic official polling-place table,10148,10414,9804,295,1561,8229,49,7,273,4254738,116744,2.74%,157603,2.68%
-K19,2013,Generic official polling-place table,10148,10109,9747,228,1532,8179,45,6,119,3833646,42261,1.10%,60951,1.08%
+K20,2015,Archived official K20 TellThePolls XLS,10464,10414,10119,295,1561,8502,49,7,0,4254738,0,0.00%,0,0.00%
+K19,2013,Archived official K19 AllStations PDF,10239,10109,9881,228,1532,8298,45,6,0,3833646,0,0.00%,0,0.00%
 K18,2009,Official K18 scanned polling-place PDF extraction,9740,9264,9263,1,1438,7780,41,4,0,3416587,0,0.00%,0,0.00%
 K17,2006,Address field in official K17 ballot-result XLS,8262,8426,8262,149,1241,6984,38,3,11,3186739,3603,0.11%,,
-K16,2003,Generic official polling-place table,10148,7886,7674,149,1209,6416,53,3,56,3200773,21938,0.69%,30028,0.62%
+K16,2003,No usable election-specific polling-place source,0,7886,0,149,1209,0,53,3,6472,3200773,2674963,83.57%,4186620,85.82%

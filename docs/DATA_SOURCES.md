@@ -15,7 +15,7 @@ Useful notes:
 - K19-K25 include official locality-level resources.
 - K16-K18 locality totals can be generated from ballot-level rows.
 - Party columns are election-specific ballot letters and must not be treated as stable party IDs across elections.
-- Some direct file downloads from `e.data.gov.il` may hit browser/security interstitials; datastore/API access was usable for the current investigation.
+- Some direct file downloads from `e.data.gov.il` may hit browser/security interstitials; datastore/API access was usable during investigation.
 
 25th Knesset official results site:
 
@@ -47,16 +47,11 @@ Observed fields:
 | `TAT_ROVA` | Sub-quarter code where present |
 | `COD_TIFKUD` | Function/type code |
 
-Importer caveat:
-
-- The JS `fgdb` reader used during investigation decoded Hebrew attribute values as mojibake. This is repairable by decoding those strings as Latin-1 bytes into UTF-8. The pipeline should prefer locality code matching and keep Hebrew names as display/crosswalk fields.
-
 Previous local source:
 
 - `data/raw/statistical-areas-2022.geojson`
 - This was a partial export with 1,776 features and 407 locality codes.
-- It was missing major localities such as Haifa, Beer Sheva, Netanya, Herzliya, Kfar Saba, Rahat, Nazareth, Eilat, Tayibe, Umm Batin, and Ar'ara-BaNegev.
-- It is no longer a project source and should not be used.
+- It was missing major localities and is no longer a project source.
 
 Detailed audit:
 
@@ -97,55 +92,47 @@ Address sources currently available:
 | K23 / 2020 | Archived official K23 polling-place XLSX | High |
 | K22 / 2019 Sep | Archived official K22 polling-place XLSX | High |
 | K21 / 2019 Apr | Archived official K21 polling-place XLS | High |
-| K20 / 2015 | Generic official `voting-polls` table | Medium; not election-specific |
-| K19 / 2013 | Generic official `voting-polls` table | Medium; not election-specific |
-| K18 / 2009 | `data/raw/archive_knesset18_kalpilist18.pdf` | High; election-specific scanned PDF with embedded OCR text layer, reconciled to 9,263 / 9,263 ordinary official result rows |
+| K20 / 2015 | `data/raw/archive_knesset20_tell_the_polls_9_3.xls` | High; election-specific archived official XLS |
+| K19 / 2013 | `data/raw/archive_knesset19_all_stations.pdf` | High; election-specific archived official Excel-generated PDF |
+| K18 / 2009 | `data/raw/archive_knesset18_kalpilist18.pdf` | High; election-specific scanned PDF with embedded OCR text, reconciled to every ordinary official result row |
 | K17 / 2006 | Address field inside official ballot-result file plus `data/raw/archive_knesset17_kalpies-list17-*.pdf` | High for addressed rows; targeted scan review recovered polling-place names for the 11 remaining multi-stat rows |
-| K16 / 2003 | Generic official `voting-polls` table | Medium; not election-specific |
+| K16 / 2003 | No usable election-specific source found | Unsolved for polling-place geocoding |
 
 Generic official polling-place datastore resource:
 
 https://data.gov.il/api/3/action/datastore_search?resource_id=68c4d7e8-2218-48ee-996f-2db2f72b2395
 
-Observed generic-table fields include locality code, kalpi code, street, house number, polling-place description, regional committee, and district. It has no coordinates and no polygons.
+The generic resource has locality code, kalpi code, street, house number, polling-place description, regional committee, and district. It has no coordinates and no polygons. Because it is not election-specific, it is kept as research-only fallback metadata and should not be counted as production address coverage without explicit validation.
 
-K21 archived official source added on 2026-07-07:
+### Archived Official Sources
 
-| Raw file | Source capture | Notes |
-|---|---|---|
-| `data/raw/archive_knesset21_kalpies_full_report.xls` | `https://web.archive.org/web/20221202061209id_/https://bechirot21.bechirot.gov.il/election/Kneset20/Documents/kalpies_full_report.xls` | Primary K21 address source: locality code/name, kalpi number, polling-place address, place name, accessibility flags, eligible voters. |
-| `data/raw/archive_knesset21_ballots_table.csv` | `https://web.archive.org/web/20221201110430id_/https://bechirot21.bechirot.gov.il/election/Documents/%D7%98%D7%91%D7%9C%D7%AA%20%D7%A7%D7%9C%D7%A4%D7%99%D7%95%D7%AA.csv` | K21 ballot table with polling-place cluster/name and metadata. |
-| `data/raw/archive_knesset21_special_kalpies.xls` | `https://web.archive.org/web/20221205071624id_/https://bechirot21.bechirot.gov.il/election/Kneset20/Documents/special_kalpies21.xls` | K21 accessible/special ballot subset. |
-| `data/raw/archive_knesset21_kalpies_committee_summary.xls` | `https://web.archive.org/web/20221202061132id_/https://bechirot21.bechirot.gov.il/election/Kneset20/Documents/kalpies21_b.xls` | K21 committee-level polling-place summary. |
+| Election | Local raw file | Source capture | Notes |
+|---|---|---|---|
+| K21 | `data/raw/archive_knesset21_kalpies_full_report.xls` | `https://web.archive.org/web/20221202061209id_/https://bechirot21.bechirot.gov.il/election/Kneset20/Documents/kalpies_full_report.xls` | Primary K21 address source. |
+| K21 | `data/raw/archive_knesset21_ballots_table.csv` | `https://web.archive.org/web/20221201110430id_/https://bechirot21.bechirot.gov.il/election/Documents/%D7%98%D7%91%D7%9C%D7%AA%20%D7%A7%D7%9C%D7%A4%D7%99%D7%95%D7%AA.csv` | K21 ballot table with polling-place cluster/name and metadata. |
+| K21 | `data/raw/archive_knesset21_special_kalpies.xls` | `https://web.archive.org/web/20221205071624id_/https://bechirot21.bechirot.gov.il/election/Kneset20/Documents/special_kalpies21.xls` | K21 accessible/special ballot subset. |
+| K21 | `data/raw/archive_knesset21_kalpies_committee_summary.xls` | `https://web.archive.org/web/20221202061132id_/https://bechirot21.bechirot.gov.il/election/Kneset20/Documents/kalpies21_b.xls` | K21 committee-level polling-place summary. |
+| K20 | `data/raw/archive_knesset20_tell_the_polls_9_3.xls` | `https://web.archive.org/web/20160330183320id_/http://bechirot.gov.il/election/Kneset20/Documents/TellThePolls.9.3.xls` | Primary K20 address source; ordinary rows fully reconciled after split-row matching. |
+| K19 | `data/raw/archive_knesset19_all_stations.pdf` | `https://web.archive.org/web/20130123205035id_/http://www.bechirot.gov.il:80/elections19/heb/about/AllStations.pdf` | Primary K19 address source; Excel-generated PDF with extractable table text. |
+| K18 | `data/raw/archive_knesset18_kalpilist18.pdf` | Local raw archive file | Official polling-place list scan with embedded OCR text layer. |
+| K17 | `data/raw/archive_knesset17_kalpies-list17-1.pdf`, `data/raw/archive_knesset17_kalpies-list17-2.pdf` | Local raw archive files | Image-only scans used for targeted review of rows with empty address fields. |
 
-K21 reconciliation:
+### K16 Status
 
-- `archive_knesset21_kalpies_full_report.xls` has 10,459 unique locality-code + kalpi rows.
-- The official K21 ballot-result datastore has 10,765 unique locality-code + kalpi rows.
-- Direct address matching covers 10,459 rows.
-- The 306 unmatched result rows are 305 official envelope rows plus one ordinary `נורית` [833] row, which is assignable through the single-stat locality shortcut.
+K16 remains the only in-scope election without a usable polling-place address source.
 
-New scanned/PDF sources added on 2026-07-06:
+Checked evidence:
 
-| Election | Raw file | Extraction status |
-|---|---|---|
-| K18 / 2009 | `data/raw/archive_knesset18_kalpilist18.pdf` | 304-page official polling-place list. It is scanned, but has an embedded OCR text layer with word coordinates. The current coordinate-based extractor writes a raw OCR table CSV and a resolved official-row CSV. Reconciliation matches 9,263 / 9,263 ordinary official result rows; the only official row without a physical polling-place address is the special non-geographic `מעטפות כפולות` row. |
-| K17 / 2006 | `data/raw/archive_knesset17_kalpies-list17-1.pdf`, `data/raw/archive_knesset17_kalpies-list17-2.pdf` | Image-only scans. Full OCR is not available locally yet, but targeted visual extraction is practical. The 11 previously unresolved multi-stat rows were located in the scans and have polling-place names, although their address column is `0` rather than a street address. |
+- Official K16 datastore: 7,886 result rows, no address or polling-place name columns.
+- Archived K16 Knesset pages: location lookup existed via voter notices and phone information centers.
+- Old K16 result UI: exposes some polling-place names, but no street addresses and no complete national archived list.
+- Wayback filename/path searches did not find a national K16 `מקומות קלפי` list, XLS, CSV, or PDF.
 
-Reproducible K18 prototype:
-
-```bash
-python scripts/extract_k18_polling_places.py --validate
-```
-
-Validation writes:
-
-- `data/processed/k18_polling_places_extracted_prototype.csv`
-- `data/processed/k18_polling_places_resolved.csv`
+Until a real source is found, K16 statistical-area mode can only map rows covered by locality-level single-stat rules or custom point buckets.
 
 ## K23 Statistical Area Field
 
-The K23 polling-place report includes an `אג"ס` field, but it still should not be joined directly to the 2022 statistical-area polygons.
+The K23 polling-place report includes an `אג"ס` field, but it should not be joined directly to the 2022 statistical-area polygons.
 
 Observed match against the FileGDB-derived 2022 locality/stat pairs:
 

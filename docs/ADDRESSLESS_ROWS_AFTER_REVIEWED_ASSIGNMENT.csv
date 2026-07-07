@@ -1,11 +1,11 @@
-﻿election,year,non_envelope_rows_without_direct_address,actual_voters_without_direct_address_non_envelope,eligible_without_direct_address_non_envelope,assigned_by_single_stat_rows,assigned_by_single_stat_actual,assigned_by_custom_point_rows,assigned_by_custom_point_actual,special_non_geographic_rows,special_non_geographic_actual,still_missing_address_rows,still_missing_address_eligible,still_missing_address_actual,actual_voters_lost_from_map_pct
+election,year,non_envelope_rows_without_direct_address,actual_voters_without_direct_address_non_envelope,eligible_without_direct_address_non_envelope,assigned_by_single_stat_rows,assigned_by_single_stat_actual,assigned_by_custom_point_rows,assigned_by_custom_point_actual,special_non_geographic_rows,special_non_geographic_actual,still_missing_address_rows,still_missing_address_eligible,still_missing_address_actual,actual_voters_lost_from_map_pct
 K25,2022,0,0,0,0,0,0,0,0,0,0,0,0,0.00%
 K24,2021,0,0,0,0,0,0,0,0,0,0,0,0,0.00%
 K23,2020,0,0,0,0,0,0,0,0,0,0,0,0,0.00%
 K22,2019 Sep,0,0,0,0,0,0,0,0,0,0,0,0,0.00%
 K21,2019 Apr,1,82,98,1,82,0,0,0,0,0,0,0,0.00%
-K20,2015,317,129708,176373,39,12166,5,798,0,0,273,157603,116744,2.74%
-K19,2013,136,47160,68407,16,4790,1,109,0,0,119,60951,42261,1.10%
+K20,2015,0,0,0,0,0,0,0,0,0,0,0,0,0.00%
+K19,2013,0,0,0,0,0,0,0,0,0,0,0,0,0.00%
 K18,2009,0,0,0,0,0,0,0,0,0,0,0,0,0.00%
 K17,2006,15,4693,,4,1090,0,0,0,0,11,,3603,0.11%
-K16,2003,63,24089,32711,3,1343,4,808,0,0,56,30028,21938,0.69%
+K16,2003,7737,3042477,4720075,1209,357644,53,9601,3,269,6472,4186620,2674963,83.57%
