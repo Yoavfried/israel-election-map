@@ -27,11 +27,11 @@ The current FileGDB has one layer, `statistical_areas_2022`.
 
 | Measure | Count |
 |---|---:|
-| Polygon features | 3,842 |
-| Unique locality/statistical-area pairs | 3,739 |
-| Locality codes represented by `SEMEL_YISHUV` | 1,283 |
-| Locality codes with one `STAT_2022` | 1,139 |
-| Locality codes with multiple `STAT_2022` values | 144 |
+| Polygon features | 3,857 |
+| Unique locality/statistical-area IDs | 3,857 |
+| Dissolved locality features | 1,329 |
+| Locality features with one statistical area | 1,184 |
+| Locality features with multiple statistical areas | 145 |
 
 The source includes the major localities that were missing from the old partial GeoJSON, including Haifa, Be'er Sheva, Netanya, Herzliya, Kfar Saba, Rahat, Nazareth, Eilat, Tayibe, Umm Batin, Ar'ara-BaNegev, and Beit Arye-Ofarim.
 

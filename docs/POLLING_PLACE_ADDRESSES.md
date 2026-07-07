@@ -25,9 +25,9 @@ Current product scope is K17-K25. K16 / 2003 is deferred until a usable election
 | Election | Address source | Current status |
 |---|---|---|
 | K25 / 2022 | Official K25 polling-place XLSX in `data/raw` | Election-specific; high confidence |
-| K24 / 2021 | Archived official K24 polling-place XLSX | Election-specific; high confidence |
-| K23 / 2020 | Archived official K23 polling-place XLSX | Election-specific; high confidence |
-| K22 / 2019 Sep | Archived official K22 polling-place XLSX | Election-specific; high confidence |
+| K24 / 2021 | Not currently present in `data/raw` | Blocked until election-specific file is recovered |
+| K23 / 2020 | Not currently present in `data/raw` | Blocked until election-specific file is recovered |
+| K22 / 2019 Sep | Not currently present in `data/raw` | Blocked until election-specific file is recovered |
 | K21 / 2019 Apr | Archived official K21 polling-place XLS | Election-specific; high confidence |
 | K20 / 2015 | `data/raw/archive_knesset20_tell_the_polls_9_3.xls` | Election-specific archived official XLS; high confidence |
 | K19 / 2013 | `data/raw/archive_knesset19_all_stations.pdf` | Election-specific archived official Excel-generated PDF; high confidence after parser cleanup |
@@ -114,43 +114,46 @@ Reconciliation:
 
 K16 / 2003 is outside current product scope. No usable full polling-place address source has been found yet. If K16 is reintroduced later, it should not rely on generic-table matches as production coverage.
 
-## Direct Address Coverage
+## Normalized Address Source Availability
 
-Coverage is measured against official ballot-result rows. Rows without direct address include special-envelope rows unless noted separately.
+This table reflects the address sources currently present under `data/raw` and parsed by `scripts/normalize_polling_places.py`.
 
-| Election | Year | Address source | Poll rows | Rows with direct address | Rows without direct address | Poll coverage | Eligible voters without direct address | Actual voters without direct address |
-|---|---:|---|---:|---:|---:|---:|---:|---:|
-| K25 | 2022 | Official K25 polling-place XLSX | 12,545 | 11,707 | 838 | 93.32% | 0 (0.00%) | 462,807 (9.65%) |
-| K24 | 2021 | Archived official polling-place XLSX | 12,926 | 12,127 | 799 | 93.82% | 0 (0.00%) | 425,512 (9.59%) |
-| K23 | 2020 | Archived official polling-place XLSX | 11,179 | 10,631 | 548 | 95.10% | 0 (0.00%) | 330,209 (7.15%) |
-| K22 | 2019 Sep | Archived official polling-place XLSX | 10,901 | 10,539 | 362 | 96.68% | 0 (0.00%) | 282,442 (6.33%) |
-| K21 | 2019 Apr | Archived official polling-place XLS | 10,765 | 10,459 | 306 | 97.16% | 98 (0.00%) | 240,865 (5.55%) |
-| K20 | 2015 | Archived official K20 TellThePolls XLS | 10,414 | 10,119 | 295 | 97.17% | 0 (0.00%) | 234,599 (5.51%) |
-| K19 | 2013 | Archived official K19 AllStations PDF | 10,109 | 9,881 | 228 | 97.74% | 0 (0.00%) | 215,789 (5.63%) |
-| K18 | 2009 | Official scanned polling-place PDF extraction | 9,264 | 9,263 | 1 | 99.99% | 186,919 (3.42%) | 186,919 (5.47%) |
-| K17 | 2006 | Address field in official result file | 8,426 | 8,262 | 164 | 98.05% | Not available | 179,177 (5.62%) |
+| Election | Source rows | Rows with street address | Place-only rows | Missing election-specific source |
+|---|---:|---:|---:|---|
+| K25 | 11,547 | 11,540 | 2 | No |
+| K24 | 0 | 0 | 0 | Yes |
+| K23 | 0 | 0 | 0 | Yes |
+| K22 | 0 | 0 | 0 | Yes |
+| K21 | 10,459 | 10,459 | 0 | No |
+| K20 | 10,464 | 10,464 | 0 | No |
+| K19 | 10,239 | 10,233 | 6 | No |
+| K18 | 9,263 | 9,248 | 15 | No |
+| K17 | 8,262 | 8,262 | 0 | No |
+
+K22-K24 are not treated as address-covered in the current pipeline. Older investigation notes that assumed local K22-K24 address files existed are superseded by the current generated `missing_address_sources.csv` output.
+
+## Geocoding Input Readiness
+
+This table covers only rows that need address-level point-in-polygon assignment after applying the reviewed locality crosswalk, custom buckets, and single-stat locality shortcut.
+
+| Election | Ready address rows | Place-only rows | Missing address rows | Missing-address actual voters |
+|---|---:|---:|---:|---:|
+| K25 | 9,834 | 0 | 0 | 0 |
+| K24 | 0 | 0 | 10,195 | 3,433,896 |
+| K23 | 0 | 0 | 8,967 | 3,680,687 |
+| K22 | 0 | 0 | 8,881 | 3,590,594 |
+| K21 | 8,808 | 0 | 0 | 0 |
+| K20 | 8,519 | 0 | 0 | 0 |
+| K19 | 8,309 | 6 | 0 | 0 |
+| K18 | 7,769 | 11 | 0 | 0 |
+| K17 | 6,984 | 0 | 11 | 3,603 |
 
 Interpretation:
 
-- K19-K25 and K18: every ordinary geographic row now has a direct election-specific address source, except K21 Nurit, which is assignable by the single-stat shortcut.
-- K17: every ordinary row has an address except 15 rows. Four are assignable by the single-stat shortcut. Eleven have recovered polling-place names from scans but still need geocoding/review.
-- For K17-K25, the only remaining missing-address blocker needed for statistical-area assignment is the 11 K17 place-name-only rows listed below.
-
-## Remaining Address Gap After Reviewed Assignment
-
-This table excludes official envelope rows. `Still missing address` means the row is non-envelope, is not covered by single-stat locality assignment, is not covered by a custom point bucket, and lacks a direct address needed for multi-stat or reviewed address-target-set geocoding.
-
-| Election | Year | Non-envelope rows without direct address | Assigned by single-stat | Assigned by custom point | Special non-geographic | Still missing address rows | Still missing eligible voters | Still missing actual voters | Actual voters lost from map |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| K25 | 2022 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0.00% |
-| K24 | 2021 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0.00% |
-| K23 | 2020 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0.00% |
-| K22 | 2019 Sep | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0.00% |
-| K21 | 2019 Apr | 1 | 1 | 0 | 0 | 0 | 0 | 0 | 0.00% |
-| K20 | 2015 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0.00% |
-| K19 | 2013 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0.00% |
-| K18 | 2009 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0.00% |
-| K17 | 2006 | 15 | 4 | 0 | 0 | 11 | Not available | 3,603 | 0.11% |
+- K25, K21, and K20 have ready address strings for all rows that need geocoding.
+- K19 and K18 have a small number of place-only rows that need manual/reviewed geocoding.
+- K17 has 11 multi-stat rows without a usable street address.
+- K22-K24 need election-specific address files before their multi-stat rows can be geocoded.
 
 ## K17 Remaining Rows
 
@@ -229,6 +232,7 @@ Rules:
 
 ## Current Blockers
 
+- Recovering election-specific K22-K24 polling-place address files.
 - Geocoding/reviewing the 11 K17 place-name-only rows.
 - Building and reviewing the geocoding cache for addressed K17-K25 multi-stat localities.
 - Designing custom point-size polygon buckets in the frontend.

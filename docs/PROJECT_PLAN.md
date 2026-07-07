@@ -46,11 +46,10 @@ Canonical raw polygon source:
 
 - `data/raw/ezorim_statistiim_2022.gdb`
 - Layer: `statistical_areas_2022`
-- 3,842 polygon features.
-- 3,739 unique locality/statistical-area pairs.
-- 1,283 represented locality codes.
-- 1,139 single-stat locality codes.
-- 144 multi-stat locality codes.
+- 3,857 polygon features in the current raw FileGDB.
+- 1,329 dissolved locality features.
+- 1,184 dissolved localities have exactly one statistical-area feature.
+- 145 dissolved localities have multiple statistical-area features.
 
 Decision:
 
@@ -105,45 +104,48 @@ Detailed findings:
 
 - `docs/POLLING_PLACE_ADDRESSES.md`
 
-Direct address-source summary:
+Current geocoding-input readiness:
 
-| Election | Year | Address source | Direct poll coverage | Actual voters without direct address |
-|---|---:|---|---:|---:|
-| K25 | 2022 | Official K25 polling-place XLSX | 93.32% | 462,807 (9.65%) |
-| K24 | 2021 | Archived official polling-place XLSX | 93.82% | 425,512 (9.59%) |
-| K23 | 2020 | Archived official polling-place XLSX | 95.10% | 330,209 (7.15%) |
-| K22 | 2019 Sep | Archived official polling-place XLSX | 96.68% | 282,442 (6.33%) |
-| K21 | 2019 Apr | Archived official K21 polling-place XLS | 97.16% | 240,865 (5.55%) |
-| K20 | 2015 | Archived official K20 TellThePolls XLS | 97.17% | 234,599 (5.51%) |
-| K19 | 2013 | Archived official K19 AllStations PDF | 97.74% | 215,789 (5.63%) |
-| K18 | 2009 | Official scanned polling-place PDF extraction | 99.99% | 186,919 (5.47%) |
-| K17 | 2006 | Address field in official result file | 98.05% | 179,177 (5.62%) |
+| Election | Ready address rows | Place-only rows | Missing address rows | Missing-address actual voters |
+|---|---:|---:|---:|---:|
+| K25 | 9,834 | 0 | 0 | 0 |
+| K24 | 0 | 0 | 10,195 | 3,433,896 |
+| K23 | 0 | 0 | 8,967 | 3,680,687 |
+| K22 | 0 | 0 | 8,881 | 3,590,594 |
+| K21 | 8,808 | 0 | 0 | 0 |
+| K20 | 8,519 | 0 | 0 | 0 |
+| K19 | 8,309 | 6 | 0 | 0 |
+| K18 | 7,769 | 11 | 0 | 0 |
+| K17 | 6,984 | 0 | 11 | 3,603 |
 
 Interpretation:
 
-- K19-K25 and K18 have election-specific address sources covering every ordinary geographic row, except K21 Nurit, which is still assignable by single-stat locality.
-- K17 has 15 ordinary rows with an empty address field. Four are assignable by the single-stat locality shortcut; 11 have recovered polling-place names from scans and need geocoding/review.
+- K22-K24 currently lack election-specific address source files in `data/raw`; their geocode-needed rows are blocked.
+- K25, K21, and K20 have ready address strings for rows that need geocoding.
+- K19 and K18 have a small number of place-only rows that need manual/reviewed geocoding.
+- K17 has 11 multi-stat rows with no usable street address.
 - K16 has no usable polling-place address source and is deferred from current scope.
 
 ## Reviewed Assignment Coverage
 
-After applying the reviewed locality crosswalk, custom buckets, and the FileGDB-derived single-stat locality shortcut:
+After applying the reviewed locality crosswalk, custom buckets, and the FileGDB-derived single-stat locality shortcut, every K17-K25 row has a handling rule. Before geocoding, only single-stat rows and custom geographies are mapped:
 
-| Election | Non-envelope rows without direct address | Assigned by single-stat | Assigned by custom point | Still missing address rows | Still missing actual voters |
-|---|---:|---:|---:|---:|---:|
-| K25 | 0 | 0 | 0 | 0 | 0 |
-| K24 | 0 | 0 | 0 | 0 | 0 |
-| K23 | 0 | 0 | 0 | 0 | 0 |
-| K22 | 0 | 0 | 0 | 0 | 0 |
-| K21 | 1 | 1 | 0 | 0 | 0 |
-| K20 | 0 | 0 | 0 | 0 | 0 |
-| K19 | 0 | 0 | 0 | 0 | 0 |
-| K18 | 0 | 0 | 0 | 0 | 0 |
-| K17 | 15 | 4 | 0 | 11 | 3,603 |
+| Election | Mapped rows now | Mapped actual voters now | Pending/missing geocode rows | Pending/missing geocode actual voters |
+|---|---:|---:|---:|---:|
+| K25 | 1,866 | 607,457 | 9,834 | 3,723,709 |
+| K24 | 1,925 | 576,281 | 10,195 | 3,433,896 |
+| K23 | 1,657 | 603,487 | 8,967 | 3,680,687 |
+| K22 | 1,651 | 591,471 | 8,881 | 3,590,594 |
+| K21 | 1,645 | 574,009 | 8,808 | 3,524,678 |
+| K20 | 1,593 | 543,828 | 8,519 | 3,475,496 |
+| K19 | 1,560 | 488,732 | 8,315 | 3,128,444 |
+| K18 | 1,479 | 413,520 | 7,780 | 2,815,741 |
+| K17 | 1,279 | 376,882 | 6,995 | 2,635,068 |
 
 Full coverage artifacts:
 
 - `docs/STATISTICAL_AREA_ASSIGNMENT_COVERAGE.md`
+- `docs/DATA_PIPELINE.md`
 - `docs/LOCALITY_SINGLE_STAT_ASSIGNMENTS.csv`
 - `docs/STATISTICAL_AREA_ASSIGNMENT_COVERAGE.csv`
 - `docs/ADDRESSLESS_ROWS_AFTER_REVIEWED_ASSIGNMENT.csv`
@@ -161,7 +163,7 @@ The K23 polling-place report includes an AGS/statistical-area-like field, but it
 
 - K23 rows with AGS: 10,631.
 - Unique K23 locality+AGS pairs: 2,701.
-- Unique 2022 locality+`STAT_2022` pairs: 3,739.
+- The current FileGDB build has 3,857 unique `YISHUV_STAT_2022` / `stat_area_id` features.
 - Row match rate: 5,379 / 10,631, or 50.60%.
 - Unique-pair match rate: 1,053 / 2,701, or 38.99%.
 

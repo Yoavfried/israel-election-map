@@ -10,6 +10,7 @@ Expected subdirectories:
 
 Current important raw inputs:
 
+- `raw/election_results/` - official K17-K25 ballot rows fetched from data.gov.il datastore by `scripts/fetch_election_results.py`.
 - `raw/ezorim_statistiim_2022.gdb/` - canonical 2022 statistical-area polygon source.
 - `raw/election-25_kalpi-places_kalpies_list_10_7_nagish.xlsx` - K25 polling-place address source.
 - `raw/election-25_kalpi-places_statistic_report_10_7_nagish.xlsx` - K25 polling-place/statistical report source.
@@ -18,6 +19,11 @@ Current important raw inputs:
 - `raw/archive_knesset19_all_stations.pdf` - archived official K19 polling-place address source.
 - `raw/archive_knesset18_kalpilist18.pdf` - archived official K18 polling-place list PDF.
 - `raw/archive_knesset17_kalpies-list17-1.pdf` and `raw/archive_knesset17_kalpies-list17-2.pdf` - archived official K17 polling-place list scans.
+
+Known current raw-data gap:
+
+- Election-specific K22-K24 polling-place address files are not currently present. The pipeline marks those geocoding rows as `missing_address_source` until those files are added.
+- The reviewed geocode cache is expected at `processed/geocoding/geocoded_points.csv` when available. Until then, `processed/public/` outputs are partial and keep address-level rows in unmapped/pending diagnostics.
 
 Do not use the old partial `statistical-areas-2022.geojson` export as a project source.
 

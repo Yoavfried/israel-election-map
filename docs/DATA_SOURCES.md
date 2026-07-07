@@ -28,11 +28,10 @@ Canonical raw polygon source for the project:
 
 - `data/raw/ezorim_statistiim_2022.gdb`
 - Esri File Geodatabase layer: `statistical_areas_2022`
-- 3,842 polygon features.
-- 3,739 unique locality/statistical-area pairs.
-- 1,283 represented locality codes.
-- 1,139 locality codes have exactly one `STAT_2022`.
-- 144 locality codes have multiple `STAT_2022` values.
+- 3,857 polygon features in the current raw FileGDB.
+- 1,329 dissolved locality features.
+- 1,184 dissolved localities have exactly one statistical-area feature.
+- 145 dissolved localities have multiple statistical-area features.
 - Coordinate range is WGS84/browser-map compatible: roughly `34.27,29.49` to `35.89,33.33`.
 
 Observed fields:
@@ -95,9 +94,9 @@ Address sources currently available:
 | Election | Address source | Source quality |
 |---|---|---|
 | K25 / 2022 | Official K25 polling-place XLSX in `data/raw` | High |
-| K24 / 2021 | Archived official K24 polling-place XLSX | High |
-| K23 / 2020 | Archived official K23 polling-place XLSX | High |
-| K22 / 2019 Sep | Archived official K22 polling-place XLSX | High |
+| K24 / 2021 | Not currently present in `data/raw` | Blocked until election-specific file is recovered |
+| K23 / 2020 | Not currently present in `data/raw` | Blocked until election-specific file is recovered |
+| K22 / 2019 Sep | Not currently present in `data/raw` | Blocked until election-specific file is recovered |
 | K21 / 2019 Apr | Archived official K21 polling-place XLS | High |
 | K20 / 2015 | `data/raw/archive_knesset20_tell_the_polls_9_3.xls` | High; election-specific archived official XLS |
 | K19 / 2013 | `data/raw/archive_knesset19_all_stations.pdf` | High; election-specific archived official Excel-generated PDF |
@@ -140,13 +139,7 @@ K16 can be reconsidered later if a real election-specific source is found.
 
 The K23 polling-place report includes an AGS/statistical-area-like field, but it should not be joined directly to the 2022 statistical-area polygons.
 
-Observed match against the FileGDB-derived 2022 locality/stat pairs:
-
-- K23 rows with AGS: 10,631.
-- Unique K23 locality+AGS pairs: 2,701.
-- Unique 2022 locality+`STAT_2022` pairs in the FileGDB: 3,739.
-- Row matches: 5,379 / 10,631, or 50.60%.
-- Unique-pair matches: 1,053 / 2,701, or 38.99%.
+Earlier compatibility checks showed that this field is not compatible enough with the 2022 FileGDB statistical-area IDs for direct joining. The current FileGDB build has 3,857 unique `YISHUV_STAT_2022` / `stat_area_id` features, and the pipeline does not use K23 AGS for assignment.
 
 Decision:
 
