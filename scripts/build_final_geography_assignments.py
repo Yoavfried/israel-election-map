@@ -15,6 +15,7 @@ from pipeline_common import PROCESSED_DIR, int_value, write_csv, write_json
 
 ASSIGNMENT_PLAN = PROCESSED_DIR / "assignments" / "ballot_assignment_plan.csv"
 GEOCODING_INPUT = PROCESSED_DIR / "geocoding" / "geocoding_input.csv"
+GEOCODING_WORK_UNIT_ROWS = PROCESSED_DIR / "geocoding" / "geocoding_work_unit_rows.csv"
 STAT_AREAS = PROCESSED_DIR / "geographies" / "statistical_areas_2022.geojson"
 STAT_AREA_METADATA = PROCESSED_DIR / "geographies" / "statistical_areas_2022.metadata.csv"
 OUT_DIR = PROCESSED_DIR / "assignments"
@@ -48,6 +49,11 @@ def load_stat_metadata() -> dict[str, dict[str, str]]:
 
 def load_geocoding_input() -> dict[str, dict[str, str]]:
     return {row["source_row_uid"]: row for row in read_csv(GEOCODING_INPUT)}
+
+
+def load_geocoding_unit_index() -> dict[str, str]:
+    rows = read_csv(GEOCODING_WORK_UNIT_ROWS)
+    return {row["source_row_uid"]: row["geocoding_unit_id"] for row in rows if row.get("geocoding_unit_id")}
 
 
 def geocode_is_usable(row: pd.Series) -> bool:
@@ -261,6 +267,7 @@ def main() -> None:
     assignment_rows = read_csv(ASSIGNMENT_PLAN)
     stat_metadata = load_stat_metadata()
     geocoding_input = load_geocoding_input()
+    geocoding_units = load_geocoding_unit_index()
     geocoded_points, geocode_keys = load_geocoded_points(args.geocoded_points)
     stats = load_stat_areas() if not geocoded_points.empty else gpd.GeoDataFrame()
     geocoded_assignments, geocoded_outside = spatially_assign_points(geocoded_points, stats)
@@ -285,8 +292,10 @@ def main() -> None:
 
         if method == "direct_address_geocode_needed":
             geocoding_row = geocoding_input.get(uid, {})
-            if uid in geocoded_assignments:
-                point = geocoded_assignments[uid]
+            geocode_lookup_key = geocoding_units.get(uid, uid)
+            geocode_match_key = geocode_lookup_key if geocode_lookup_key in geocoded_assignments else uid
+            if geocode_match_key in geocoded_assignments:
+                point = geocoded_assignments[geocode_match_key]
                 output.append(
                     {
                         **base_output(row),
@@ -304,7 +313,7 @@ def main() -> None:
                         "is_geographic": True,
                         "final_assignment_method": "geocoded_point_in_polygon",
                         "final_assignment_source": "reviewed_geocode_cache",
-                        "geocode_key": uid,
+                        "geocode_key": geocode_match_key,
                         "geocode_lon": point["geocode_lon"],
                         "geocode_lat": point["geocode_lat"],
                         "geocoder": point["geocoder"],
@@ -315,9 +324,9 @@ def main() -> None:
                         "unresolved_reason": "",
                     }
                 )
-            elif uid in geocoded_outside:
+            elif geocode_lookup_key in geocoded_outside or uid in geocoded_outside:
                 output.append(unmapped(row, "geocoded_point_outside_stat_area", "geocoded point did not fall inside a 2022 statistical area", geocoding_row))
-            elif uid in geocode_keys:
+            elif geocode_lookup_key in geocode_keys or uid in geocode_keys:
                 output.append(unmapped(row, "geocode_rejected_or_invalid", "geocode cache row was rejected or had invalid coordinates", geocoding_row))
             elif geocoding_row and geocoding_row.get("address_match_status") != "ready":
                 status = f"geocoding_input_not_ready:{geocoding_row.get('address_match_status', 'unknown')}"

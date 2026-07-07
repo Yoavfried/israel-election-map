@@ -19,8 +19,9 @@ The pipeline writes generated files under `data/processed/`, which is intentiona
 4. Normalize available polling-place address sources.
 5. Build the row-level assignment plan.
 6. Build the geocoding input table.
-7. Build final row-level geography assignments from reviewed geocodes when available.
-8. Build public/download-oriented aggregate CSV outputs.
+7. Deduplicate geocoding input into unique geocoding work units.
+8. Build final row-level geography assignments from reviewed geocodes when available.
+9. Build public/download-oriented aggregate CSV outputs.
 
 ## Current Outputs
 
@@ -33,6 +34,9 @@ The pipeline writes generated files under `data/processed/`, which is intentiona
 - `data/processed/assignments/ballot_assignment_plan.csv`
 - `data/processed/geocoding/geocoding_input.csv`
 - `data/processed/geocoding/geocoding_input_summary.csv`
+- `data/processed/geocoding/geocoding_work_units.csv`
+- `data/processed/geocoding/geocoding_work_unit_rows.csv`
+- `data/processed/geocoding/geocoding_manual_queue.csv` flags place-name queries, composite-locality queries, suspicious OCR/address prefixes, and rows without a geocoder query.
 - `data/processed/assignments/ballot_geography_assignments.csv`
 - `data/processed/public/election_summary.csv`
 - `data/processed/public/statistical_area_results/*.csv`
@@ -98,7 +102,8 @@ Geocoding input readiness:
 
 Supported key columns:
 
-- `geocode_key` preferred; otherwise `source_row_uid`.
+- `geocode_key` preferred. Use `geocoding_unit_id` values from `data/processed/geocoding/geocoding_work_units.csv` for deduplicated geocoding.
+- `source_row_uid` is still accepted for row-specific/manual geocodes.
 
 Supported coordinates:
 

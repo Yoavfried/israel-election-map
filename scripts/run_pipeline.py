@@ -14,6 +14,7 @@ STAGES = [
     ["scripts/normalize_polling_places.py"],
     ["scripts/build_assignment_plan.py"],
     ["scripts/build_geocoding_input.py"],
+    ["scripts/build_geocoding_work_units.py"],
     ["scripts/build_final_geography_assignments.py"],
     ["scripts/build_public_outputs.py"],
 ]
