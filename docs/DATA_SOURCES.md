@@ -1,6 +1,6 @@
 # Data Sources
 
-Last updated: 2026-07-06
+Last updated: 2026-07-07
 
 ## Election Results
 
@@ -96,7 +96,7 @@ Address sources currently available:
 | K24 / 2021 | Archived official K24 polling-place XLSX | High |
 | K23 / 2020 | Archived official K23 polling-place XLSX | High |
 | K22 / 2019 Sep | Archived official K22 polling-place XLSX | High |
-| K21 / 2019 Apr | Generic official `voting-polls` table | Medium; not election-specific |
+| K21 / 2019 Apr | Archived official K21 polling-place XLS | High |
 | K20 / 2015 | Generic official `voting-polls` table | Medium; not election-specific |
 | K19 / 2013 | Generic official `voting-polls` table | Medium; not election-specific |
 | K18 / 2009 | `data/raw/archive_knesset18_kalpilist18.pdf` | High; election-specific scanned PDF with embedded OCR text layer, reconciled to 9,263 / 9,263 ordinary official result rows |
@@ -108,6 +108,22 @@ Generic official polling-place datastore resource:
 https://data.gov.il/api/3/action/datastore_search?resource_id=68c4d7e8-2218-48ee-996f-2db2f72b2395
 
 Observed generic-table fields include locality code, kalpi code, street, house number, polling-place description, regional committee, and district. It has no coordinates and no polygons.
+
+K21 archived official source added on 2026-07-07:
+
+| Raw file | Source capture | Notes |
+|---|---|---|
+| `data/raw/archive_knesset21_kalpies_full_report.xls` | `https://web.archive.org/web/20221202061209id_/https://bechirot21.bechirot.gov.il/election/Kneset20/Documents/kalpies_full_report.xls` | Primary K21 address source: locality code/name, kalpi number, polling-place address, place name, accessibility flags, eligible voters. |
+| `data/raw/archive_knesset21_ballots_table.csv` | `https://web.archive.org/web/20221201110430id_/https://bechirot21.bechirot.gov.il/election/Documents/%D7%98%D7%91%D7%9C%D7%AA%20%D7%A7%D7%9C%D7%A4%D7%99%D7%95%D7%AA.csv` | K21 ballot table with polling-place cluster/name and metadata. |
+| `data/raw/archive_knesset21_special_kalpies.xls` | `https://web.archive.org/web/20221205071624id_/https://bechirot21.bechirot.gov.il/election/Kneset20/Documents/special_kalpies21.xls` | K21 accessible/special ballot subset. |
+| `data/raw/archive_knesset21_kalpies_committee_summary.xls` | `https://web.archive.org/web/20221202061132id_/https://bechirot21.bechirot.gov.il/election/Kneset20/Documents/kalpies21_b.xls` | K21 committee-level polling-place summary. |
+
+K21 reconciliation:
+
+- `archive_knesset21_kalpies_full_report.xls` has 10,459 unique locality-code + kalpi rows.
+- The official K21 ballot-result datastore has 10,765 unique locality-code + kalpi rows.
+- Direct address matching covers 10,459 rows.
+- The 306 unmatched result rows are 305 official envelope rows plus one ordinary `נורית` [833] row, which is assignable through the single-stat locality shortcut.
 
 New scanned/PDF sources added on 2026-07-06:
 

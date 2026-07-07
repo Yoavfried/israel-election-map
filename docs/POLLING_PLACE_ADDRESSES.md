@@ -1,6 +1,6 @@
 # Polling-Place Address Coverage
 
-Last updated: 2026-07-06
+Last updated: 2026-07-07
 
 ## Purpose
 
@@ -24,7 +24,7 @@ This is intentionally approximate. It maps the polling-place building, not each 
 | K24 / 2021 | Archived official K24 polling-place XLSX | Election-specific; high confidence |
 | K23 / 2020 | Archived official K23 polling-place XLSX | Election-specific; high confidence |
 | K22 / 2019 Sep | Archived official K22 polling-place XLSX | Election-specific; high confidence |
-| K21 / 2019 Apr | Generic official `voting-polls` table | Fallback only; not election-specific |
+| K21 / 2019 Apr | Archived official K21 polling-place XLS | Election-specific; high confidence |
 | K20 / 2015 | Generic official `voting-polls` table | Fallback only; not election-specific |
 | K19 / 2013 | Generic official `voting-polls` table | Fallback only; not election-specific |
 | K18 / 2009 | `data/raw/archive_knesset18_kalpilist18.pdf` | Election-specific scanned list with embedded OCR text layer; row-level reconciliation is complete for ordinary rows |
@@ -39,10 +39,24 @@ Generic official polling-place datastore resource:
 
 https://data.gov.il/api/3/action/datastore_search?resource_id=68c4d7e8-2218-48ee-996f-2db2f72b2395
 
-K21 note:
+K21 update, 2026-07-07:
 
-- Historical-looking K21 URLs were found, but live and archived downloads did not yield a usable election-specific spreadsheet during this investigation.
-- K21 remains fallback-quality until a real election-specific file is recovered.
+- Recovered election-specific archived official K21 polling-place files from `bechirot21.bechirot.gov.il`.
+- Saved raw files:
+  - `data/raw/archive_knesset21_kalpies_full_report.xls`
+  - `data/raw/archive_knesset21_ballots_table.csv`
+  - `data/raw/archive_knesset21_special_kalpies.xls`
+  - `data/raw/archive_knesset21_kalpies_committee_summary.xls`
+- `archive_knesset21_kalpies_full_report.xls` is the direct address source. It includes locality code/name, kalpi number, polling-place address, polling-place name, accessibility flags, and eligible voters.
+- Exact locality-code + kalpi matching against the official K21 ballot-result datastore covers 10,459 / 10,765 result rows.
+- The unmatched rows are 305 official envelope rows plus one ordinary row: `נורית` [833], kalpi 1, with 98 eligible voters and 82 actual voters. `נורית` is a reviewed single-stat locality, so it is still assignable without geocoding.
+
+Archived source captures:
+
+- `https://web.archive.org/web/20221202061209id_/https://bechirot21.bechirot.gov.il/election/Kneset20/Documents/kalpies_full_report.xls`
+- `https://web.archive.org/web/20221201110430id_/https://bechirot21.bechirot.gov.il/election/Documents/%D7%98%D7%91%D7%9C%D7%AA%20%D7%A7%D7%9C%D7%A4%D7%99%D7%95%D7%AA.csv`
+- `https://web.archive.org/web/20221205071624id_/https://bechirot21.bechirot.gov.il/election/Kneset20/Documents/special_kalpies21.xls`
+- `https://web.archive.org/web/20221202061132id_/https://bechirot21.bechirot.gov.il/election/Kneset20/Documents/kalpies21_b.xls`
 
 ## Direct Address Matching
 
@@ -76,7 +90,7 @@ K18 update, 2026-07-06:
 | K24 | 2021 | Archived official polling-place XLSX | 12,926 | 12,127 | 799 | 93.82% | 0 (0.00%) | 425,512 (9.59%) |
 | K23 | 2020 | Archived official polling-place XLSX | 11,179 | 10,631 | 548 | 95.10% | 0 (0.00%) | 330,209 (7.15%) |
 | K22 | 2019 Sep | Archived official polling-place XLSX | 10,901 | 10,539 | 362 | 96.68% | 0 (0.00%) | 282,442 (6.33%) |
-| K21 | 2019 Apr | Generic official polling-place table | 10,765 | 9,698 | 1,067 | 90.09% | 467,046 (7.37%) | 567,589 (13.08%) |
+| K21 | 2019 Apr | Archived official polling-place XLS | 10,765 | 10,459 | 306 | 97.16% | 98 (0.00%) | 240,865 (5.55%) |
 | K20 | 2015 | Generic official polling-place table | 10,414 | 9,804 | 610 | 94.14% | 176,373 (3.00%) | 362,617 (8.52%) |
 | K19 | 2013 | Generic official polling-place table | 10,109 | 9,747 | 362 | 96.42% | 68,407 (1.21%) | 260,957 (6.81%) |
 | K18 | 2009 | Official scanned polling-place PDF extraction | 9,264 | 9,263 | 1 | 99.99% | 186,919 (3.42%) | 186,919 (5.47%) |
@@ -88,7 +102,8 @@ Interpretation:
 - K22-K25: every ordinary row has a direct address match; rows without direct addresses are not ordinary polling-place rows.
 - K17: every ordinary row has an address except 15 rows listed below.
 - K18: every ordinary row has a direct address match from the election-specific scanned PDF; the only row without an address is non-geographic.
-- K16 and K19-K21: matches use the generic polling-place table, so they are provisional. Kalpi numbers and polling-place locations may have changed.
+- K16 and K19-K20: matches use the generic polling-place table, so they are provisional. Kalpi numbers and polling-place locations may have changed.
+- K21: every ordinary row has a direct address match except `נורית` [833], kalpi 1, which is assignable by the single-stat locality shortcut.
 
 ## Ordinary Rows Without Direct Address
 
@@ -100,7 +115,7 @@ The table below excludes non-ordinary rows and shows only ordinary locality/kalp
 | K24 | 0 | 0 | 0 |
 | K23 | 0 | 0 | 0 |
 | K22 | 0 | 0 | 0 |
-| K21 | 762 | 467,046 | 326,806 |
+| K21 | 1 | 98 | 82 |
 | K20 | 317 | 176,373 | 129,708 |
 | K19 | 136 | 68,407 | 47,160 |
 | K18 | 0 | 0 | 0 |
@@ -136,7 +151,7 @@ After applying the reviewed locality resolution plan, the remaining non-envelope
 | K24 | 0 | 0 | 0 | 0 | 0 | 0 |
 | K23 | 0 | 0 | 0 | 0 | 0 | 0 |
 | K22 | 0 | 0 | 0 | 0 | 0 | 0 |
-| K21 | 762 | 103 | 6 | 653 | 409,279 | 287,550 |
+| K21 | 1 | 1 | 0 | 0 | 0 | 0 |
 | K20 | 317 | 39 | 5 | 273 | 157,603 | 116,744 |
 | K19 | 136 | 16 | 1 | 119 | 60,951 | 42,261 |
 | K18 | 0 | 0 | 0 | 0 | 0 | 0 |
@@ -227,7 +242,7 @@ Rules:
 
 ## Current Blockers
 
-- Recovering true election-specific polling-place files for K16 and K19-K21 would materially improve confidence.
+- Recovering true election-specific polling-place files for K16, K19, and K20 would materially improve confidence.
 - A geocoding provider and cache/review policy is still needed.
 - Locality polygons still need an official or reliable source.
 - The frontend still needs a visual design for custom point-size polygon buckets.

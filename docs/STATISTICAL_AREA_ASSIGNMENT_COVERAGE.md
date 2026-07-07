@@ -1,6 +1,6 @@
 # Statistical-Area Assignment Coverage
 
-Last updated: 2026-07-06
+Last updated: 2026-07-07
 
 ## Purpose
 
@@ -23,6 +23,11 @@ Full CSV outputs:
 
 - K18 scanned polling-place PDF extraction is now integrated into the coverage tables below. It resolves every ordinary official K18 result row to a polling-place address/place; only the special non-geographic row has no physical address.
 - New K17 scanned polling-place PDFs recover polling-place names for the 11 remaining multi-stat rows. Those rows still need geocoding/review because the scan address column is `0`, not a street address.
+
+2026-07-07 source update:
+
+- K21 now uses the archived official `archive_knesset21_kalpies_full_report.xls` instead of the generic polling-place fallback.
+- K21 has one ordinary row without a direct address: `נורית` [833], kalpi 1. It is covered by the reviewed single-stat locality shortcut.
 
 The full single-stat mapping has 2,166 source locality identities from K16-K25 that resolve to exactly one 2022 statistical area.
 
@@ -47,7 +52,7 @@ This table is row-level ballot-result coverage after applying:
 | K24 | 2021 | 1,887 | 10,171 | 62 | 7 | 0 | 0 |
 | K23 | 2020 | 1,622 | 8,948 | 54 | 7 | 0 | 0 |
 | K22 | 2019 Sep | 1,616 | 8,862 | 54 | 7 | 0 | 0 |
-| K21 | 2019 Apr | 1,610 | 8,136 | 54 | 7 | 653 | 287,550 |
+| K21 | 2019 Apr | 1,610 | 8,789 | 54 | 7 | 0 | 0 |
 | K20 | 2015 | 1,561 | 8,229 | 49 | 7 | 273 | 116,744 |
 | K19 | 2013 | 1,532 | 8,179 | 45 | 6 | 119 | 42,261 |
 | K18 | 2009 | 1,438 | 7,780 | 41 | 4 | 0 | 0 |
@@ -66,7 +71,7 @@ This table excludes official envelope rows. `Still missing address` means the ro
 | K24 | 2021 | 0 | 0 | 0 | 0 | 0 | 0 | 0.00% |
 | K23 | 2020 | 0 | 0 | 0 | 0 | 0 | 0 | 0.00% |
 | K22 | 2019 Sep | 0 | 0 | 0 | 0 | 0 | 0 | 0.00% |
-| K21 | 2019 Apr | 762 | 103 | 6 | 653 | 409,279 | 287,550 | 6.63% |
+| K21 | 2019 Apr | 1 | 1 | 0 | 0 | 0 | 0 | 0.00% |
 | K20 | 2015 | 317 | 39 | 5 | 273 | 157,603 | 116,744 | 2.74% |
 | K19 | 2013 | 136 | 16 | 1 | 119 | 60,951 | 42,261 | 1.10% |
 | K18 | 2009 | 0 | 0 | 0 | 0 | 0 | 0 | 0.00% |
@@ -76,7 +81,8 @@ This table excludes official envelope rows. `Still missing address` means the ro
 ## Interpretation
 
 - K22-K25 have no remaining non-envelope address gap after reviewed assignment.
-- K21, K20, K19, and K16 still depend on the generic polling-place fallback, so their unresolved rows are mostly multi-stat localities where a direct historical address is still needed.
+- K21 now has no remaining ordinary address gap after reviewed assignment; its former unresolved multi-stat rows have election-specific polling-place addresses and move into direct-address geocoding scope.
+- K20, K19, and K16 still depend on the generic polling-place fallback, so their unresolved rows are mostly multi-stat localities where a direct historical address is still needed.
 - K18 now uses the election-specific scanned polling-place PDF instead of the generic fallback and has no remaining ordinary address gap.
 - K17 improves after the reviewed crosswalk: `ניצן`, `אום בטין`, and two `בית אריה` rows are assignable without geocoding. The 11 remaining multi-stat rows now have recovered polling-place names from the K17 scans, but still need geocoding/review.
 - Custom point-size polygon buckets are data-assigned now. Their visual treatment is a frontend design decision for later.
