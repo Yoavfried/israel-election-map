@@ -16,6 +16,8 @@ There is also a shortcut:
 
 This is intentionally approximate. It maps the polling-place building, not each voter's residential statistical area.
 
+Current product scope is K17-K25. K16 / 2003 is deferred until a usable election-specific polling-place address source is recovered.
+
 ## Sources Found
 
 | Election | Address source | Current status |
@@ -29,7 +31,6 @@ This is intentionally approximate. It maps the polling-place building, not each 
 | K19 / 2013 | `data/raw/archive_knesset19_all_stations.pdf` | Election-specific archived official Excel-generated PDF; high confidence after parser cleanup |
 | K18 / 2009 | `data/raw/archive_knesset18_kalpilist18.pdf` | Election-specific scanned PDF with embedded OCR text; reconciliation complete for ordinary rows |
 | K17 / 2006 | Address field inside official ballot-result file plus `data/raw/archive_knesset17_kalpies-list17-*.pdf` | Election-specific; high confidence for addressed rows; targeted scan extraction recovered names for 11 remaining multi-stat rows |
-| K16 / 2003 | No usable election-specific polling-place address source found yet | Not solved for polling-place geocoding |
 
 Official election results package:
 
@@ -104,25 +105,12 @@ Reconciliation:
 - The direct address source has 10,459 unique locality-code + kalpi rows.
 - The official K21 ballot-result datastore has 10,765 rows.
 - Direct address matching covers 10,459 rows.
-- The 306 unmatched result rows are 305 special-envelope rows plus `נורית` [833], kalpi 1, with 98 eligible voters and 82 actual voters.
-- `נורית` is a reviewed single-stat locality, so it is still assignable without geocoding.
+- The 306 unmatched result rows are 305 special-envelope rows plus Nurit [833], kalpi 1, with 98 eligible voters and 82 actual voters.
+- Nurit is a reviewed single-stat locality, so it is still assignable without geocoding.
 
-### K16 / 2003
+## Deferred K16 Research
 
-No usable full polling-place address source was found.
-
-Evidence checked:
-
-- The official K16 datastore has 7,886 rows and fields for locality code, kalpi code, eligible voters, actual voters, invalid/valid votes, locality name, and party votes. It has no address or polling-place place-name columns.
-- The old Knesset archive confirms voter-location lookup existed through public notices, voter messages, and phone information centers.
-- The old K16 result UI exposes some polling-place names, for example Jerusalem entries, but not street addresses and not a complete national archived list.
-- Wayback searches for `elections16`, `AllStations`, `kalpi`, `poll`, `station`, `mikum`, `makom`, `place`, and related old Knesset paths did not find a national polling-place address file.
-
-Current K16 decision:
-
-- Do not count generic-table matches as production address coverage.
-- Use locality-level/single-stat/custom-bucket assignment where possible.
-- Keep K16 multi-stat rows unresolved until a real K16 source is recovered.
+K16 / 2003 is outside current product scope. No usable full polling-place address source has been found yet. If K16 is reintroduced later, it should not rely on generic-table matches as production coverage.
 
 ## Direct Address Coverage
 
@@ -139,13 +127,12 @@ Coverage is measured against official ballot-result rows. Rows without direct ad
 | K19 | 2013 | Archived official K19 AllStations PDF | 10,109 | 9,881 | 228 | 97.74% | 0 (0.00%) | 215,789 (5.63%) |
 | K18 | 2009 | Official scanned polling-place PDF extraction | 9,264 | 9,263 | 1 | 99.99% | 186,919 (3.42%) | 186,919 (5.47%) |
 | K17 | 2006 | Address field in official result file | 8,426 | 8,262 | 164 | 98.05% | Not available | 179,177 (5.62%) |
-| K16 | 2003 | No usable election-specific source | 7,886 | 0 | 7,886 | 0.00% | 4,878,371 (100.00%) | 3,200,773 (100.00%) |
 
 Interpretation:
 
-- K19-K25 and K18: every ordinary geographic row now has a direct election-specific address source, except K21 `נורית`, which is assignable by the single-stat shortcut.
+- K19-K25 and K18: every ordinary geographic row now has a direct election-specific address source, except K21 Nurit, which is assignable by the single-stat shortcut.
 - K17: every ordinary row has an address except 15 rows. Four are assignable by the single-stat shortcut. Eleven have recovered polling-place names from scans but still need geocoding/review.
-- K16: no production-grade polling-place address source is available yet.
+- For K17-K25, the only remaining missing-address blocker needed for statistical-area assignment is the 11 K17 place-name-only rows listed below.
 
 ## Remaining Address Gap After Reviewed Assignment
 
@@ -162,9 +149,6 @@ This table excludes official envelope rows. `Still missing address` means the ro
 | K19 | 2013 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0.00% |
 | K18 | 2009 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0.00% |
 | K17 | 2006 | 15 | 4 | 0 | 0 | 11 | Not available | 3,603 | 0.11% |
-| K16 | 2003 | 7,737 | 1,209 | 53 | 3 | 6,472 | 4,186,620 | 2,674,963 | 83.57% |
-
-K16 note: the non-envelope count includes one zero-vote control/malformed row. It does not affect voter totals.
 
 ## K17 Remaining Rows
 
@@ -225,13 +209,13 @@ Rules:
 
 - Exact current locality-code matches can be automated.
 - Historical aliases, spelling changes, merges, and splits must be reviewed and recorded.
-- Reviewed split localities and `שער שומרון` are address-target sets: use each ballot row's address/geocoded point to assign it to the correct current polygon. Do not join current polygons, and do not split votes heuristically.
+- Reviewed split localities and Sha'ar Shomron are address-target sets: use each ballot row's address/geocoded point to assign it to the correct current polygon. Do not join current polygons, and do not split votes heuristically.
 - Reviewed custom buckets (`TRIBE`, `GAZA`, `N.S.`, `HEBRON`) are assigned to synthetic point-size polygon geographies and preserve source-row contributions.
 - A merge can use the single-stat shortcut only if the merged 2022 target has exactly one statistical area, or if a reviewed rule assigns the old locality unambiguously.
 
 ## Current Blockers
 
-- Recovering a usable K16 polling-place address/list source.
-- Building and reviewing the geocoding cache for K17-K25 multi-stat localities.
+- Geocoding/reviewing the 11 K17 place-name-only rows.
+- Building and reviewing the geocoding cache for addressed K17-K25 multi-stat localities.
 - Choosing an official or reliable locality polygon source.
 - Designing custom point-size polygon buckets in the frontend.

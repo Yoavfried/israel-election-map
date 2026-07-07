@@ -2,6 +2,8 @@
 
 Last updated: 2026-07-06
 
+Scope note: this file was created during the earlier K16-K25 investigation. Current product scope is K17-K25; K16-only rows are retained as historical review/future-reactivation context.
+
 This file turns the reviewed locality crosswalk table into implementation actions.
 
 Source review table:

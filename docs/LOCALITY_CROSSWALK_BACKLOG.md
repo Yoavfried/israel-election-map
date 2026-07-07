@@ -2,9 +2,11 @@
 
 Last updated: 2026-07-05
 
+Scope note: this file was created during the earlier K16-K25 investigation. Current product scope is K17-K25; K16-only rows are retained as historical review/future-reactivation context.
+
 ## Purpose
 
-This file defines the next data-cleaning backlog: every unique locality identity from K16-K25 that did not automatically match the 2022 statistical-area locality list.
+This file records the original data-cleaning backlog: every unique locality identity from the earlier K16-K25 investigation that did not automatically match the 2022 statistical-area locality list.
 
 The source for this backlog is the FileGDB-based locality audit, not the old partial GeoJSON.
 
@@ -30,7 +32,7 @@ Reviewed assignment coverage:
 ## Summary
 
 - Unique unmatched locality identities: 155
-- Total affected actual voters across K16-K25 rows: 702,421
+- Total affected actual voters across the original K16-K25 rows: 702,421
 
 | Initial bucket | Localities | Affected actual voters |
 | --- | --- | --- |

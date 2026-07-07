@@ -4,14 +4,14 @@ Last updated: 2026-07-07
 
 ## Goal
 
-Build a local-first election visualization website for Israeli Knesset elections from 2003 onward. A user should be able to choose an election, switch geography modes, inspect mapped results, and drill into vote distribution details.
+Build a local-first election visualization website for Israeli Knesset elections from 2006 onward. A user should be able to choose an election, switch geography modes, inspect mapped results, and drill into vote distribution details.
 
 Required geography modes:
 
 1. Statistical areas, using 2022 statistical-area polygons.
 2. Localities.
 
-This is not a K23-only prototype. K16-K25 are the implementation target.
+The current implementation target is K17-K25. K16 / 2003 is out of current scope until a usable election-specific polling-place address source is recovered.
 
 ## Confirmed Data Direction
 
@@ -19,7 +19,7 @@ Official Knesset election data exists in the data.gov.il `votes-knesset` package
 
 https://data.gov.il/api/3/action/package_show?id=26f9fa06-fcd7-4173-8df5-65797b63e857
 
-Confirmed coverage:
+Confirmed current-scope coverage:
 
 | Election | Year | Ballot-level results | Locality-level results |
 |---|---:|---|---|
@@ -32,13 +32,12 @@ Confirmed coverage:
 | Knesset 19 | 2013 | CSV | CSV |
 | Knesset 18 | 2009 | CSV | Aggregate from ballot rows |
 | Knesset 17 | 2006 | XLS | Aggregate from ballot rows, with name-normalization caveats |
-| Knesset 16 | 2003 | XLS | Aggregate from ballot rows |
 
 Locality-mode decision:
 
 - Use official locality-level resources for K19-K25.
-- Generate locality totals from ballot rows for K16-K18.
-- Keep pre-2003 locality availability as an open research item; current product scope starts at K16 / 2003.
+- Generate locality totals from ballot rows for K17-K18.
+- Keep K16 and pre-2003 locality availability as later research items; current product scope starts at K17 / 2006.
 
 ## Statistical Areas
 
@@ -68,7 +67,7 @@ Apply this single-stat locality shortcut before geocoding. If a result row's mat
 
 This is an accepted approximation for the product.
 
-The ballot-result rows include vote counts and kalpi identifiers, but no geometry. Polling-place address data plus the single-stat locality shortcut supports a first-pass approximation for K17-K25. K16 remains only partially mappable until a real K16 polling-place address/list source is recovered.
+The ballot-result rows include vote counts and kalpi identifiers, but no geometry. Polling-place address data plus the single-stat locality shortcut supports a first-pass approximation for K17-K25.
 
 The approximation is:
 
@@ -95,13 +94,12 @@ Direct address-source summary:
 | K19 | 2013 | Archived official K19 AllStations PDF | 97.74% | 215,789 (5.63%) |
 | K18 | 2009 | Official scanned polling-place PDF extraction | 99.99% | 186,919 (5.47%) |
 | K17 | 2006 | Address field in official result file | 98.05% | 179,177 (5.62%) |
-| K16 | 2003 | No usable election-specific source | 0.00% | 3,200,773 (100.00%) |
 
 Interpretation:
 
-- K19-K25 and K18 have election-specific address sources covering every ordinary geographic row, except K21 `נורית`, which is still assignable by single-stat locality.
-- K17 has 15 ordinary rows with an empty address field. Four are assignable by single-stat locality; 11 have recovered polling-place names from scans and need geocoding/review.
-- K16 has no usable polling-place address source yet. Generic-table matches are kept as research-only metadata, not production coverage.
+- K19-K25 and K18 have election-specific address sources covering every ordinary geographic row, except K21 Nurit, which is still assignable by single-stat locality.
+- K17 has 15 ordinary rows with an empty address field. Four are assignable by the single-stat locality shortcut; 11 have recovered polling-place names from scans and need geocoding/review.
+- K16 has no usable polling-place address source and is deferred from current scope.
 
 ## Reviewed Assignment Coverage
 
@@ -118,7 +116,6 @@ After applying the reviewed locality crosswalk, custom buckets, and the FileGDB-
 | K19 | 0 | 0 | 0 | 0 | 0 |
 | K18 | 0 | 0 | 0 | 0 | 0 |
 | K17 | 15 | 4 | 0 | 11 | 3,603 |
-| K16 | 7,737 | 1,209 | 53 | 6,472 | 2,674,963 |
 
 Full coverage artifacts:
 
@@ -136,21 +133,21 @@ Implementation decisions:
 
 ## K23 AGS Field
 
-The K23 polling-place report includes an `אג"ס` field, but it is not compatible enough with the 2022 polygons for direct joining:
+The K23 polling-place report includes an AGS/statistical-area-like field, but it is not compatible enough with the 2022 polygons for direct joining:
 
-- K23 rows with `אג"ס`: 10,631.
-- Unique K23 locality+`אג"ס` pairs: 2,701.
+- K23 rows with AGS: 10,631.
+- Unique K23 locality+AGS pairs: 2,701.
 - Unique 2022 locality+`STAT_2022` pairs: 3,739.
 - Row match rate: 5,379 / 10,631, or 50.60%.
 - Unique-pair match rate: 1,053 / 2,701, or 38.99%.
 
 Decision:
 
-Keep K23 `אג"ס` as source metadata only. Use geocoded polling-place addresses plus point-in-polygon for multi-stat localities, and use the single-stat locality shortcut only where the 2022 layer has exactly one statistical area for the locality.
+Keep K23 AGS as source metadata only. Use geocoded polling-place addresses plus point-in-polygon for multi-stat localities, and use the single-stat locality shortcut only where the 2022 layer has exactly one statistical area for the locality.
 
 ## Geocoding And Assignment Pipeline
 
-1. Load official ballot results for K16-K25.
+1. Load official ballot results for K17-K25.
 2. Normalize locality codes, locality names, and kalpi identifiers.
 3. Load the 2022 statistical-area FileGDB and generate a web-friendly polygon layer plus locality/stat metadata.
 4. Apply the reviewed locality resolution plan for exact matches, aliases, merges, splits, custom buckets, and non-geographic buckets.
@@ -158,13 +155,12 @@ Keep K23 `אג"ס` as source metadata only. Use geocoded polling-place addresses
 6. Assign reviewed custom point-size polygon rows without geocoding.
 7. Keep official envelope and reviewed special non-geographic rows outside geographic polygon assignment.
 8. Load election-specific polling-place addresses where available.
-9. Keep the generic official polling-place table as research-only fallback metadata unless an election-specific validation step approves it.
-10. Geocode polling-place addresses for rows in multi-stat localities and reviewed address-target sets that still need address-level assignment.
-11. Run point-in-polygon against the 2022 statistical-area polygons.
-12. Join ballot results to assigned statistical areas, custom geographies, or non-geographic buckets.
-13. Aggregate per geography and keep per-kalpi/source-row contribution details.
-14. Store unresolved rows and their vote totals separately.
-15. Persist assignment provenance: source, match rule, geocoder, confidence, and failure reason.
+9. Geocode polling-place addresses for rows in multi-stat localities and reviewed address-target sets that still need address-level assignment.
+10. Run point-in-polygon against the 2022 statistical-area polygons.
+11. Join ballot results to assigned statistical areas, custom geographies, or non-geographic buckets.
+12. Aggregate per geography and keep per-kalpi/source-row contribution details.
+13. Store unresolved rows and their vote totals separately.
+14. Persist assignment provenance: source, match rule, geocoder, confidence, and failure reason.
 
 ## Locality Crosswalk
 
@@ -182,6 +178,8 @@ Current resolution artifact:
 - `docs/LOCALITY_CROSSWALK_RESOLUTION_PLAN.md`
 - `docs/LOCALITY_CROSSWALK_RESOLUTION_PLAN.csv`
 
+Scope note: the crosswalk review files may still retain K16-only rows from the earlier investigation. Current product loaders should filter source elections to K17-K25.
+
 Minimum crosswalk fields:
 
 - election
@@ -191,7 +189,7 @@ Minimum crosswalk fields:
 - whether the target can use the single-stat locality shortcut
 - notes/source for the decision
 
-Reviewed split localities and `שער שומרון` are modeled as address-target sets. Their rows should be assigned by polling-place geocoding into the correct current polygon. Do not join current polygons, and do not split votes heuristically.
+Reviewed split localities and Sha'ar Shomron are modeled as address-target sets. Their rows should be assigned by polling-place geocoding into the correct current polygon. Do not join current polygons, and do not split votes heuristically.
 
 ## Aggregation Model
 
@@ -211,7 +209,7 @@ For localities:
 
 Map-first interface:
 
-- Election dropdown for K16-K25.
+- Election dropdown for K17-K25.
 - Geography switch: Statistical areas / Localities.
 - Coloring mode:
   - Winning party
@@ -235,7 +233,7 @@ Candidate stack:
 
 ## Open Questions
 
-1. Can a usable election-specific polling-place address/list source be recovered for K16?
+1. Should K16 be added later if a usable election-specific polling-place address/list source is recovered?
 2. Which geocoder should be used for polling-place addresses, and can we cache/review results legally and reproducibly?
 3. What official or reliable locality polygon source should be used?
 4. Are pre-2003 locality-level results available from an official archive outside the inspected open-data package?

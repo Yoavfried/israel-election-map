@@ -11,6 +11,8 @@ It answers two separate questions:
 1. Which election locality identities can be assigned directly because their reviewed 2022 locality has exactly one statistical area?
 2. After direct address matching, reviewed locality assignment, custom buckets, and non-geographic buckets, how many rows still need an address and how many actual voters are still lost from the map?
 
+Current product scope is K17-K25. K16 / 2003 is deferred until a usable election-specific polling-place address source is recovered.
+
 ## Generated Tables
 
 Full CSV outputs:
@@ -26,15 +28,14 @@ Source updates:
 - K21 uses the archived official `archive_knesset21_kalpies_full_report.xls` instead of the generic polling-place fallback.
 - K20 uses the archived official `archive_knesset20_tell_the_polls_9_3.xls`; every ordinary K20 row is addressed after split-row matching.
 - K19 uses the archived official `archive_knesset19_all_stations.pdf`; every ordinary K19 row is addressed after RTL-aware table parsing.
-- K16 has no usable election-specific polling-place source. Generic-table matches are not counted as production coverage.
 
-The full single-stat mapping has 2,166 source locality identities from K16-K25 that resolve to exactly one 2022 statistical area.
+The full single-stat mapping has 2,127 source locality identities from K17-K25 that resolve to exactly one 2022 statistical area.
 
 | Match method | Source locality identities |
 |---|---:|
-| automatic_code_match | 1,133 |
-| automatic_name_match | 939 |
-| reviewed_locality | 94 |
+| automatic_code_match | 1,103 |
+| automatic_name_match | 937 |
+| reviewed_locality | 87 |
 
 ## Assignment Coverage
 
@@ -56,7 +57,6 @@ This table is row-level ballot-result coverage after applying:
 | K19 | 2013 | 1,532 | 8,298 | 45 | 6 | 0 | 0 |
 | K18 | 2009 | 1,438 | 7,780 | 41 | 4 | 0 | 0 |
 | K17 | 2006 | 1,241 | 6,984 | 38 | 3 | 11 | 3,603 |
-| K16 | 2003 | 1,209 | 0 | 53 | 3 | 6,472 | 2,674,963 |
 
 ## Remaining Address Gap
 
@@ -75,14 +75,11 @@ This table excludes official envelope rows. `Still missing address` means the ro
 | K19 | 2013 | 0 | 0 | 0 | 0 | 0 | 0 | 0.00% |
 | K18 | 2009 | 0 | 0 | 0 | 0 | 0 | 0 | 0.00% |
 | K17 | 2006 | 15 | 4 | 0 | 11 | Not available | 3,603 | 0.11% |
-| K16 | 2003 | 7,737 | 1,209 | 53 | 6,472 | 4,186,620 | 2,674,963 | 83.57% |
-
-K16 note: the non-envelope count includes one zero-vote control/malformed row. It does not affect voter totals.
 
 ## Interpretation
 
 - K19-K25 have no remaining non-envelope address gap after reviewed assignment.
 - K18 has no remaining ordinary address gap after scanned-PDF extraction.
 - K17 has 11 remaining multi-stat rows with recovered polling-place names but no street address.
-- K16 is not polling-place-address solved. Most K16 statistical-area assignment remains unresolved until a real K16 source is recovered.
+- K16 is outside current product scope.
 - Custom point-size polygon buckets are data-assigned now. Their visual treatment is a frontend design decision for later.

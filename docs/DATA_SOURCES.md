@@ -8,14 +8,15 @@ Official Knesset election results package:
 
 https://data.gov.il/api/3/action/package_show?id=26f9fa06-fcd7-4173-8df5-65797b63e857
 
-Current project scope starts at K16 / 2003 and runs through K25 / 2022.
+Current project scope starts at K17 / 2006 and runs through K25 / 2022.
 
 Useful notes:
 
 - K19-K25 include official locality-level resources.
-- K16-K18 locality totals can be generated from ballot-level rows.
+- K17-K18 locality totals can be generated from ballot-level rows.
 - Party columns are election-specific ballot letters and must not be treated as stable party IDs across elections.
 - Some direct file downloads from `e.data.gov.il` may hit browser/security interstitials; datastore/API access was usable during investigation.
+- K16 / 2003 is deferred until a usable election-specific polling-place address source is recovered.
 
 25th Knesset official results site:
 
@@ -96,7 +97,6 @@ Address sources currently available:
 | K19 / 2013 | `data/raw/archive_knesset19_all_stations.pdf` | High; election-specific archived official Excel-generated PDF |
 | K18 / 2009 | `data/raw/archive_knesset18_kalpilist18.pdf` | High; election-specific scanned PDF with embedded OCR text, reconciled to every ordinary official result row |
 | K17 / 2006 | Address field inside official ballot-result file plus `data/raw/archive_knesset17_kalpies-list17-*.pdf` | High for addressed rows; targeted scan review recovered polling-place names for the 11 remaining multi-stat rows |
-| K16 / 2003 | No usable election-specific source found | Unsolved for polling-place geocoding |
 
 Generic official polling-place datastore resource:
 
@@ -117,34 +117,34 @@ The generic resource has locality code, kalpi code, street, house number, pollin
 | K18 | `data/raw/archive_knesset18_kalpilist18.pdf` | Local raw archive file | Official polling-place list scan with embedded OCR text layer. |
 | K17 | `data/raw/archive_knesset17_kalpies-list17-1.pdf`, `data/raw/archive_knesset17_kalpies-list17-2.pdf` | Local raw archive files | Image-only scans used for targeted review of rows with empty address fields. |
 
-### K16 Status
+### Deferred K16 Research
 
-K16 remains the only in-scope election without a usable polling-place address source.
+K16 / 2003 is not part of current product scope.
 
 Checked evidence:
 
 - Official K16 datastore: 7,886 result rows, no address or polling-place name columns.
-- Archived K16 Knesset pages: location lookup existed via voter notices and phone information centers.
+- Archived K16 Knesset pages: location lookup existed via voter notices, public notices, and phone information centers.
 - Old K16 result UI: exposes some polling-place names, but no street addresses and no complete national archived list.
-- Wayback filename/path searches did not find a national K16 `מקומות קלפי` list, XLS, CSV, or PDF.
+- Wayback filename/path searches did not find a national K16 polling-place list, XLS, CSV, or PDF.
 
-Until a real source is found, K16 statistical-area mode can only map rows covered by locality-level single-stat rules or custom point buckets.
+K16 can be reconsidered later if a real election-specific source is found.
 
 ## K23 Statistical Area Field
 
-The K23 polling-place report includes an `אג"ס` field, but it should not be joined directly to the 2022 statistical-area polygons.
+The K23 polling-place report includes an AGS/statistical-area-like field, but it should not be joined directly to the 2022 statistical-area polygons.
 
 Observed match against the FileGDB-derived 2022 locality/stat pairs:
 
-- K23 rows with `אג"ס`: 10,631.
-- Unique K23 locality+`אג"ס` pairs: 2,701.
+- K23 rows with AGS: 10,631.
+- Unique K23 locality+AGS pairs: 2,701.
 - Unique 2022 locality+`STAT_2022` pairs in the FileGDB: 3,739.
 - Row matches: 5,379 / 10,631, or 50.60%.
 - Unique-pair matches: 1,053 / 2,701, or 38.99%.
 
 Decision:
 
-Keep K23 `אג"ס` as source metadata only. Use geocoded polling-place addresses plus point-in-polygon for multi-stat localities, and use the single-stat locality shortcut only where the 2022 layer has exactly one statistical area for the locality.
+Keep K23 AGS as source metadata only. Use geocoded polling-place addresses plus point-in-polygon for multi-stat localities, and use the single-stat locality shortcut only where the 2022 layer has exactly one statistical area for the locality.
 
 ## Preferred Polygon Export Format
 
