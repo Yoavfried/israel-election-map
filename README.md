@@ -20,7 +20,7 @@ Kalpi-level results are part of the source data, but the project will not presen
 - Preserve raw source data and generated/normalized data separately.
 - Keep source metadata, assignment method, and mapped/unmapped coverage visible in the product.
 
-Current K17-K25 statistical-area status: row assignment is classified for every result row, but address-level geocoding is still pending. K22-K25 and K20-K21 have ready address strings for rows that need geocoding; K17 has 11 multi-stat rows without a usable street address.
+Current K17-K25 statistical-area status: row assignment is classified for every result row, and every relevant row has a geocoder query. Address-level geocoding is still pending; some K17/K18/K19 rows are place-name-only and need provider/manual review rather than blind acceptance.
 
 Current core docs:
 
@@ -30,6 +30,8 @@ Current core docs:
 - `docs/POLLING_PLACE_ADDRESSES.md`
 - `docs/STATISTICAL_AREA_ASSIGNMENT_COVERAGE.md`
 - `docs/LOCALITY_CROSSWALK_RESOLUTION_PLAN.md`
+- `docs/GEOCODING_SPIKE.md`
+- `docs/GOVMAP_BROWSER_SPIKE.md`
 
 ## Repository Layout
 
@@ -40,7 +42,7 @@ Current core docs:
 
 ## Status
 
-No runnable web app has been scaffolded yet. The current data pipeline runs through final row-level geography assignment and public aggregate CSV generation; outputs are partial until a reviewed geocode cache is added. See `docs/DATA_PIPELINE.md`.
+No product web app has been scaffolded yet. A temporary static GovMap provider-test page lives in `web/geocode-spike/`. The current data pipeline runs through final row-level geography assignment and public aggregate CSV generation; outputs are partial until a reviewed geocode cache is added. See `docs/DATA_PIPELINE.md`.
 
 ## License
 

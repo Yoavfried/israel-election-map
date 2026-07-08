@@ -24,6 +24,8 @@ Stages:
 - `build_geocoding_input.py` joins the assignment plan to polling-place addresses and emits the rows ready for geocoding.
 - `build_geocoding_work_units.py` deduplicates geocoding input rows into unique geocoder queries and row mappings.
 - `build_geocoding_spike_sample.py` builds a representative sample of geocoding work units for provider testing.
+- `export_geocoding_spike_web.py` exports that representative sample to `web/geocode-spike/sample.json` for the domain-approved browser spike.
+- `check_geocode_spike_static.py` validates the static browser spike files and exported sample before deployment.
 - `run_govmap_geocoding_spike.py` runs a small GovMap search spike when `GOVMAP_API_KEY` is available; outputs are marked `needs_review`.
 - `build_final_geography_assignments.py` consumes an optional reviewed geocode cache and writes final row-level geography assignments; without a geocode cache it writes explicit pending-geocode diagnostics.
 - `build_public_outputs.py` writes statistical-area, locality, custom-geography, contribution, and unmapped CSV outputs for the website and public downloads.
@@ -35,6 +37,7 @@ Dependency note:
 Known current input gap:
 
 - `data/processed/geocoding/geocoded_points.csv` does not exist yet, so final outputs are partial until reviewed coordinates are added.
+- The GovMap token request is domain-approved for `yoavfried.com`; use `web/geocode-spike/` for live browser testing if direct Python calls are blocked.
 
 Source guardrail:
 

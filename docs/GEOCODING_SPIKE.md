@@ -46,12 +46,28 @@ Primary docs:
 - Search result detail docs: https://api.govmap.gov.il/docs/search-functions/get-search-result-data
 - Geocode JS docs: https://api.govmap.gov.il/docs/javascript-functions/geocode
 
+GovMap API keys are domain-approved. The current request is for `yoavfried.com`, so the primary live spike path is the browser page documented in:
+
+- `docs/GOVMAP_BROWSER_SPIKE.md`
+
+Prepare the browser sample payload with:
+
+```bash
+python scripts/export_geocoding_spike_web.py
+```
+
+Output:
+
+- `web/geocode-spike/sample.json`
+
+The browser page calls GovMap from the approved domain and exports a CSV with the same review-oriented output contract as the Python spike.
+
 The current spike script uses the same public service endpoints called by GovMap's published JavaScript API:
 
 - `https://www.govmap.gov.il/api/search-service/api-search`
 - `https://www.govmap.gov.il/api/layers-catalog/api-search-result-data`
 
-This is acceptable for a small spike, but do not bulk geocode until API terms, rate limits, and caching/publishing permission are confirmed.
+This is acceptable for a small spike or local dry-run, but live calls may be blocked by GovMap domain/origin checks. Do not bulk geocode until API terms, rate limits, and caching/publishing permission are confirmed.
 
 Run a dry run:
 
@@ -65,6 +81,8 @@ Run live after setting a token:
 set GOVMAP_API_KEY=...
 python scripts/run_govmap_geocoding_spike.py --limit 40
 ```
+
+If the token only works from the approved browser origin, use the browser spike instead of this Python path.
 
 Output:
 
