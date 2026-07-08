@@ -33,6 +33,7 @@ Current core docs:
 - `docs/GEOCODING_SPIKE.md`
 - `docs/GOVMAP_BROWSER_SPIKE.md`
 - `docs/ARCGIS_GEOCODING_SPIKE.md`
+- `docs/PHOTON_GEOCODING_SPIKE.md`
 
 ## Repository Layout
 

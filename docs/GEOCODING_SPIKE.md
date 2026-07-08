@@ -115,6 +115,37 @@ Output:
 
 The ArcGIS script defaults to `forStorage=true` because project coordinates are intended to be cached/reviewed. Use only a token with the right stored-geocoding privilege for retained results.
 
+
+## Photon Local Candidate
+
+Photon is being tested as a no-token, self-hosted fallback candidate. The local setup uses:
+
+- Geofabrik `israel-and-palestine-latest.osm.pbf`.
+- `mediagis/nominatim:5.3` to import the PBF into a local Nominatim/Postgres database.
+- Photon `1.2.1` importing from that Nominatim database with `-languages he,en,ar` and `-country-codes il,ps`.
+
+This path is free in API cost and permits local batch execution, but it is based on OpenStreetMap rather than official Israeli address data. Early manual testing showed that a query like `Begin 1 Jerusalem / Menachem Begin 1 Jerusalem` can return high-looking results in the wrong locality, so Photon matches must be reviewed for locality/stat-area plausibility before any promotion to the production cache.
+
+Run a dry run:
+
+```bash
+python scripts/run_photon_geocoding_spike.py --dry-run
+```
+
+Run live after the local Photon server is listening on `127.0.0.1:2322`:
+
+```bash
+python scripts/run_photon_geocoding_spike.py --limit 50
+```
+
+Output:
+
+- `data/processed/geocoding/photon_spike_results.csv`
+
+The script applies an Israel/Palestine bounding box and a center-of-Israel bias by default. Those constraints reduce out-of-region drift but do not guarantee a correct locality match. The output therefore exposes Photon locality fields such as `photon_city`, `photon_district`, `photon_street`, and OSM metadata for manual review.
+
+The first 50-row live Photon spike completed locally with 46 matches and 4 no-matches. The conservative locality check found 36 top results where the expected locality was visible and 10 where it was not. Some of those 10 are spelling/orthography review cases, but several are real wrong-locality matches, especially school/place-name queries.
+
 ## Cache Contract
 
 The production cache path remains:
