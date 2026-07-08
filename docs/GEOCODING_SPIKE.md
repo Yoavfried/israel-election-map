@@ -144,6 +144,10 @@ Output:
 
 The script applies an Israel/Palestine bounding box and a center-of-Israel bias by default. Those constraints reduce out-of-region drift but do not guarantee a correct locality match. The output therefore exposes Photon locality fields such as `photon_city`, `photon_district`, `photon_street`, and OSM metadata for manual review.
 
+
+
+A full local Photon work-unit run over 7,196 deduplicated queries found that true `place_only` queries are small enough for manual review: 18 units, 60 ballot rows, and 22,246 actual voters. Broader non-address queries (`place_with_locality` + `place_only`) are larger: 469 units, 4,821 rows, and 1,818,295 actual voters. Address queries are Photon?s strongest use case, but acceptance should still require a point-in-expected-locality validation rather than trusting the first text result.
+
 The first 50-row live Photon spike completed locally with 46 matches and 4 no-matches. The conservative locality check found 36 top results where the expected locality was visible and 10 where it was not. Some of those 10 are spelling/orthography review cases, but several are real wrong-locality matches, especially school/place-name queries.
 
 ## Cache Contract
