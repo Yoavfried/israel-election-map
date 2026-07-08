@@ -21,6 +21,38 @@ STAT_AREA_METADATA = PROCESSED_DIR / "geographies" / "statistical_areas_2022.met
 OUT_DIR = PROCESSED_DIR / "assignments"
 
 
+
+def normalize_locality_code(value: Any) -> str:
+    text = str(value or "").strip()
+    if not text or text.lower() == "nan":
+        return ""
+    try:
+        number = float(text)
+    except ValueError:
+        digits = "".join(char for char in text if char.isdigit())
+        return str(int(digits)) if digits else ""
+    if number.is_integer():
+        return str(int(number))
+    digits = "".join(char for char in text if char.isdigit())
+    return str(int(digits)) if digits else ""
+
+
+def split_locality_codes(value: Any) -> list[str]:
+    codes: list[str] = []
+    for part in str(value or "").split("|"):
+        code = normalize_locality_code(part)
+        if code and code not in codes:
+            codes.append(code)
+    return codes
+
+
+def point_matches_expected_locality(row: dict[str, str], point: dict[str, Any]) -> bool:
+    expected = split_locality_codes(row.get("target_locality_code", ""))
+    if not expected:
+        return True
+    return normalize_locality_code(point.get("locality_code", "")) in expected
+
+
 def read_csv(path: Path) -> list[dict[str, str]]:
     if not path.exists():
         return []
@@ -300,6 +332,18 @@ def main() -> None:
             geocode_match_key = geocode_lookup_key if geocode_lookup_key in geocoded_assignments else uid
             if geocode_match_key in geocoded_assignments:
                 point = geocoded_assignments[geocode_match_key]
+                if not point_matches_expected_locality(row, point):
+                    expected_codes = "|".join(split_locality_codes(row.get("target_locality_code", "")))
+                    point_code = normalize_locality_code(point.get("locality_code", ""))
+                    output.append(
+                        unmapped(
+                            row,
+                            "geocoded_point_outside_expected_locality",
+                            f"geocoded point fell in locality {point_code}, expected {expected_codes}",
+                            geocoding_row,
+                        )
+                    )
+                    continue
                 output.append(
                     {
                         **base_output(row),
@@ -433,7 +477,7 @@ def main() -> None:
         ],
     )
 
-    missing = [row for row in output if row["geography_assignment_status"].startswith("missing_geocode") or row["geography_assignment_status"].startswith("geocoding_input_not_ready") or row["geography_assignment_status"] == "geocoded_point_outside_stat_area"]
+    missing = [row for row in output if row["geography_assignment_status"].startswith("missing_geocode") or row["geography_assignment_status"].startswith("geocoding_input_not_ready") or row["geography_assignment_status"] == "geocoded_point_outside_stat_area" or row["geography_assignment_status"] == "geocoded_point_outside_expected_locality"]
     write_csv(OUT_DIR / "missing_geography_assignment_rows.csv", missing, fields)
 
     summary: list[dict[str, Any]] = []
@@ -446,6 +490,7 @@ def main() -> None:
             if row["geography_assignment_status"].startswith("missing_geocode")
             or row["geography_assignment_status"].startswith("geocoding_input_not_ready")
             or row["geography_assignment_status"] == "geocoded_point_outside_stat_area"
+            or row["geography_assignment_status"] == "geocoded_point_outside_expected_locality"
         ]
         summary.append(
             {

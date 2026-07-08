@@ -146,7 +146,7 @@ The script applies an Israel/Palestine bounding box and a center-of-Israel bias 
 
 
 
-A full local Photon work-unit run over 7,196 deduplicated queries found that true `place_only` queries are small enough for manual review: 18 units, 60 ballot rows, and 22,246 actual voters. Broader non-address queries (`place_with_locality` + `place_only`) are larger: 469 units, 4,821 rows, and 1,818,295 actual voters. Address queries are Photon?s strongest use case, but acceptance should still require a point-in-expected-locality validation rather than trusting the first text result.
+A full local Photon work-unit run over 7,196 deduplicated queries found that true `place_only` queries are small enough for manual review: 18 units, 60 ballot rows, and 22,246 actual voters. Broader non-address queries (`place_with_locality` + `place_only`) are larger: 469 units, 4,821 rows, and 1,818,295 actual voters. Address queries are Photon's strongest use case, but acceptance requires point-in-expected-locality validation rather than trusting the first text result. The validation script is `scripts/validate_geocode_candidate_localities.py`, and final assignment rejects reviewed coordinates that fall outside the expected locality with `geocoded_point_outside_expected_locality`.
 
 The first 50-row live Photon spike completed locally with 46 matches and 4 no-matches. The conservative locality check found 36 top results where the expected locality was visible and 10 where it was not. Some of those 10 are spelling/orthography review cases, but several are real wrong-locality matches, especially school/place-name queries.
 
@@ -177,8 +177,14 @@ Recommended columns:
 
 Review rule:
 
+Coordinate sanity rule:
+
+- A reviewed geocode is usable only after the coordinate lands inside the expected dissolved 2022 locality polygon, or a reviewer records an explicit exception.
+- The final assignment stage already checks whether a point falls inside a statistical area; it now also rejects points that fall in the wrong locality before assigning a statistical area.
+
 - `review_status=approved` means the row may be used by the final assignment stage.
 - `review_status=needs_review`, `pending`, or `unreviewed` is ignored by final assignment.
 - `geocode_status=no_match`, `failed`, `rejected`, `ambiguous`, or equivalent failure values are ignored.
 
 The spike output intentionally uses `review_status=needs_review`, even for successful matches. Reviewed coordinates should be copied or promoted into `geocoded_points.csv` only after inspection.
+

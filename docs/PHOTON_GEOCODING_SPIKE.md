@@ -80,6 +80,31 @@ The first 50-row live Photon spike completed locally:
 The locality check is conservative and can flag spelling/orthography variants for review, but the spike also exposed real wrong-locality matches for school/place-name queries. Photon remains useful as a free candidate, but only with locality/stat-area validation and manual review before promotion to `geocoded_points.csv`.
 
 
+## Candidate Polygon Validation
+
+Photon candidate coordinates were checked against the expected dissolved 2022 locality polygon with:
+
+```bash
+python scripts/validate_geocode_candidate_localities.py --candidates data/processed/geocoding/photon_work_unit_results.csv
+```
+
+Output:
+
+- `data/processed/geocoding/geocode_candidate_locality_validation.csv`
+- `data/processed/geocoding/geocode_candidate_locality_validation_summary.json`
+
+Full 7,196-work-unit validation result:
+
+| Validation status | Units | Meaning |
+| --- | ---: | --- |
+| `inside_expected_locality` | 5,668 | Candidate coordinate falls inside the expected 2022 dissolved locality polygon. |
+| `outside_expected_locality` | 858 | Candidate coordinate falls inside a different 2022 locality polygon and must not be auto-accepted. |
+| `outside_all_localities` | 15 | Candidate coordinate does not fall inside any dissolved 2022 locality polygon. |
+| `candidate_not_matched` | 634 | Photon did not return usable coordinates. |
+| `expected_locality_missing` | 21 | Work unit lacks a target locality code for this validation. |
+
+This is a stronger check than the earlier text-locality heuristic. Text checks remain useful for diagnostics, but the practical acceptance rule is spatial: a candidate coordinate can be promoted only if it lands inside the expected locality polygon, or if a reviewer explicitly approves a known exception.
+
 ## Full Work-Unit Run
 
 A local Photon run over all 7,196 deduplicated geocoding work units produced:
@@ -96,3 +121,4 @@ Interpretation:
 - All non-address queries (`place_with_locality` + `place_only`) are 469 unique work units, 4,821 ballot rows, 1,818,295 actual voters. That is too large to resolve fully by hand as a first pass.
 - Address queries are the strongest Photon use case, but still cannot be accepted blindly. In the full run, Photon returned many plausible address matches, but also real wrong-locality matches.
 - The practical Photon use rule should be: accept a Photon coordinate only if it passes a spatial locality validation against the expected 2022 locality polygon or an approved historical locality/crosswalk rule. Text locality checks are useful diagnostics but not sufficient.
+
