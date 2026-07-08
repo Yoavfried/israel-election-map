@@ -32,6 +32,7 @@ Current core docs:
 - `docs/LOCALITY_CROSSWALK_RESOLUTION_PLAN.md`
 - `docs/GEOCODING_SPIKE.md`
 - `docs/GOVMAP_BROWSER_SPIKE.md`
+- `docs/ARCGIS_GEOCODING_SPIKE.md`
 
 ## Repository Layout
 

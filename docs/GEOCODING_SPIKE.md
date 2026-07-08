@@ -88,6 +88,33 @@ Output:
 
 - `data/processed/geocoding/govmap_spike_results.csv`
 
+## ArcGIS Fallback Candidate
+
+ArcGIS is now being tested as a separate fallback candidate because GovMap approval may not arrive or may not be usable for our workflow.
+
+Docs:
+
+- `docs/ARCGIS_GEOCODING_SPIKE.md`
+
+Run a dry run:
+
+```bash
+python scripts/run_arcgis_geocoding_spike.py --dry-run
+```
+
+Run live after setting an ArcGIS access token/API key:
+
+```bash
+set ARCGIS_ACCESS_TOKEN=...
+python scripts/run_arcgis_geocoding_spike.py --limit 50
+```
+
+Output:
+
+- `data/processed/geocoding/arcgis_spike_results.csv`
+
+The ArcGIS script defaults to `forStorage=true` because project coordinates are intended to be cached/reviewed. Use only a token with the right stored-geocoding privilege for retained results.
+
 ## Cache Contract
 
 The production cache path remains:
