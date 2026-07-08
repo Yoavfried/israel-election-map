@@ -37,6 +37,8 @@ The pipeline writes generated files under `data/processed/`, which is intentiona
 - `data/processed/geocoding/geocoding_work_units.csv`
 - `data/processed/geocoding/geocoding_work_unit_rows.csv`
 - `data/processed/geocoding/geocoding_manual_queue.csv` flags place-name queries, composite-locality queries, suspicious OCR/address prefixes, and rows without a geocoder query.
+- `data/processed/geocoding/geocoding_spike_sample.csv`
+- `data/processed/geocoding/govmap_spike_results.csv`
 - `data/processed/assignments/ballot_geography_assignments.csv`
 - `data/processed/public/election_summary.csv`
 - `data/processed/public/statistical_area_results/*.csv`
@@ -117,4 +119,6 @@ Optional provenance columns:
 - `geocode_confidence`
 - `review_status`
 
-Rows with rejected/failed/no-match statuses are not used for map assignment.
+Rows with rejected/failed/no-match/ambiguous geocode statuses are not used for map assignment. If `review_status` is present, `needs_review`, `pending`, and `unreviewed` are also ignored; use `approved` only after inspection.
+
+See `docs/GEOCODING_SPIKE.md` for the representative sample, GovMap spike runner, and reviewed cache promotion rules.

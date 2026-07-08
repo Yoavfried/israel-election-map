@@ -66,6 +66,10 @@ def geocode_is_usable(row: pd.Series) -> bool:
         "no_match",
         "not_found",
         "ambiguous",
+        "needs_review",
+        "needs_manual_review",
+        "pending",
+        "unreviewed",
     }
     for column in ["review_status", "geocode_status", "status"]:
         if column in row.index and normalize_status(row[column]) in rejected_values:

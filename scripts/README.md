@@ -23,6 +23,8 @@ Stages:
 - `build_assignment_plan.py` applies envelope detection, reviewed locality crosswalks, single-stat shortcuts, custom buckets, and geocode-needed classification.
 - `build_geocoding_input.py` joins the assignment plan to polling-place addresses and emits the rows ready for geocoding.
 - `build_geocoding_work_units.py` deduplicates geocoding input rows into unique geocoder queries and row mappings.
+- `build_geocoding_spike_sample.py` builds a representative sample of geocoding work units for provider testing.
+- `run_govmap_geocoding_spike.py` runs a small GovMap search spike when `GOVMAP_API_KEY` is available; outputs are marked `needs_review`.
 - `build_final_geography_assignments.py` consumes an optional reviewed geocode cache and writes final row-level geography assignments; without a geocode cache it writes explicit pending-geocode diagnostics.
 - `build_public_outputs.py` writes statistical-area, locality, custom-geography, contribution, and unmapped CSV outputs for the website and public downloads.
 
