@@ -62,7 +62,7 @@ This table covers only rows that require address-level geocoding.
 | K20 | 8,519 | 0 | 0 | 0 |
 | K19 | 8,309 | 6 | 0 | 0 |
 | K18 | 7,769 | 11 | 0 | 0 |
-| K17 | 6,984 | 0 | 11 | 3,603 |
+| K17 | 6,984 | 11 | 0 | 0 |
 
 ## Current Pre-Geocode Map Output
 
@@ -85,5 +85,5 @@ Because `data/processed/geocoding/geocoded_points.csv` does not exist yet, the f
 - Assignment classification has no unresolved rows for K17-K25.
 - K22-K25 and K20-K21 have ready geocoding inputs for all rows that need address-level assignment.
 - K19 and K18 have a small number of place-only rows that need manual/reviewed geocoding.
-- K17 has 11 rows in multi-stat localities with no usable street address; these still need manual resolution or an additional source.
+- K17 has 11 place-only rows recovered from targeted review of the scanned polling-place lists; they still need geocoding/review, but they are no longer source-missing.
 - Custom point-size polygon buckets are assigned now. Their visual treatment is a frontend decision.

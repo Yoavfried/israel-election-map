@@ -10,7 +10,7 @@ from typing import Any
 import pandas as pd
 import pdfplumber
 
-from pipeline_common import PROCESSED_DIR, RAW_DIR, int_value, normalize_code, normalize_kalpi, normalize_spaces, write_csv, write_json
+from pipeline_common import MANUAL_DIR, PROCESSED_DIR, RAW_DIR, int_value, normalize_code, normalize_kalpi, normalize_spaces, write_csv, write_json
 
 
 OUT_DIR = PROCESSED_DIR / "addresses"
@@ -26,6 +26,7 @@ ADDRESS_SOURCES = {
     "K19": RAW_DIR / "archive_knesset19_all_stations.pdf",
     "K18": PROCESSED_DIR / "k18_polling_places_resolved.csv",
     "K17": PROCESSED_DIR / "normalized" / "ballot_rows.csv",
+    "K17_MANUAL_PLACES": MANUAL_DIR / "manual_k17_scanned_place_names.csv",
 }
 
 FIELDS = [
@@ -205,6 +206,29 @@ def read_k17_result_addresses(path: Path) -> list[dict[str, Any]]:
     return rows
 
 
+def read_k17_manual_places(path: Path) -> list[dict[str, Any]]:
+    rows = []
+    with path.open(encoding="utf-8-sig", newline="") as handle:
+        for source in csv.DictReader(handle):
+            if source["election"] != "K17" or not source["place"]:
+                continue
+            rows.append(
+                row(
+                    election="K17",
+                    source_file=path,
+                    source_row_id=source["source_result_row_id"],
+                    locality_code="",
+                    locality_name=source["source_locality_name"],
+                    kalpi=source["source_kalpi"],
+                    eligible="",
+                    address="",
+                    place=source["place"],
+                    source_status="place_only_scanned_pdf",
+                )
+            )
+    return rows
+
+
 def main() -> None:
     sys.stdout.reconfigure(encoding="utf-8")
     parser = argparse.ArgumentParser()
@@ -235,6 +259,11 @@ def main() -> None:
         rows.extend(read_k17_result_addresses(ADDRESS_SOURCES["K17"]))
     else:
         missing_sources.append({"election": "K17", "expected_path": str(ADDRESS_SOURCES["K17"]), "reason": "missing_file"})
+
+    if ADDRESS_SOURCES["K17_MANUAL_PLACES"].exists():
+        rows.extend(read_k17_manual_places(ADDRESS_SOURCES["K17_MANUAL_PLACES"]))
+    else:
+        missing_sources.append({"election": "K17_MANUAL_PLACES", "expected_path": str(ADDRESS_SOURCES["K17_MANUAL_PLACES"]), "reason": "missing_file"})
 
     rows.sort(key=lambda item: (item["election"], item["source_locality_code"], item["source_kalpi"], item["source_row_id"]))
     write_csv(OUT_DIR / "polling_place_addresses.csv", rows, FIELDS)

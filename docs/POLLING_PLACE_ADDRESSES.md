@@ -165,7 +165,7 @@ K16 / 2003 is outside current product scope. No usable full polling-place addres
 
 ## Normalized Address Source Availability
 
-This table reflects the address sources currently present under `data/raw` and parsed by `scripts/normalize_polling_places.py`.
+This table reflects the address sources currently present under `data/raw` and `data/manual` and parsed by `scripts/normalize_polling_places.py`.
 
 | Election | Source rows | Rows with street address | Place-only rows | Missing election-specific source |
 |---|---:|---:|---:|---|
@@ -177,7 +177,7 @@ This table reflects the address sources currently present under `data/raw` and p
 | K20 | 10,464 | 10,464 | 0 | No |
 | K19 | 10,239 | 10,233 | 6 | No |
 | K18 | 9,263 | 9,248 | 15 | No |
-| K17 | 8,262 | 8,262 | 0 | No |
+| K17 | 8,273 | 8,262 | 11 | No |
 
 K22-K24 address reports were recovered in an earlier research pass, then were stranded in the old Codex scratch folder during project-folder reorganization. They are now copied into `data/raw` and parsed by the pipeline.
 
@@ -195,13 +195,13 @@ This table covers only rows that need address-level point-in-polygon assignment 
 | K20 | 8,519 | 0 | 0 | 0 |
 | K19 | 8,309 | 6 | 0 | 0 |
 | K18 | 7,769 | 11 | 0 | 0 |
-| K17 | 6,984 | 0 | 11 | 3,603 |
+| K17 | 6,984 | 11 | 0 | 0 |
 
 Interpretation:
 
 - K22-K25 and K20-K21 have ready address strings for all rows that need geocoding.
 - K19 and K18 have a small number of place-only rows that need manual/reviewed geocoding.
-- K17 has 11 multi-stat rows without a usable street address.
+- K17 has 11 place-only rows recovered from targeted review of the scanned polling-place lists.
 
 ## K17 Remaining Rows
 
@@ -280,6 +280,6 @@ Rules:
 
 ## Current Blockers
 
-- Geocoding/reviewing the 11 K17 place-name-only rows.
+- Geocoding/reviewing the K17, K18, and K19 place-name-only rows.
 - Building and reviewing the geocoding cache for addressed K17-K25 multi-stat localities.
 - Designing custom point-size polygon buckets in the frontend.

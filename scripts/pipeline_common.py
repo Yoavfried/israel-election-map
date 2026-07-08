@@ -10,6 +10,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = ROOT / "data"
 RAW_DIR = DATA_DIR / "raw"
+MANUAL_DIR = DATA_DIR / "manual"
 PROCESSED_DIR = DATA_DIR / "processed"
 
 ELECTIONS: dict[int, dict[str, Any]] = {

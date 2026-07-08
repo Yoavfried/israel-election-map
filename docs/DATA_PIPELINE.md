@@ -85,11 +85,11 @@ Geocoding input readiness:
 | K20 | 8,519 | 0 | 0 | 0 |
 | K19 | 8,309 | 6 | 0 | 0 |
 | K18 | 7,769 | 11 | 0 | 0 |
-| K17 | 6,984 | 0 | 11 | 3,603 |
+| K17 | 6,984 | 11 | 0 | 0 |
 
 ## Current Blockers
 
-- K17 has 11 geocode-needed rows with no address in the official result file.
+- K17 has 11 place-only geocode-needed rows recovered from targeted review of the scanned polling-place lists.
 - K19 has 6 place-only geocode-needed rows from the PDF extraction.
 - K18 has 11 place-only geocode-needed rows from the OCR/PDF extraction.
 - GovMap geocoding provider terms, caching permission, API key flow, rate limits, and coordinate-system behavior still need a spike before bulk geocoding.

@@ -101,7 +101,7 @@ Address sources currently available:
 | K20 / 2015 | `data/raw/archive_knesset20_tell_the_polls_9_3.xls` | High; election-specific archived official XLS |
 | K19 / 2013 | `data/raw/archive_knesset19_all_stations.pdf` | High; election-specific archived official Excel-generated PDF |
 | K18 / 2009 | `data/raw/archive_knesset18_kalpilist18.pdf` | High; election-specific scanned PDF with embedded OCR text, reconciled to every ordinary official result row |
-| K17 / 2006 | Address field inside official ballot-result file plus `data/raw/archive_knesset17_kalpies-list17-*.pdf` | High for addressed rows; targeted scan review recovered polling-place names for the 11 remaining multi-stat rows |
+| K17 / 2006 | Address field inside official ballot-result file plus `data/raw/archive_knesset17_kalpies-list17-*.pdf` and `data/manual/manual_k17_scanned_place_names.csv` | High for addressed rows; targeted scan review recovered polling-place names for the 11 remaining multi-stat rows |
 
 Generic official polling-place datastore resource:
 

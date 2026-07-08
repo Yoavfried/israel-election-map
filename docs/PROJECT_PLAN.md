@@ -116,13 +116,13 @@ Current geocoding-input readiness:
 | K20 | 8,519 | 0 | 0 | 0 |
 | K19 | 8,309 | 6 | 0 | 0 |
 | K18 | 7,769 | 11 | 0 | 0 |
-| K17 | 6,984 | 0 | 11 | 3,603 |
+| K17 | 6,984 | 11 | 0 | 0 |
 
 Interpretation:
 
 - K22-K25 and K20-K21 have ready address strings for rows that need geocoding.
 - K19 and K18 have a small number of place-only rows that need manual/reviewed geocoding.
-- K17 has 11 multi-stat rows with no usable street address.
+- K17 has 11 place-only rows recovered from targeted review of the scanned polling-place lists.
 - K16 has no usable polling-place address source and is deferred from current scope.
 
 ## Reviewed Assignment Coverage
