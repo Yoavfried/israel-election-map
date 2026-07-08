@@ -179,6 +179,12 @@ Review rule:
 
 Coordinate sanity rule:
 
+Historical AGS QA note:
+
+- Where an election-specific source row has an official AGS/statistical-area code, candidate coordinates should also be tested against the matching historical AGS polygon layer before the final bad-match list is produced.
+- Current local inspection found explicit AGS only in the K23 polling-place report. Other elections need additional source research before this QA can be applied.
+- See `docs/AGS_HISTORICAL_QA.md`.
+
 - A reviewed geocode is usable only after the coordinate lands inside the expected dissolved 2022 locality polygon, or a reviewer records an explicit exception.
 - The final assignment stage already checks whether a point falls inside a statistical area; it now also rejects points that fall in the wrong locality before assigning a statistical area.
 

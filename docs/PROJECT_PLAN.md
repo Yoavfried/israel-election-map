@@ -160,15 +160,24 @@ Implementation decisions:
 
 The K23 polling-place report includes an AGS/statistical-area-like field, but it is not compatible enough with the 2022 polygons for direct joining:
 
-- K23 rows with AGS: 10,631.
-- Unique K23 locality+AGS pairs: 2,701.
+- K23 total polling-place report rows: 10,631.
+- K23 rows with non-empty AGS: 8,031.
+- Unique K23 locality+AGS pairs with non-empty AGS: 1,570.
 - The current FileGDB build has 3,857 unique `YISHUV_STAT_2022` / `stat_area_id` features.
-- Row match rate: 5,379 / 10,631, or 50.60%.
-- Unique-pair match rate: 1,053 / 2,701, or 38.99%.
+- Earlier direct compatibility checks against 2022 polygons were weak enough that K23 AGS should not be joined directly to the 2022 layer.
+- K23 `locality + concentration` is not a substitute for AGS: among AGS-bearing rows, 741 `locality + concentration` pairs map to more than one AGS.
 
 Decision:
 
 Keep K23 AGS as source metadata only. Use geocoded polling-place addresses plus point-in-polygon for multi-stat localities, and use the single-stat locality shortcut only where the 2022 layer has exactly one statistical area for the locality.
+
+## Historical AGS QA
+
+Historical AGS validation is now the preferred stronger QA layer for geocoded candidates, where source AGS metadata exists. The goal is to test whether a candidate coordinate falls inside the official historical statistical-area polygon named by the source row. This is stronger than the current locality-polygon check.
+
+Current finding: the local K23 polling-place report has explicit AGS metadata; inspected K17-K22/K24-K25 local sources do not yet expose equivalent AGS fields. The 2008 CBS statistical-area package exists on data.gov.il, but the actual archive still needs to be downloaded outside the command-line browser challenge.
+
+Do not finalize the real bad-match list for Photon until historical AGS QA has been run where possible. Keep `outside_expected_locality` as blocked-from-auto-accept, not final rejection. See `docs/AGS_HISTORICAL_QA.md`.
 
 ## Geocoding And Assignment Pipeline
 

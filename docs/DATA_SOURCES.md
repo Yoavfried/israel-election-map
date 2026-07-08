@@ -71,6 +71,16 @@ https://data.gov.il/api/3/action/package_show?id=statistical-area-2008
 
 The 2008 layer remains a historical reference only. It should not replace the 2022 layer for the main product.
 
+## Historical AGS QA
+
+Dedicated note:
+
+- `docs/AGS_HISTORICAL_QA.md`
+
+The official CBS 2008 statistical-area package exists (`statistical-area-2008`), but command-line download from `e.data.gov.il` returned a browser-challenge HTML page during the 2026-07-08 check. The actual `50400-2008.7z` archive still needs to be obtained before historical AGS point-in-polygon QA can be implemented.
+
+Local raw election-source inspection found explicit AGS metadata only in the K23 polling-place report so far. `ריכוז` / `סמל רכוז` should not be treated as AGS; K23 shows `locality + concentration` is ambiguous for 741 AGS-bearing pairs.
+
 ## 2022 Census Statistical Area Attributes
 
 2022 census package:
