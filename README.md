@@ -20,7 +20,7 @@ Kalpi-level results are part of the source data, but the project will not presen
 - Preserve raw source data and generated/normalized data separately.
 - Keep source metadata, assignment method, and mapped/unmapped coverage visible in the product.
 
-Current K17-K25 statistical-area status: row assignment is classified for every result row, and every relevant row has a geocoder query. Address-level geocoding is still pending; some K17/K18/K19 rows are place-name-only and need provider/manual review rather than blind acceptance.
+Current K17-K25 statistical-area status: row assignment is classified for every result row, and every relevant row has a geocoder query. A full local Photon candidate run exists, but no production geocode cache has been approved yet. Candidate coordinates must pass point-in-expected-locality validation, manual review, and historical AGS QA where source AGS exists before promotion. Some K17/K18/K19 rows are place-name-only and need provider/manual review rather than blind acceptance.
 
 Current core docs:
 
@@ -31,6 +31,7 @@ Current core docs:
 - `docs/STATISTICAL_AREA_ASSIGNMENT_COVERAGE.md`
 - `docs/LOCALITY_CROSSWALK_RESOLUTION_PLAN.md`
 - `docs/GEOCODING_SPIKE.md`
+- `docs/AGS_HISTORICAL_QA.md`
 - `docs/GOVMAP_BROWSER_SPIKE.md`
 - `docs/ARCGIS_GEOCODING_SPIKE.md`
 - `docs/PHOTON_GEOCODING_SPIKE.md`

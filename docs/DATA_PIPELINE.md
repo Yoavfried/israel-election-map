@@ -39,6 +39,8 @@ The pipeline writes generated files under `data/processed/`, which is intentiona
 - `data/processed/geocoding/geocoding_manual_queue.csv` flags place-name queries, composite-locality queries, suspicious OCR/address prefixes, and rows without a geocoder query.
 - `data/processed/geocoding/geocoding_spike_sample.csv`
 - `data/processed/geocoding/govmap_spike_results.csv`
+- `data/processed/geocoding/photon_work_unit_results.csv` local Photon candidate output, ignored by git and not a reviewed cache.
+- `data/processed/geocoding/geocode_candidate_locality_validation.csv` locality-polygon validation for candidate geocodes, ignored by git.
 - `data/processed/assignments/ballot_geography_assignments.csv`
 - `data/processed/public/election_summary.csv`
 - `data/processed/public/statistical_area_results/*.csv`
@@ -94,7 +96,10 @@ Geocoding input readiness:
 - K17 has 11 place-only geocode-needed rows recovered from targeted review of the scanned polling-place lists.
 - K19 has 6 place-only geocode-needed rows from the PDF extraction.
 - K18 has 11 place-only geocode-needed rows from the OCR/PDF extraction.
-- GovMap geocoding provider terms, caching permission, API key flow, rate limits, and coordinate-system behavior still need a spike before bulk geocoding.
+- No reviewed production geocode cache exists yet; candidate provider outputs remain `needs_review`.
+- GovMap approval/token behavior and coordinate/caching terms still need live verification.
+- Photon has a full local candidate run, but candidates must pass point-in-expected-locality validation and, where source AGS exists, historical AGS QA before promotion.
+- The official CBS 2008 statistical-area archive must still be obtained to implement historical AGS QA.
 
 ## Geocode Cache Contract
 
@@ -121,4 +126,4 @@ Optional provenance columns:
 
 Rows with rejected/failed/no-match/ambiguous geocode statuses are not used for map assignment. If `review_status` is present, `needs_review`, `pending`, and `unreviewed` are also ignored; use `approved` only after inspection.
 
-See `docs/GEOCODING_SPIKE.md` for the representative sample, GovMap spike runner, and reviewed cache promotion rules.
+See `docs/GEOCODING_SPIKE.md` for provider spikes, candidate validation, and reviewed cache promotion rules.

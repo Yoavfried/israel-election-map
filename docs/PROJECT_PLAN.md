@@ -198,10 +198,11 @@ Do not finalize the real bad-match list for Photon until historical AGS QA has b
 
 Geocoding provider decision status:
 
-- Use GovMap as the first candidate for the geocoding spike because it supports Hebrew address search and can return point geometry/centroid data.
-- Before bulk geocoding, confirm API key flow, rate limits, cache/publication terms, returned coordinate systems, and WGS84 conversion.
+- GovMap remains the preferred official Israeli candidate, but approval/token behavior, rate limits, coordinate fields, and caching/publication terms still need live verification.
+- ArcGIS is a paid/stored-geocoding fallback only if a token/API key with the right storage privileges is available.
+- Photon is a free self-hosted candidate. A full local run exists, but it is not trusted blindly; candidate coordinates must pass locality-polygon validation and historical AGS QA where source AGS exists before promotion.
 - Do not use Google as the primary geocoder for public downloadable coordinates unless its storage and redistribution constraints are explicitly cleared.
-- Do not use public Nominatim for bulk geocoding; reconsider only a self-hosted/open-data workflow if GovMap is insufficient.
+- Do not use public Nominatim for bulk geocoding. The only open-data path currently considered is self-hosted Nominatim/Photon.
 
 ## Locality Crosswalk
 

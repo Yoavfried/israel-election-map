@@ -254,15 +254,15 @@ Row-level assignment should store one method:
 
 ## Geocoding Provider Research
 
-GovMap is the preferred first geocoding candidate because it is Israeli, supports Hebrew address search, and its documented search API can return point geometry/centroid data. Before bulk geocoding, run a small representative spike and confirm:
+Provider status is documented in `docs/GEOCODING_SPIKE.md`, `docs/GOVMAP_BROWSER_SPIKE.md`, `docs/ARCGIS_GEOCODING_SPIKE.md`, and `docs/PHOTON_GEOCODING_SPIKE.md`.
 
-- API key flow and rate limits.
-- Whether cached/reviewed coordinates may be stored and published in the project's public data outputs.
-- Which coordinate system is returned in each geometry field, and the correct conversion to WGS84 longitude/latitude.
-- Accuracy on older polling-place addresses, school/place names, and reviewed address-target-set cases.
-- Fallback policy for ambiguous or failed results.
+Current position:
 
-Google geocoding should not be the primary source for public downloadable coordinates unless its storage and redistribution constraints are explicitly cleared. Public Nominatim should not be used for bulk geocoding; a self-hosted/open-data fallback can be reconsidered if needed.
+- GovMap remains the preferred official Israeli candidate, but approval/token behavior, rate limits, coordinate fields, and caching/publication terms still need live verification.
+- ArcGIS is a fallback only if an access token/API key with stored-geocoding rights is available.
+- Photon is a free local candidate source. A full local run exists, but it already showed wrong-locality matches, so Photon output is candidate data only until it passes locality-polygon validation, manual review, and historical AGS QA where source AGS exists.
+- Google geocoding should not be the primary source for public downloadable coordinates unless its storage and redistribution constraints are explicitly cleared.
+- Public Nominatim should not be used for bulk geocoding. The only open-data path currently considered is self-hosted Nominatim/Photon.
 
 ## Locality History
 
