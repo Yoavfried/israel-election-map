@@ -35,6 +35,62 @@ export function numberValue(value, fieldName = 'value') {
   return parsed
 }
 
+export function buildPartyRegistryIndex(rows) {
+  const byElection = new Map()
+
+  for (const row of rows) {
+    const electionId = String(row.election ?? '').trim()
+    const sourceColumn = String(row.source_column ?? '').trim()
+    const ballotLetter = String(row.ballot_letter ?? '').trim()
+    const listNameHe = String(row.list_name_he ?? '').trim()
+    const displayNameHe = String(row.display_name_he ?? '').trim() || listNameHe
+    const displayNameEn = String(row.display_name_en ?? '').trim()
+    const wikipediaHeUrl = optionalHttpsUrl(
+      row.wikipedia_he_url,
+      `${electionId}.${sourceColumn}.wikipedia_he_url`,
+    )
+    const wikipediaEnUrl = optionalHttpsUrl(
+      row.wikipedia_en_url,
+      `${electionId}.${sourceColumn}.wikipedia_en_url`,
+    )
+    const totalVotes = numberValue(
+      row.total_votes,
+      `${electionId}.${sourceColumn}.total_votes`,
+    )
+
+    if (!/^K\d+$/.test(electionId) || !sourceColumn || !ballotLetter || !listNameHe) {
+      throw new Error(
+        'Every party-registry row needs an election, source column, ballot letter, and Hebrew list name',
+      )
+    }
+    if (!Number.isInteger(totalVotes) || totalVotes < 0) {
+      throw new Error(`${electionId}.${sourceColumn}.total_votes must be a nonnegative integer`)
+    }
+
+    let election = byElection.get(electionId)
+    if (!election) {
+      election = new Map()
+      byElection.set(electionId, election)
+    }
+    if (election.has(sourceColumn)) {
+      throw new Error(`Duplicate party-registry key: ${electionId}.${sourceColumn}`)
+    }
+    election.set(sourceColumn, {
+      electionId,
+      sourceColumn,
+      ballotLetter,
+      totalVotes,
+      listNameHe,
+      displayNameHe,
+      displayNameEn,
+      wikipediaHeUrl,
+      wikipediaEnUrl,
+    })
+  }
+
+  return byElection
+}
+
 export function cleanNumericCode(value) {
   return String(value ?? '').trim().replace(/\.0+$/, '')
 }
@@ -300,8 +356,11 @@ export function buildResultPayload({
   customMetadataById,
   coverage,
   hiddenGeographyIds = [],
+  partyRegistry,
+  partyColorsByBallotLetter = {},
   partyOverrides = {},
   excludedPartyColumns = [],
+  validatePartyTotals = false,
 }) {
   const primaryType = mode === 'statistical-area' ? 'statistical-area' : 'locality'
   const records = []
@@ -309,6 +368,7 @@ export function buildResultPayload({
   const partyIds = inferPartyColumns(primaryRows, customRows, envelopeRows).filter(
     (partyId) => !excludedColumns.has(partyId),
   )
+  assertPartyRegistryCoverage(electionId, partyIds, partyRegistry)
 
   for (const row of primaryRows) {
     const id = mode === 'statistical-area' ? row.stat_area_id : row.locality_id
@@ -362,7 +422,18 @@ export function buildResultPayload({
     )
   }
 
-  const parties = partyIds.map((partyId) => buildPartyDefinition(electionId, partyId, partyOverrides[partyId]))
+  if (validatePartyTotals) {
+    assertPartyTotalsMatchRegistry(electionId, partyIds, partyRegistry, records, envelope)
+  }
+
+  const parties = partyIds.map((partyId) =>
+    buildPartyDefinition(
+      partyId,
+      partyRegistry.get(partyId),
+      partyOverrides[partyId],
+      partyColorsByBallotLetter,
+    ),
+  )
 
   return {
     schemaVersion: 2,
@@ -458,22 +529,86 @@ function inferPartyColumns(...rowGroups) {
   return [...partyIds]
 }
 
-function buildPartyDefinition(electionId, partyId, override = {}) {
+function buildPartyDefinition(
+  partyId,
+  registryEntry,
+  override = {},
+  partyColorsByBallotLetter = {},
+) {
+  const nameHe = override.nameHe || registryEntry.displayNameHe || registryEntry.listNameHe
+  const nameEn = override.nameEn || registryEntry.displayNameEn || nameHe
+  const reviewedColor = override.color || partyColorsByBallotLetter[registryEntry.ballotLetter]
   return {
     id: partyId,
-    ballotLetter: partyId,
+    ballotLetter: registryEntry.ballotLetter,
     names: {
-      he: override.nameHe || partyId,
-      en: override.nameEn || partyId,
+      he: nameHe,
+      en: nameEn,
     },
-    color: override.color || stablePartyColor(electionId, partyId),
-    colorStatus: override.color ? 'reviewed' : 'provisional',
+    listNameHe: registryEntry.listNameHe,
+    wikipedia: {
+      he: registryEntry.wikipediaHeUrl || null,
+      en: registryEntry.wikipediaEnUrl || null,
+    },
+    color: reviewedColor || stablePartyColor(registryEntry.ballotLetter),
+    colorStatus: reviewedColor ? 'reviewed' : 'provisional',
   }
 }
 
-export function stablePartyColor(electionId, partyId) {
+function assertPartyRegistryCoverage(electionId, partyIds, partyRegistry) {
+  if (!(partyRegistry instanceof Map)) {
+    throw new Error(`${electionId} is missing its party-registry map`)
+  }
+  const sourceColumns = new Set(partyIds)
+  const missing = partyIds.filter((partyId) => !partyRegistry.has(partyId))
+  const extra = [...partyRegistry.keys()].filter((partyId) => !sourceColumns.has(partyId))
+  if (missing.length > 0 || extra.length > 0) {
+    throw new Error(
+      `${electionId} party registry does not match result columns; ` +
+        `missing: ${missing.join(', ') || '(none)'}; extra: ${extra.join(', ') || '(none)'}`,
+    )
+  }
+}
+
+function assertPartyTotalsMatchRegistry(electionId, partyIds, partyRegistry, records, envelope) {
+  const totals = Object.fromEntries(partyIds.map((partyId) => [partyId, 0]))
+  for (const record of envelope ? [...records, envelope] : records) {
+    for (const partyId of partyIds) {
+      totals[partyId] += record.partyVotes[partyId]
+    }
+  }
+
+  const mismatches = partyIds
+    .filter((partyId) => totals[partyId] !== partyRegistry.get(partyId).totalVotes)
+    .map(
+      (partyId) =>
+        `${partyId}: aggregate ${totals[partyId]}, registry ${partyRegistry.get(partyId).totalVotes}`,
+    )
+  if (mismatches.length > 0) {
+    throw new Error(`${electionId} party totals do not match the registry: ${mismatches.join('; ')}`)
+  }
+}
+
+function optionalHttpsUrl(value, fieldName) {
+  const text = String(value ?? '').trim()
+  if (!text) {
+    return ''
+  }
+  let parsed
+  try {
+    parsed = new URL(text)
+  } catch {
+    throw new Error(`${fieldName} is not a valid URL`)
+  }
+  if (parsed.protocol !== 'https:') {
+    throw new Error(`${fieldName} must use HTTPS`)
+  }
+  return parsed.href
+}
+
+export function stablePartyColor(ballotLetter) {
   let hash = 2166136261
-  for (const character of `${electionId}:${partyId}`) {
+  for (const character of ballotLetter) {
     hash ^= character.codePointAt(0)
     hash = Math.imul(hash, 16777619)
   }

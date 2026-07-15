@@ -13,6 +13,13 @@ Required geography modes:
 
 The current implementation target is K17-K25. K16 / 2003 is out of current scope until a usable election-specific polling-place address source is recovered.
 
+## Current Completion Boundaries
+
+- Locality result-row assignment and aggregation are complete for K17-K25, but the 116-feature partial/no-result inventory still needs historical interpretation and final election-specific visibility decisions.
+- The party-color precedence and override system is implemented, but the reviewed color table is only a partial seed and most ballot lists still use deterministic placeholders.
+- The party registry covers every real result column, but the party/list names and Hebrew/English Wikipedia links remain a working snapshot pending complete manual audit.
+- The frontend is a functional foundation, not a finished product. General UX refinement, search and navigation, additional map modes, accessibility, mobile behavior, and end-to-end browser coverage remain open.
+
 ## Confirmed Data Direction
 
 Official Knesset election data exists in the data.gov.il `votes-knesset` package:
@@ -38,7 +45,7 @@ Locality-mode decision:
 - Do not use official locality-level aggregates as product input.
 - Build locality totals directly from normalized ballot rows and the reviewed locality crosswalk. Address placement is not required when the target locality identity is already known.
 - Preserve reviewed election-time composite municipalities by unioning their 2022 component locality polygons only in the elections where the composite exists.
-- Aggregate official envelope results separately and never duplicate them across locality polygons.
+- Combine official envelope rows and reviewed envelope-like military/special rows into a separate national result, never duplicated across locality polygons.
 - Keep official locality-level resources as QA/reference metadata only.
 - Keep K16 and pre-2003 locality availability as later research items; current product scope starts at K17 / 2006.
 
@@ -49,10 +56,12 @@ Canonical raw polygon source:
 - `data/raw/ezorim_statistiim_2022.gdb`
 - Layer: `statistical_areas_2022`
 - 3,857 polygon features in the current raw FileGDB.
-- 1,329 dissolved locality features.
-- 1,184 dissolved localities have exactly one statistical-area feature.
+- 1,387 dissolved locality/display-footprint features.
+- 1,242 dissolved locality/display-footprint features have exactly one statistical-area feature.
 - 145 dissolved localities have multiple statistical-area features.
 - 4 reviewed composite-locality features are built from unions of the dissolved 2022 localities.
+
+The locality geometry keeps 58 null-English-name CBS footprints as neutral, non-interactive Israeli land so locality mode does not show false water-colored gaps. Kinneret remains outside the fill.
 
 Decision:
 
@@ -193,7 +202,7 @@ Do not use source AGS as a hard accept/reject gate. Keep `outside_expected_local
 3. Load the 2022 statistical-area FileGDB and generate statistical-area, dissolved-locality, reviewed composite-locality, and custom geometries.
 4. Apply the reviewed locality resolution plan for exact matches, aliases, merges, splits, custom buckets, and non-geographic buckets.
 5. Assign every geographic row directly to its reviewed locality, composite locality, or custom geography for locality mode.
-6. Aggregate official envelope rows as a separate national result and keep reviewed special non-geographic rows outside polygon assignment.
+6. Keep reviewed special non-geographic rows outside polygon assignment and combine all rows targeted to `special:envelope_votes` with the official envelope aggregate.
 7. For statistical-area mode, assign by locality when the mapped 2022 locality has exactly one statistical area.
 8. Load election-specific polling-place addresses where available.
 9. Geocode polling-place addresses for rows in multi-stat localities and reviewed address-target sets that still need address-level assignment.
@@ -256,7 +265,7 @@ For localities:
 - Aggregate normalized ballot rows directly by reviewed locality or election-specific composite-locality identity.
 - Preserve source ballot-row and kalpi contributions for drill-down without waiting for statistical-area assignment.
 - Keep official locality resources as QA/reference metadata, not as product totals.
-- Keep official envelope results as one separate national aggregate per election.
+- Combine official envelope rows and reviewed `special:envelope_votes` rows into one separate national aggregate per election.
 
 ## Frontend Direction
 
@@ -268,8 +277,10 @@ Implemented map-first foundation under `web/app/`:
 - Area details with totals, winner/margin, party distribution, and contributing kalpis.
 - English/Hebrew switching with document-level LTR/RTL.
 - Explicit mapped/pending voter coverage for every election.
-- Complete locality coverage with election-specific composite municipalities.
+- Complete locality result-row coverage with election-specific composite municipalities; feature-presence and visibility review remains open.
 - Selectable national envelope results with a full ballot breakdown.
+- Election-specific registry rows for all 309 real result columns, with party/list names and Wikipedia candidates still awaiting complete editorial review.
+- Scrollable area details that include every ballot list, including zero-vote rows.
 - Build-time CSV/GeoJSON compiler with Zod-validated browser assets.
 
 Implemented stack:
@@ -279,13 +290,15 @@ Implemented stack:
 - Static local JSON/GeoJSON generated from `data/processed/`.
 - PMTiles/vector tiles later if production transfer or mobile parsing requires them.
 
-Still planned: selected-party share, turnout, and margin coloring; searchable geography navigation; contribution drill-down; reviewed cross-election party names/colors; and browser accessibility/performance release gates. See `web/app/docs/ARCHITECTURE.md`.
+Still planned: completion of the locality feature audit; completion of party-name and Wikipedia-link review; completion of the reviewed ballot-letter color table; selected-party share, turnout, and margin coloring; searchable geography navigation; contribution drill-down; an explicit cross-election lineage model; general UX refinement; and browser accessibility/performance release gates. See `web/app/docs/ARCHITECTURE.md`.
 
 ## Open Questions
 
 1. Should K16 be added later if a usable election-specific polling-place address/list source is recovered?
 2. Which geocoder should be used for polling-place addresses, and can we cache/review results legally and reproducibly?
 3. Are pre-2003 locality-level results available from an official archive outside the inspected open-data package?
-4. How should party colors be governed across party splits, mergers, renamed lists, and reused letters?
+4. Which remaining ballot letters need reviewed default colors or election-specific exceptions?
 5. How should the UI communicate mapped vote coverage without weakening the map-first experience?
 6. How should custom point-size polygon buckets be drawn and explained in the UI?
+7. Which partial/no-result locality features should be hidden, renamed, represented by a composite, or retained as neutral in each election?
+8. Which party/list names and Wikipedia links need correction, removal, or election-specific presentation changes?

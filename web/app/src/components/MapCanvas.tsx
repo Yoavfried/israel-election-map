@@ -3,12 +3,15 @@ import maplibregl from 'maplibre-gl'
 import type {
   CircleLayerSpecification,
   FillLayerSpecification,
-  FilterSpecification,
   LineLayerSpecification,
   Map as MapLibreMap,
 } from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
-import { buildMarkerVisibilityFilter, mayHaveDisplayMarker } from '../domain/mapPresentation'
+import {
+  buildMarkerVisibilityFilter,
+  buildPolygonVisibilityFilter,
+  mayHaveDisplayMarker,
+} from '../domain/mapPresentation'
 import type { Language, Party, ResultRecord } from '../domain/schemas'
 import { translate } from '../i18n/translations'
 
@@ -17,7 +20,6 @@ const MARKER_SOURCE_ID = 'election-geography-markers'
 const FILL_LAYER_ID = 'election-fill'
 const LINE_LAYER_ID = 'election-line'
 const MARKER_LAYER_ID = 'election-markers'
-const KINNERET_GEOGRAPHY_ID = 'stat2022:9920'
 const MAP_BACKGROUND_COLOR = '#f3f0e8'
 const UNMAPPED_GEOGRAPHY_COLOR = '#aeb5b0'
 
@@ -136,12 +138,7 @@ export default function MapCanvas({
       promoteId: 'id',
     })
 
-    const polygonVisibilityFilter: FilterSpecification = [
-      'all',
-      ['!=', ['get', 'displayMode'], 'marker'],
-      ['!=', ['get', 'id'], KINNERET_GEOGRAPHY_ID],
-      ['!', ['in', ['get', 'id'], ['literal', hiddenGeographyIds]]],
-    ]
+    const polygonVisibilityFilter = buildPolygonVisibilityFilter(hiddenGeographyIds)
 
     const fillLayer: FillLayerSpecification = {
       id: FILL_LAYER_ID,
@@ -193,7 +190,10 @@ export default function MapCanvas({
       id: MARKER_LAYER_ID,
       source: MARKER_SOURCE_ID,
       type: 'circle',
-      filter: buildMarkerVisibilityFilter([...recordsByIdRef.current.values()]),
+      filter: buildMarkerVisibilityFilter(
+        [...recordsByIdRef.current.values()],
+        hiddenGeographyIds,
+      ),
       paint: {
         'circle-color': [
           'case',
@@ -274,7 +274,7 @@ export default function MapCanvas({
       return
     }
 
-    map.setFilter(MARKER_LAYER_ID, buildMarkerVisibilityFilter(records))
+    map.setFilter(MARKER_LAYER_ID, buildMarkerVisibilityFilter(records, hiddenGeographyIds))
 
     const applyFeatureStates = () => {
       if (!map.isSourceLoaded(SOURCE_ID) || !map.isSourceLoaded(MARKER_SOURCE_ID)) {
@@ -312,7 +312,7 @@ export default function MapCanvas({
     return () => {
       map.off('sourcedata', handleSourceData)
     }
-  }, [geometryUrl, mapReady, markerGeometryUrl, partyById, records, selectedId])
+  }, [geometryUrl, hiddenGeographyIds, mapReady, markerGeometryUrl, partyById, records, selectedId])
 
   if (mapError) {
     return (

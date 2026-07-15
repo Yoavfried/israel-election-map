@@ -83,6 +83,11 @@ const PartySchema = z.object({
   id: z.string().min(1),
   ballotLetter: z.string().min(1),
   names: LocalizedTextSchema,
+  listNameHe: z.string().min(1),
+  wikipedia: z.object({
+    he: z.url().nullable(),
+    en: z.url().nullable(),
+  }),
   color: z.string().min(1),
   colorStatus: z.enum(['provisional', 'reviewed']),
 })

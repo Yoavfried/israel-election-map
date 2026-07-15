@@ -36,6 +36,26 @@ Direct K17 polling-place scan transcriptions are stored in `data/manual/manual_k
 
 Reviewed election-specific composite municipalities are stored in `data/manual/composite_localities.csv`.
 
+Reviewed historical locality names and election-specific no-result visibility rules are stored in `data/manual/locality_display_overrides.csv`. These rules affect the browser display only and cannot hide a locality that has a result in the same election.
+
+The checked-in election-specific party/list registry is `data/manual/party_registry.csv`. It contains all 309 real K17-K25 result columns, including 12 zero-vote columns, and separates the source column from the official ballot code. Refreshing it is deliberately outside the normal pipeline because it queries official election sources, Hebrew Wikipedia, and Wikidata:
+
+```bash
+python scripts/build_party_registry.py
+```
+
+The current snapshot has 165 populated Hebrew party/list URLs and 150 corresponding English URLs after the builder's source and article-type checks. These counts are not a completed editorial audit: every party/list name and link remains reviewable, and blank URLs mean only that the builder did not retain a standalone article candidate. Redirects to people or an election article are rejected automatically.
+
+Reviewed party-color rules are stored separately in `web/app/config/party-overrides.json`. `ballotLetterColors` assigns a default to an official ballot letter across elections, while `elections.<election>.<source_column>.color` overrides that default for one election. This table is intentionally incomplete: reviewed defaults currently cover five letters, with a Kadima-specific `כן` override for K17-K19, and all other letters receive deterministic fallback colors keyed only by their official ballot letter.
+
+The checked-in locality result-presence exception inventory can be regenerated after public locality outputs change:
+
+```bash
+python scripts/build_locality_result_presence_audit.py
+```
+
+The generated inventory identifies the complete partial/no-result feature scope, but the historical explanation and visibility decision for every feature are still under review.
+
 ## Current Outputs
 
 - `data/processed/manifest/election_result_resources.csv`
@@ -85,6 +105,7 @@ Reviewed election-specific composite municipalities are stored in `data/manual/c
 - `data/processed/public/envelope_results/*.csv`
 - `data/processed/public/ballot_contributions/*.csv`
 - `data/processed/public/unmapped_rows/*.csv`
+- `docs/LOCALITY_RESULT_PRESENCE_AUDIT.csv` and `.md` - generated partial/no-standalone-result inventory for 2022 locality display features.
 
 ## Latest Verified Run
 
@@ -95,11 +116,13 @@ Geography:
 | Metric | Count |
 |---|---:|
 | Statistical-area features in FileGDB | 3,857 |
-| Dissolved locality features | 1,329 |
-| Single-stat localities | 1,184 |
+| Dissolved locality/display-footprint features | 1,387 |
+| Single-stat locality/display-footprint features | 1,242 |
 | Multi-stat localities | 145 |
 | Reviewed composite localities | 4 |
 | Custom geographies | 4 |
+
+The dissolved layer retains 58 CBS polygons whose English locality name is blank, including no-jurisdiction land and the Neve Midbar and Al-Kasom regional-council footprints. They render as neutral, non-selectable land in locality mode. Kinneret is explicitly excluded from the fill layer.
 
 Assignment plan:
 
@@ -115,7 +138,7 @@ Assignment plan:
 | K18 | 1,444 | 7,774 | 41 | 4 | 1 | 0 |
 | K17 | 1,250 | 6,986 | 38 | 3 | 149 | 0 |
 
-Locality-mode assignment is independent from the geocode-needed column above. All 92,945 geographic-scope rows, representing 34,783,363 actual voters, are assigned in locality mode. This includes 460 reviewed custom-geography rows and the election-specific composite municipalities. The 3,525 official envelope rows are aggregated separately by election. See `docs/LOCALITY_MODE.md` for the per-election and composite breakdown.
+Locality-mode assignment is independent from the geocode-needed column above. All 92,945 geographic-scope rows, representing 34,783,363 actual voters, are assigned in locality mode. This includes 460 reviewed custom-geography rows and the election-specific composite municipalities. The 3,525 official envelope rows and 59 reviewed `special:envelope_votes` rows are combined into one non-map aggregate per election. See `docs/LOCALITY_MODE.md` for the per-election and composite breakdown.
 
 Geocoding input readiness:
 
@@ -188,7 +211,7 @@ python scripts/build_osm_address_stat_lookup.py
 python scripts/build_unmatched_location_inventory.py
 ```
 
-The resulting analytical inventory assigns 40,048 non-envelope rows to a 2022 statistical area, retains 460 reviewed custom-geography rows, and leaves 4,893 unique unresolved location signatures covering 52,437 ballot rows. These OSM assignments are not yet promoted into the final public output. See `docs/GEOGRAPHIC_ASSIGNMENT_STATUS.md` for the category and reason breakdown.
+The resulting analytical inventory assigns 40,048 non-envelope rows to a 2022 statistical area, retains 460 reviewed custom-geography rows, and leaves 4,893 unique unresolved location signatures covering 52,437 ballot rows. These OSM assignments are not yet promoted into the final public output. The public envelope aggregate combines the 3,525 official envelope rows with all 59 reviewed rows targeted to `special:envelope_votes`, so national party totals reconcile without placing those rows on the map. See `docs/GEOGRAPHIC_ASSIGNMENT_STATUS.md` for the category and reason breakdown.
 
 ## Current Blockers
 

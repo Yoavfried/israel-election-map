@@ -175,7 +175,9 @@ def main() -> None:
         locality_rows["locality_name"] = locality_rows["locality_result_name"]
         locality_geographic_rows = merged[locality_mapped].copy()
         locality_unmapped_rows = merged[geographic_scope_mask & ~locality_mapped].copy()
-        envelope_rows = merged[merged["locality_geography_type"] == "envelope"].copy()
+        envelope_rows = merged[
+            merged["locality_geography_type"].isin(["envelope", "non_geographic"])
+        ].copy()
         envelope_rows["envelope_id"] = "envelope:official"
         envelope_rows["envelope_name_he"] = "מעטפות חיצוניות"
         envelope_rows["envelope_name_en"] = "Envelope votes"

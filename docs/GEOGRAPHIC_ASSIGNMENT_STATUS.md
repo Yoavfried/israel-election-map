@@ -95,7 +95,7 @@ The missing-number pass contains 829 query units and 815 canonical locality/stre
 
 ## Locality Mode Is Complete
 
-The unmatched inventory below applies to statistical-area placement, not locality totals. Locality mode assigns all 92,945 geographic-scope rows directly through the reviewed locality crosswalk, election-specific composite municipalities, or reviewed custom geographies. Official envelope votes are aggregated separately as one national result per election.
+The unmatched inventory below applies to statistical-area placement, not locality totals. Locality mode assigns all 92,945 geographic-scope rows directly through the reviewed locality crosswalk, election-specific composite municipalities, or reviewed custom geographies. The 3,525 official envelope rows and 59 reviewed `special:envelope_votes` rows are combined into one separate national result per election.
 
 The composite municipalities are באקה-ג'ת, עיר כרמל, and שגור in K17-K18, plus שער שומרון in K25. Their component polygons are unioned only for the elections where the composite source municipality exists. See `docs/LOCALITY_MODE.md` for the exact rows, voters, components, and frontend behavior.
 

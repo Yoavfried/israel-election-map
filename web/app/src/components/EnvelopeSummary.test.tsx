@@ -7,6 +7,8 @@ const party: Party = {
   id: 'A',
   ballotLetter: 'A',
   names: { en: 'List A', he: 'רשימה א' },
+  listNameHe: 'רשימה א',
+  wikipedia: { en: null, he: null },
   color: '#336655',
   colorStatus: 'reviewed',
 }

@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { buildMarkerVisibilityFilter, mayHaveDisplayMarker } from './mapPresentation'
+import {
+  buildMarkerVisibilityFilter,
+  buildPolygonVisibilityFilter,
+  mayHaveDisplayMarker,
+} from './mapPresentation'
 import type { ResultRecord } from './schemas'
 
 describe('map presentation rules', () => {
@@ -12,16 +16,38 @@ describe('map presentation rules', () => {
     expect(mayHaveDisplayMarker(record('loc:3000', 'locality', 'loc:3000', '3000'))).toBe(false)
   })
 
-  it('includes custom markers only when that election has a result record', () => {
-    const filter = buildMarkerVisibilityFilter([
-      record('custom:hebron', 'custom', null, 'HEBRON'),
-      record('loc:3616', 'locality', 'loc:3616', '3616'),
-    ])
+  it('includes custom markers only with data and excludes election-hidden markers', () => {
+    const filter = buildMarkerVisibilityFilter(
+      [
+        record('custom:hebron', 'custom', null, 'HEBRON'),
+        record('loc:3616', 'locality', 'loc:3616', '3616'),
+      ],
+      ['loc:3778', 'loc:3720'],
+    )
 
     expect(filter).toEqual([
-      'any',
-      ['!=', ['get', 'geographyType'], 'custom'],
-      ['in', ['get', 'id'], ['literal', ['custom:hebron']]],
+      'all',
+      ['!', ['in', ['get', 'id'], ['literal', ['loc:3720', 'loc:3778']]]],
+      [
+        'any',
+        ['!=', ['get', 'geographyType'], 'custom'],
+        ['in', ['get', 'id'], ['literal', ['custom:hebron']]],
+      ],
+    ])
+  })
+
+  it('keeps Kinneret and election-hidden locality polygons out of the fill layer', () => {
+    expect(buildPolygonVisibilityFilter(['loc:628', 'loc:9920'])).toEqual([
+      'all',
+      ['!=', ['get', 'displayMode'], 'marker'],
+      [
+        '!',
+        [
+          'in',
+          ['get', 'id'],
+          ['literal', ['loc:628', 'loc:9920', 'stat2022:9920']],
+        ],
+      ],
     ])
   })
 })

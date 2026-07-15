@@ -22,6 +22,16 @@ Useful notes:
 
 https://votes25.bechirot.gov.il/
 
+## Party/List Registry
+
+`data/manual/party_registry.csv` is the working election-specific lookup used by the web compiler. Its key is `(election, source_column)`, because the same ballot letters can identify different lists in different elections. `ballot_letter` stores the official code separately; the known K19 source column `מרץ` is retained as the data key and corrected to official code `מרצ` for display. Structural coverage is complete, but editorial review of names and links is not.
+
+The registry covers all 309 real K17-K25 result columns: 297 with at least one national vote and 12 zero-vote columns. Names come from the official Central Elections Committee national results pages for K21-K25, official results PDFs for K17-K20 where extractable, and official candidate-list publications for the three old zero-vote rows missing from the result PDFs. Positive-vote Wikipedia rows are matched within the same election by exact national vote total; duplicate totals are disambiguated by ballot code. Zero-vote article matches are explicit.
+
+The builder keeps Hebrew links only when its checks identify a standalone party/list article. Redirects to a person or to the election article itself are rejected. English links come only from the Hebrew article's actual English interlanguage link, never from a guessed title. The current snapshot contains 165 Hebrew URLs and 150 English URLs, but these links and the associated list names have not completed manual auditing; blank URLs are expected candidates for later review rather than a final assertion that no article exists.
+
+Party identity and color policy are deliberately separate. `web/app/config/party-overrides.json` gives reviewed official ballot letters a stable default color across elections and supports election-specific source-column overrides. The reviewed table is still partial; unreviewed letters use deterministic placeholders. Reusing a color for the same letter is a display convention, not a claim that every list using that letter is the same party.
+
 ## 2022 Statistical Areas
 
 Canonical raw polygon source for the project:
@@ -29,11 +39,13 @@ Canonical raw polygon source for the project:
 - `data/raw/ezorim_statistiim_2022.gdb`
 - Esri File Geodatabase layer: `statistical_areas_2022`
 - 3,857 polygon features in the current raw FileGDB.
-- 1,329 dissolved locality features.
-- 1,184 dissolved localities have exactly one statistical-area feature.
+- 1,387 dissolved locality/display-footprint features.
+- 1,242 dissolved locality/display-footprint features have exactly one statistical-area feature.
 - 145 dissolved localities have multiple statistical-area features.
 - 4 reviewed election-specific composite-locality features are unions of 2022 component localities.
 - Coordinate range is WGS84/browser-map compatible: roughly `34.27,29.49` to `35.89,33.33`.
+
+The 1,387-feature layer deliberately preserves 58 polygons with no English locality label. Most are CBS no-jurisdiction land; two are the Neve Midbar and Al-Kasom regional-council footprints. Keeping them prevents false sea-colored gaps in locality mode. They carry no election result and are therefore neutral and non-interactive; Kinneret remains unfilled.
 
 Observed fields:
 

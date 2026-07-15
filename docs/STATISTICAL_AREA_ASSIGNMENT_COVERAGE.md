@@ -19,7 +19,7 @@ Two different states matter:
 
 Current product scope is K17-K25. K16 / 2003 is deferred.
 
-This document is intentionally limited to statistical-area placement. Locality mode does not inherit these pending-geocode counts: it maps the full geographic scope directly and shows official envelope aggregates separately. See `docs/LOCALITY_MODE.md`.
+This document is intentionally limited to statistical-area placement. Locality mode does not inherit these pending-geocode counts: it maps the full geographic scope directly and separately shows the combined official and reviewed-special envelope aggregate. See `docs/LOCALITY_MODE.md`.
 
 ## Generated Tables
 

@@ -1,9 +1,32 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
+  "ballotLetterColors": {
+    "מחל": "#2455A4",
+    "אמת": "#C62828",
+    "מרצ": "#18864B",
+    "שס": "#202020",
+    "ג": "#8B5A2B"
+  },
   "ignoredResultColumns": {
     "K18": {
       "ת. עדכון": "Trailing K18 source metadata field whose value is not part of the valid-vote total; it is not a ballot list."
     }
   },
-  "elections": {}
+  "elections": {
+    "K17": {
+      "כן": {
+        "color": "#7B2CBF"
+      }
+    },
+    "K18": {
+      "כן": {
+        "color": "#7B2CBF"
+      }
+    },
+    "K19": {
+      "כן": {
+        "color": "#7B2CBF"
+      }
+    }
+  }
 }

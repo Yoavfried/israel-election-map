@@ -10,12 +10,20 @@ The repository contains both the reproducible election/geography pipeline and a 
 - Every row has a handling rule: 2022 statistical area, reviewed custom geography, address placement required, envelope, or reviewed non-geographic exception.
 - OSM is the first address-placement layer. Photon is reserved for unresolved fallback work.
 - The current OSM audit leaves 4,893 unique unresolved location signatures covering 52,437 non-envelope ballot rows.
-- Locality mode maps all 92,945 geographic-scope rows for K17-K25. Reviewed composite municipalities preserve the election-time locality geometry where the 2022 layer has separate component localities.
+- Locality mode maps all 92,945 geographic-scope rows for K17-K25. Reviewed composite municipalities preserve the election-time locality geometry where the 2022 layer has separate component localities. The separate review of 2022 features with partial or no standalone election results is still in progress.
 - Statistical-area mode does not yet promote OSM candidates; its current geographic-scope voter coverage ranges from 12.65% to 14.38% by election.
-- Official envelope votes are aggregated as a separate national result for every election and are not placed on locality polygons.
+- Official envelope rows and 59 reviewed military/special rows are combined into one separate national envelope result per election and are not placed on locality polygons.
+- `data/manual/party_registry.csv` structurally identifies all 309 election-specific ballot-list columns, including zero-vote lists. Its current 165 Hebrew and 150 English Wikipedia URLs and its party/list names are a working snapshot that still requires editorial review.
 - K17 scan recovery and the completed K18 visual-review corrections are part of the normalized source pipeline.
 
 Locality behavior is documented in `docs/LOCALITY_MODE.md`. The statistical-area methodology, unmatched categories, and promotion boundary are documented in `docs/GEOGRAPHIC_ASSIGNMENT_STATUS.md`.
+
+## Explicitly Incomplete
+
+- **Locality feature audit:** the reproducible inventory contains 80 features with results in only some elections and 36 with no standalone K17-K25 result. The inventory exists, but the historical explanation and election-specific visibility decision for every row have not been reviewed.
+- **Party colors:** the stable-letter color mechanism and election-specific overrides work, but reviewed colors currently cover only `מחל`, `אמת`, `מרצ`, `שס`, `ג`, and Kadima's `כן` in K17-K19. The remaining lists still use deterministic placeholder colors.
+- **Party names and Wikipedia links:** all result columns have registry rows, but the displayed names and candidate Hebrew/English links have not received a complete manual audit. Registry coverage must not be described as completed metadata review.
+- **UX:** the map is functional, bilingual, and responsive, but interaction design and visual polish remain active work. Search/navigation, additional coloring modes, contribution drill-down, accessibility, mobile QA, and broader end-to-end testing are not finished.
 
 ## Assignment Strategy
 
@@ -56,7 +64,11 @@ Vite serves the app at `http://localhost:4173`. The frontend compiler reads `dat
 ## Documentation
 
 - `docs/GEOGRAPHIC_ASSIGNMENT_STATUS.md` - current end-to-end assignment and unmatched inventory.
-- `docs/LOCALITY_MODE.md` - complete locality coverage, composite municipalities, and envelope presentation.
+- `docs/LOCALITY_MODE.md` - complete result-row coverage, the unfinished feature-presence audit, composite municipalities, and envelope presentation.
+- `data/manual/locality_display_overrides.csv` - reviewed historical locality names and election-specific no-result visibility.
+- `docs/LOCALITY_RESULT_PRESENCE_AUDIT.md` - all 2022 locality features with partial or no standalone K17-K25 results.
+- `data/manual/party_registry.csv` - election-specific ballot letters and the current, not-yet-fully-audited list names and Wikipedia links.
+- `web/app/config/party-overrides.json` - reviewed default ballot-letter colors and election-specific color/name overrides.
 - `docs/POLLING_PLACE_ADDRESS_QUALITY_AUDIT.md` - source fidelity, OCR/manual review, and OSM address QA.
 - `docs/DATA_PIPELINE.md` - stages, outputs, commands, and verified run counts.
 - `docs/POLLING_PLACE_ADDRESSES.md` - election-specific address sources.

@@ -8,6 +8,7 @@ import {
   buildDisplayMarkers,
   buildHiddenLocalityIds,
   buildMetadataIndex,
+  buildPartyRegistryIndex,
   buildResultPayload,
   parseCsv,
   pruneGeography,
@@ -32,6 +33,8 @@ async function main() {
     const [
       electionConfig,
       partyOverrideConfig,
+      partyRegistryRows,
+      localityDisplayOverrideRows,
       summaryRows,
       geographySummary,
       statisticalMetadataRows,
@@ -43,6 +46,8 @@ async function main() {
     ] = await Promise.all([
       readJson(resolve(APP_ROOT, 'config', 'elections.json')),
       readJson(resolve(APP_ROOT, 'config', 'party-overrides.json')),
+      readCsv(resolve(REPOSITORY_ROOT, 'data', 'manual', 'party_registry.csv')),
+      readCsv(resolve(REPOSITORY_ROOT, 'data', 'manual', 'locality_display_overrides.csv')),
       readCsv(resolve(sourceRoot, 'public', 'election_summary.csv')),
       readJson(resolve(sourceRoot, 'geographies', 'geography_build_summary.json')),
       readCsv(resolve(sourceRoot, 'geographies', 'statistical_areas_2022.metadata.csv')),
@@ -54,6 +59,8 @@ async function main() {
     ])
 
     validateConfiguration(electionConfig, partyOverrideConfig)
+    const partyRegistryByElection = buildPartyRegistryIndex(partyRegistryRows)
+    validatePartyRegistryElections(electionConfig, partyRegistryByElection)
 
     const summaryByElection = new Map(summaryRows.map((row) => [row.election, row]))
     const statisticalMetadata = buildMetadataIndex(statisticalMetadataRows, 'statistical-area')
@@ -61,6 +68,11 @@ async function main() {
       ...buildMetadataIndex(localityMetadataRows, 'locality'),
       ...buildCompositeMetadataIndex(compositeLocalities),
     ])
+    const localityDisplayOverrides = buildLocalityDisplayOverrideIndex(
+      localityDisplayOverrideRows,
+      electionConfig,
+      localityMetadata,
+    )
     const customMetadata = buildCustomMetadataIndex(customGeographies)
     const coverageByElection = new Map(
       electionConfig.map((election) => [
@@ -113,8 +125,21 @@ async function main() {
         readCsv(resolve(sourceRoot, 'public', 'envelope_results', `${electionSlug}.csv`)),
       ])
       const coverageByMode = coverageByElection.get(election.id)
-      const hiddenLocalityIds = buildHiddenLocalityIds(prunedLocalities, election.id)
+      const displayOverrides = localityDisplayOverrides.get(election.id) ?? new Map()
+      const hiddenLocalityIds = [
+        ...new Set([
+          ...buildHiddenLocalityIds(prunedLocalities, election.id),
+          ...[...displayOverrides]
+            .filter(([, override]) => override.visibility === 'hidden')
+            .map(([localityId]) => localityId),
+        ]),
+      ].toSorted()
+      const electionLocalityMetadata = applyLocalityNameOverrides(
+        localityMetadata,
+        displayOverrides,
+      )
       const overrides = partyOverrideConfig.elections[election.id] ?? {}
+      const partyRegistry = partyRegistryByElection.get(election.id)
       const excludedPartyColumns = Object.keys(
         partyOverrideConfig.ignoredResultColumns[election.id] ?? {},
       )
@@ -127,6 +152,8 @@ async function main() {
         metadataById: statisticalMetadata,
         customMetadataById: customMetadata,
         coverage: coverageByMode['statistical-area'],
+        partyRegistry,
+        partyColorsByBallotLetter: partyOverrideConfig.ballotLetterColors,
         partyOverrides: overrides,
         excludedPartyColumns,
       })
@@ -136,12 +163,15 @@ async function main() {
         primaryRows: localityRows,
         customRows,
         envelopeRows,
-        metadataById: localityMetadata,
+        metadataById: electionLocalityMetadata,
         customMetadataById: customMetadata,
         coverage: coverageByMode.locality,
         hiddenGeographyIds: hiddenLocalityIds,
+        partyRegistry,
+        partyColorsByBallotLetter: partyOverrideConfig.ballotLetterColors,
         partyOverrides: overrides,
         excludedPartyColumns,
+        validatePartyTotals: true,
       })
 
       const resultUrls = {
@@ -184,8 +214,8 @@ async function main() {
         [geographySummary.bounds_wgs84.max_lon, geographySummary.bounds_wgs84.max_lat],
       ],
       partyColorPolicy: {
-        status: 'provisional',
-        description: 'Deterministic placeholder colors keyed by election and ballot letter; reviewed overrides take precedence.',
+        status: 'partial',
+        description: 'Reviewed ballot-letter colors stay constant across elections, election-specific overrides take precedence, and unreviewed letters use deterministic placeholders.',
       },
       geographyModes: [
         {
@@ -305,6 +335,59 @@ async function readCsv(path) {
   return parseCsv(await readFile(path, 'utf8'), path)
 }
 
+function buildLocalityDisplayOverrideIndex(rows, elections, localityMetadata) {
+  const configuredElections = new Set(elections.map((election) => election.id))
+  const byElection = new Map(elections.map((election) => [election.id, new Map()]))
+
+  for (const row of rows) {
+    const localityId = String(row.locality_id ?? '').trim()
+    const electionIds = String(row.elections ?? '')
+      .split('|')
+      .map((value) => value.trim())
+      .filter(Boolean)
+    const visibility = String(row.visibility ?? '').trim() || 'default'
+    const nameHe = String(row.name_he ?? '').trim()
+    const nameEn = String(row.name_en ?? '').trim()
+    const note = String(row.note ?? '').trim()
+
+    if (!localityMetadata.has(localityId)) {
+      throw new Error(`Unknown locality display override: ${localityId || '(blank ID)'}`)
+    }
+    if (electionIds.length === 0 || electionIds.some((id) => !configuredElections.has(id))) {
+      throw new Error(`${localityId} has invalid display-override elections`)
+    }
+    if (!['default', 'hidden'].includes(visibility)) {
+      throw new Error(`${localityId} has invalid display visibility: ${visibility}`)
+    }
+
+    for (const electionId of electionIds) {
+      const electionOverrides = byElection.get(electionId)
+      if (electionOverrides.has(localityId)) {
+        throw new Error(`Duplicate locality display override: ${electionId}.${localityId}`)
+      }
+      electionOverrides.set(localityId, { visibility, nameHe, nameEn, note })
+    }
+  }
+
+  return byElection
+}
+
+function applyLocalityNameOverrides(localityMetadata, overrides) {
+  const output = new Map(localityMetadata)
+  for (const [localityId, override] of overrides) {
+    if (!override.nameHe && !override.nameEn) {
+      continue
+    }
+    const metadata = output.get(localityId)
+    output.set(localityId, {
+      ...metadata,
+      nameHe: override.nameHe || metadata.nameHe,
+      nameEn: override.nameEn || metadata.nameEn,
+    })
+  }
+  return output
+}
+
 function validateConfiguration(elections, partyOverrides) {
   if (!Array.isArray(elections) || elections.length === 0) {
     throw new Error('Election configuration must be a non-empty array')
@@ -320,14 +403,55 @@ function validateConfiguration(elections, partyOverrides) {
     ids.add(election.id)
   }
   if (
-    partyOverrides?.schemaVersion !== 1 ||
+    partyOverrides?.schemaVersion !== 2 ||
+    !partyOverrides.ballotLetterColors ||
+    typeof partyOverrides.ballotLetterColors !== 'object' ||
     !partyOverrides.elections ||
     typeof partyOverrides.elections !== 'object' ||
     !partyOverrides.ignoredResultColumns ||
     typeof partyOverrides.ignoredResultColumns !== 'object'
   ) {
     throw new Error(
-      'party-overrides.json must use schemaVersion 1 and contain elections and ignoredResultColumns objects',
+      'party-overrides.json must use schemaVersion 2 and contain ballotLetterColors, elections, and ignoredResultColumns objects',
+    )
+  }
+
+  for (const [ballotLetter, color] of Object.entries(partyOverrides.ballotLetterColors)) {
+    assertHexColor(color, `ballotLetterColors.${ballotLetter}`)
+  }
+  for (const [electionId, overrides] of Object.entries(partyOverrides.elections)) {
+    if (!ids.has(electionId) || !overrides || typeof overrides !== 'object') {
+      throw new Error(`Invalid party override election: ${electionId}`)
+    }
+    for (const [partyId, override] of Object.entries(overrides)) {
+      if (!override || typeof override !== 'object') {
+        throw new Error(`${electionId}.${partyId} must be an override object`)
+      }
+      if (override.color) {
+        assertHexColor(override.color, `elections.${electionId}.${partyId}.color`)
+      }
+    }
+  }
+}
+
+function assertHexColor(color, fieldName) {
+  if (typeof color !== 'string' || !/^#[0-9a-f]{6}$/i.test(color)) {
+    throw new Error(`${fieldName} must be a six-digit hex color`)
+  }
+}
+
+function validatePartyRegistryElections(elections, partyRegistryByElection) {
+  const configuredIds = new Set(elections.map((election) => election.id))
+  const missing = elections
+    .map((election) => election.id)
+    .filter((electionId) => !partyRegistryByElection.has(electionId))
+  const extra = [...partyRegistryByElection.keys()].filter(
+    (electionId) => !configuredIds.has(electionId),
+  )
+  if (missing.length > 0 || extra.length > 0) {
+    throw new Error(
+      `Party registry election coverage is invalid; missing: ${missing.join(', ') || '(none)'}; ` +
+        `extra: ${extra.join(', ') || '(none)'}`,
     )
   }
 }

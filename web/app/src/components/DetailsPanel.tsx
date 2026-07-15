@@ -26,11 +26,14 @@ export function DetailsPanel({ language, record, parties }: DetailsPanelProps) {
 
   const winner = partyById.get(record.winner.partyId)
   const isEnvelope = record.geographyType === 'envelope'
+  const partyName = (partyId: string) => partyById.get(partyId)?.names[language] ?? partyId
+  const collator = new Intl.Collator(language === 'he' ? 'he-IL' : 'en-IL')
   const orderedParties = Object.entries(record.partyVotes)
-    .filter(([, votes]) => votes > 0)
-    .toSorted((left, right) => right[1] - left[1])
-    .slice(0, 8)
-  const largestPartyVote = orderedParties[0]?.[1] ?? 1
+    .toSorted(
+      (left, right) =>
+        right[1] - left[1] || collator.compare(partyName(left[0]), partyName(right[0])),
+    )
+  const largestPartyVote = Math.max(orderedParties[0]?.[1] ?? 0, 1)
 
   return (
     <aside className="details-panel">
@@ -78,10 +81,6 @@ export function DetailsPanel({ language, record, parties }: DetailsPanelProps) {
           <dt>{translate(language, 'validVotes')}</dt>
           <dd>{formatNumber(record.totals.validVotes, language)}</dd>
         </div>
-        <div>
-          <dt>{translate(language, 'margin')}</dt>
-          <dd>{formatNumber(record.winner.marginVotes, language)}</dd>
-        </div>
       </dl>
 
       <div className="party-breakdown">
@@ -102,7 +101,9 @@ export function DetailsPanel({ language, record, parties }: DetailsPanelProps) {
                   style={{ backgroundColor: party?.color ?? '#68706a' }}
                   aria-hidden="true"
                 />
-                <span className="party-name">{party?.names[language] ?? partyId}</span>
+                <span className="party-name" title={party?.names[language] ?? partyId}>
+                  {party?.names[language] ?? partyId}
+                </span>
                 <span className="party-votes">{formatNumber(votes, language)}</span>
                 <span className="party-bar" aria-hidden="true">
                   <span

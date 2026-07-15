@@ -341,7 +341,9 @@ select:focus-visible {
 }
 
 .details-panel {
-  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   inline-size: 100%;
   max-block-size: min(500px, max(180px, calc(100dvh - 450px)));
   padding: 18px;
@@ -443,7 +445,8 @@ select:focus-visible {
 
 .metric-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  flex: 0 0 auto;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1px;
   overflow: hidden;
   margin: 0;
@@ -454,25 +457,31 @@ select:focus-visible {
 
 .metric-grid > div {
   min-inline-size: 0;
-  padding: 10px 8px;
+  padding: 11px 10px;
   background: rgba(255, 255, 255, 0.55);
 }
 
 .metric-grid dt {
-  overflow: hidden;
   color: var(--muted);
-  font-size: 0.64rem;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.25;
 }
 
 .metric-grid dd {
   margin: 4px 0 0;
-  font-size: 0.86rem;
+  font-size: 0.98rem;
   font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.15;
+  white-space: nowrap;
 }
 
 .party-breakdown {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-block-size: 0;
   margin-block-start: 17px;
 }
 
@@ -497,9 +506,27 @@ select:focus-visible {
 .party-breakdown ol {
   display: grid;
   gap: 7px;
+  min-block-size: 0;
   margin: 0;
   padding: 0;
+  padding-inline-end: 5px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-color: rgba(23, 26, 23, 0.34) transparent;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
   list-style: none;
+}
+
+.party-breakdown ol::-webkit-scrollbar {
+  inline-size: 7px;
+}
+
+.party-breakdown ol::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: rgba(23, 26, 23, 0.34);
+  background-clip: padding-box;
 }
 
 .party-breakdown li {
@@ -656,10 +683,6 @@ select:focus-visible {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-  }
-
-  .metric-grid {
-    grid-template-columns: repeat(2, 1fr);
   }
 
   .party-breakdown li {

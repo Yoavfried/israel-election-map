@@ -79,6 +79,57 @@ describe('generated web data', () => {
       }
     }
   })
+
+  it('retains neutral Israeli land footprints in locality geometry', async () => {
+    const geometry = (await readJson(
+      resolve(dataRoot, 'geographies', 'localities.geojson'),
+    )) as {
+      features: Array<{
+        id?: string
+        properties?: { displayMode?: string; nameEn?: string }
+      }>
+    }
+    const featuresById = new Map(geometry.features.map((feature) => [feature.id, feature]))
+
+    for (const id of ['loc:9971', 'loc:9936', 'loc:5568', 'loc:5569', 'loc:9920']) {
+      const feature = featuresById.get(id)
+      expect(feature, id).toBeDefined()
+      expect(feature?.properties?.displayMode, id).toBe('polygon')
+      expect(feature?.properties?.nameEn, id).not.toBe('nan')
+    }
+  })
+
+  it('applies reviewed election-specific locality display rules', async () => {
+    const catalog = AppCatalogSchema.parse(await readJson(resolve(dataRoot, 'catalog.json')))
+    const geometry = (await readJson(
+      resolve(dataRoot, 'geographies', 'localities.geojson'),
+    )) as {
+      features: Array<{
+        id?: string
+        properties?: { nameHe?: string }
+      }>
+    }
+    const featuresById = new Map(geometry.features.map((feature) => [feature.id, feature]))
+
+    expect(featuresById.get('loc:3620')?.properties?.nameHe).toBe('נערן')
+    expect(featuresById.has('loc:3786')).toBe(true)
+    expect(featuresById.has('loc:3825')).toBe(true)
+
+    for (const election of catalog.elections) {
+      const payload = ElectionResultsSchema.parse(
+        await readJson(resolve(dataRoot, election.resultUrls.locality)),
+      )
+      expect(payload.hiddenGeographyIds, election.id).toContain('loc:3786')
+      expect(payload.hiddenGeographyIds, election.id).toContain('loc:3825')
+
+      const naranRecord = payload.records.find((record) => record.id === 'loc:3620')
+      if (Number(election.id.slice(1)) <= 21) {
+        expect(naranRecord?.names, election.id).toEqual({ he: 'נירן', en: 'NIRAN' })
+      } else {
+        expect(naranRecord, election.id).toBeUndefined()
+      }
+    }
+  })
 })
 
 async function readJson(path: string): Promise<unknown> {

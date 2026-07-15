@@ -3,6 +3,7 @@ import {
   buildCompositeMetadataIndex,
   buildDisplayMarkers,
   buildHiddenLocalityIds,
+  buildPartyRegistryIndex,
   buildResultPayload,
   isPointLikeGeometry,
   isWestBankSettlementCode,
@@ -21,6 +22,22 @@ const coverage = {
   pendingActualVoters: 0,
   unmappedRows: 0,
   unmappedActualVoters: 0,
+}
+
+function registryFor(electionId, parties) {
+  return buildPartyRegistryIndex(
+    parties.map(({ sourceColumn, ballotLetter = sourceColumn, totalVotes, nameHe, nameEn = '' }) => ({
+      election: electionId,
+      source_column: sourceColumn,
+      ballot_letter: ballotLetter,
+      total_votes: String(totalVotes),
+      list_name_he: nameHe,
+      display_name_he: nameHe,
+      display_name_en: nameEn,
+      wikipedia_he_url: '',
+      wikipedia_en_url: '',
+    })),
+  ).get(electionId)
 }
 
 describe('web data compiler', () => {
@@ -196,6 +213,12 @@ describe('web data compiler', () => {
       metadataById: metadata,
       customMetadataById: new Map(),
       coverage,
+      partyColorsByBallotLetter: { אמת: '#C62828', מחל: '#2455A4' },
+      partyOverrides: { מחל: { color: '#123456' } },
+      partyRegistry: registryFor('K25', [
+        { sourceColumn: 'אמת', totalVotes: 100, nameHe: 'העבודה', nameEn: 'Labor' },
+        { sourceColumn: 'מחל', totalVotes: 58, nameHe: 'הליכוד', nameEn: 'Likud' },
+      ]),
       envelopeRows: [
         {
           election: row.election,
@@ -222,12 +245,21 @@ describe('web data compiler', () => {
     expect(payload.records[0].partyVotes).toEqual({ אמת: 50, מחל: 29 })
     expect(payload.records[0].totals.turnout).toBe(0.8)
     expect(payload.parties).toHaveLength(2)
+    expect(payload.parties[0].names).toEqual({ he: 'העבודה', en: 'Labor' })
+    expect(payload.parties.find((party) => party.id === 'אמת')).toMatchObject({
+      color: '#C62828',
+      colorStatus: 'reviewed',
+    })
+    expect(payload.parties.find((party) => party.id === 'מחל')).toMatchObject({
+      color: '#123456',
+      colorStatus: 'reviewed',
+    })
     expect(payload.envelope?.geographyType).toBe('envelope')
   })
 
-  it('keeps fallback party colors deterministic', () => {
-    expect(stablePartyColor('K25', 'אמת')).toBe(stablePartyColor('K25', 'אמת'))
-    expect(stablePartyColor('K24', 'אמת')).not.toBe(stablePartyColor('K25', 'אמת'))
+  it('keeps fallback party colors deterministic by ballot letter', () => {
+    expect(stablePartyColor('אמת')).toBe(stablePartyColor('אמת'))
+    expect(stablePartyColor('אמת')).not.toBe(stablePartyColor('מחל'))
   })
 
   it('excludes declared source metadata and recomputes the winner', () => {
@@ -271,7 +303,12 @@ describe('web data compiler', () => {
       metadataById: metadata,
       customMetadataById: new Map(),
       coverage,
+      partyRegistry: registryFor('K18', [
+        { sourceColumn: 'אמת', totalVotes: 1, nameHe: 'העבודה' },
+        { sourceColumn: 'מחל', totalVotes: 3, nameHe: 'הליכוד' },
+      ]),
       excludedPartyColumns: ['ת. עדכון'],
+      validatePartyTotals: true,
     })
 
     expect(payload.records[0].winner).toEqual({
@@ -282,5 +319,23 @@ describe('web data compiler', () => {
       voteShare: 0.75,
     })
     expect(payload.parties.map((party) => party.id)).not.toContain('ת. עדכון')
+  })
+
+  it('keeps source columns distinct from corrected official ballot letters', () => {
+    const registry = registryFor('K19', [
+      {
+        sourceColumn: 'מרץ',
+        ballotLetter: 'מרצ',
+        totalVotes: 172403,
+        nameHe: 'מרצ',
+        nameEn: 'Meretz',
+      },
+    ])
+
+    expect(registry.get('מרץ')).toMatchObject({
+      sourceColumn: 'מרץ',
+      ballotLetter: 'מרצ',
+      displayNameHe: 'מרצ',
+    })
   })
 })

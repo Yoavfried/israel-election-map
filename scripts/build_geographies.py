@@ -89,6 +89,8 @@ def read_statistical_areas() -> gpd.GeoDataFrame:
         }
     )
     gdf["locality_code"] = gdf["locality_code"].map(clean_int)
+    gdf["locality_name_he"] = gdf["locality_name_he"].fillna("")
+    gdf["locality_name_en"] = gdf["locality_name_en"].fillna("")
     gdf["stat_2022"] = gdf["stat_2022"].map(clean_int)
     gdf["yishuv_stat_2022"] = gdf["yishuv_stat_2022"].map(clean_int)
     gdf["locality_id"] = gdf["locality_code"].map(lambda value: f"loc:{value}" if value is not None else "")
@@ -162,8 +164,18 @@ def build_localities(stats: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
             "COD_TIFKUD": join_int_values,
         },
         as_index=False,
+        dropna=False,
     )
     dissolved["geometry"] = dissolved.geometry.make_valid()
+
+    source_coverage = union_all(stats_for_dissolve.geometry)
+    dissolved_coverage = union_all(dissolved.geometry)
+    missing_area = source_coverage.difference(dissolved_coverage).area
+    if missing_area > 1:
+        raise ValueError(
+            f"Dissolved locality layer dropped {missing_area:,.1f} square metres of source coverage"
+        )
+
     dissolved["single_stat_area"] = dissolved["stat_area_count"] == 1
     dissolved["has_function_code"] = dissolved["COD_TIFKUD"].astype(str) != ""
     return dissolved

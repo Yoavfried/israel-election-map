@@ -29,9 +29,11 @@ The current FileGDB has one layer, `statistical_areas_2022`.
 |---|---:|
 | Polygon features | 3,857 |
 | Unique locality/statistical-area IDs | 3,857 |
-| Dissolved locality features | 1,329 |
-| Locality features with one statistical area | 1,184 |
+| Dissolved locality/display-footprint features | 1,387 |
+| Locality/display-footprint features with one statistical area | 1,242 |
 | Locality features with multiple statistical areas | 145 |
+
+The display-footprint count includes 58 source polygons with a blank English locality name. They are retained as neutral land coverage rather than treated as election localities; Kinneret is excluded from the rendered fill.
 
 The source includes the major localities that were missing from the old partial GeoJSON, including Haifa, Be'er Sheva, Netanya, Herzliya, Kfar Saba, Rahat, Nazareth, Eilat, Tayibe, Umm Batin, Ar'ara-BaNegev, and Beit Arye-Ofarim.
 

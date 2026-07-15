@@ -1,0 +1,4 @@
+locality_id,elections,visibility,name_he,name_en,note
+loc:3620,K17|K18|K19|K20|K21,default,נירן,NIRAN,Historical election name for the 2022 locality named נערן.
+loc:3786,K17|K18|K19|K20|K21|K22|K23|K24|K25,hidden,,,No standalone K17-K25 result; reviewed as non-independent before 2025 and hidden without deleting its 2022 geometry.
+loc:3825,K17|K18|K19|K20|K21|K22|K23|K24|K25,hidden,,,"No standalone K17-K25 result; independent only from September 2019 and reviewed as included with ייט""ב where applicable."
