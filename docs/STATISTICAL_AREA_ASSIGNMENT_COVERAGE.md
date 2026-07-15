@@ -1,6 +1,6 @@
 # Statistical-Area Assignment Coverage
 
-Last updated: 2026-07-07
+Last updated: 2026-07-15
 
 ## Purpose
 
@@ -38,15 +38,15 @@ This is the pre-geocode assignment plan. `Geocode-needed rows` are valid geograp
 
 | Election | Year | Single-stat rows | Geocode-needed rows | Custom rows | Special rows | Envelope rows | Unresolved rows |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| K25 | 2022 | 1,803 | 9,834 | 63 | 7 | 838 | 0 |
-| K24 | 2021 | 1,863 | 10,195 | 62 | 7 | 799 | 0 |
-| K23 | 2020 | 1,603 | 8,967 | 54 | 7 | 548 | 0 |
-| K22 | 2019 Sep | 1,597 | 8,881 | 54 | 7 | 362 | 0 |
-| K21 | 2019 Apr | 1,591 | 8,808 | 54 | 7 | 305 | 0 |
-| K20 | 2015 | 1,544 | 8,519 | 49 | 7 | 295 | 0 |
-| K19 | 2013 | 1,515 | 8,315 | 45 | 6 | 228 | 0 |
-| K18 | 2009 | 1,438 | 7,780 | 41 | 4 | 1 | 0 |
-| K17 | 2006 | 1,241 | 6,995 | 38 | 3 | 149 | 0 |
+| K25 | 2022 | 1,819 | 9,817 | 63 | 8 | 838 | 0 |
+| K24 | 2021 | 1,864 | 10,193 | 62 | 8 | 799 | 0 |
+| K23 | 2020 | 1,605 | 8,964 | 54 | 8 | 548 | 0 |
+| K22 | 2019 Sep | 1,599 | 8,878 | 54 | 8 | 362 | 0 |
+| K21 | 2019 Apr | 1,593 | 8,806 | 54 | 7 | 305 | 0 |
+| K20 | 2015 | 1,547 | 8,516 | 49 | 7 | 295 | 0 |
+| K19 | 2013 | 1,517 | 8,313 | 45 | 6 | 228 | 0 |
+| K18 | 2009 | 1,444 | 7,774 | 41 | 4 | 1 | 0 |
+| K17 | 2006 | 1,250 | 6,986 | 38 | 3 | 149 | 0 |
 
 ## Geocoding Input Readiness
 
@@ -54,15 +54,15 @@ This table covers only rows that require address-level geocoding.
 
 | Election | Ready address rows | Place-only rows | Missing address rows | Missing-address actual voters |
 |---|---:|---:|---:|---:|
-| K25 | 9,834 | 0 | 0 | 0 |
-| K24 | 10,195 | 0 | 0 | 0 |
-| K23 | 8,967 | 0 | 0 | 0 |
-| K22 | 8,881 | 0 | 0 | 0 |
-| K21 | 8,808 | 0 | 0 | 0 |
-| K20 | 8,519 | 0 | 0 | 0 |
-| K19 | 8,309 | 6 | 0 | 0 |
-| K18 | 7,769 | 11 | 0 | 0 |
-| K17 | 6,984 | 11 | 0 | 0 |
+| K25 | 9,817 | 0 | 0 | 0 |
+| K24 | 10,193 | 0 | 0 | 0 |
+| K23 | 8,964 | 0 | 0 | 0 |
+| K22 | 8,878 | 0 | 0 | 0 |
+| K21 | 8,806 | 0 | 0 | 0 |
+| K20 | 8,516 | 0 | 0 | 0 |
+| K19 | 8,307 | 6 | 0 | 0 |
+| K18 | 7,739 | 35 | 0 | 0 |
+| K17 | 6,530 | 456 | 0 | 0 |
 
 ## Current Pre-Geocode Map Output
 
@@ -70,20 +70,21 @@ Because `data/processed/geocoding/geocoded_points.csv` does not exist yet, the f
 
 | Election | Mapped rows | Mapped actual voters | Pending/missing geocode rows | Pending/missing geocode actual voters |
 |---|---:|---:|---:|---:|
-| K25 | 1,866 | 607,457 | 9,834 | 3,723,709 |
-| K24 | 1,925 | 576,281 | 10,195 | 3,433,896 |
-| K23 | 1,657 | 603,487 | 8,967 | 3,680,687 |
-| K22 | 1,651 | 591,471 | 8,881 | 3,590,594 |
-| K21 | 1,645 | 574,009 | 8,808 | 3,524,678 |
-| K20 | 1,593 | 543,828 | 8,519 | 3,475,496 |
-| K19 | 1,560 | 488,732 | 8,315 | 3,128,444 |
-| K18 | 1,479 | 413,520 | 7,780 | 2,815,741 |
-| K17 | 1,279 | 376,882 | 6,995 | 2,635,068 |
+| K25 | 1,882 | 613,521 | 9,817 | 3,717,505 |
+| K24 | 1,926 | 576,695 | 10,193 | 3,433,319 |
+| K23 | 1,659 | 604,128 | 8,964 | 3,679,886 |
+| K22 | 1,653 | 592,134 | 8,878 | 3,589,777 |
+| K21 | 1,647 | 574,684 | 8,806 | 3,524,003 |
+| K20 | 1,596 | 544,451 | 8,516 | 3,474,873 |
+| K19 | 1,562 | 489,305 | 8,313 | 3,127,871 |
+| K18 | 1,485 | 415,673 | 7,774 | 2,813,588 |
+| K17 | 1,288 | 380,986 | 6,986 | 2,630,964 |
 
 ## Interpretation
 
 - Assignment classification has no unresolved rows for K17-K25.
 - K22-K25 and K20-K21 have ready geocoding inputs for all rows that need address-level assignment.
 - K19 and K18 have a small number of place-only rows that need manual/reviewed geocoding.
-- K17 has 11 place-only rows recovered from targeted review of the scanned polling-place lists; they still need geocoding/review, but they are no longer source-missing.
+- K17 has 456 place-only rows recovered directly from the scanned polling-place lists; they still need facility geocoding/review, but the current locality-only/no-place count is zero.
 - Custom point-size polygon buckets are assigned now. Their visual treatment is a frontend decision.
+- The broader OSM audit is intentionally not included in this table until those candidates are promoted into the final assignment builder. See `docs/GEOGRAPHIC_ASSIGNMENT_STATUS.md`.

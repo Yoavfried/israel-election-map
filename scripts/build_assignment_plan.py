@@ -8,12 +8,13 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
-from pipeline_common import PROCESSED_DIR, ROOT, int_value, normalize_code, normalize_spaces, write_csv, write_json
+from pipeline_common import MANUAL_DIR, PROCESSED_DIR, ROOT, int_value, normalize_code, normalize_kalpi, normalize_spaces, write_csv, write_json
 
 
 BALLOT_ROWS = PROCESSED_DIR / "normalized" / "ballot_rows.csv"
 LOCALITIES = PROCESSED_DIR / "geographies" / "localities_2022.metadata.csv"
 CROSSWALK = ROOT / "docs" / "LOCALITY_CROSSWALK_RESOLUTION_PLAN.csv"
+ROW_OVERRIDES = MANUAL_DIR / "polling_place_assignment_overrides.csv"
 OUT_DIR = PROCESSED_DIR / "assignments"
 
 
@@ -40,6 +41,95 @@ def split_source_identity(value: str) -> tuple[str, str]:
 
 def bool_value(value: Any) -> bool:
     return str(value).strip().lower() in {"true", "1", "yes"}
+
+
+def row_override_lookup_keys(row: dict[str, str]) -> list[tuple[str, str, str]]:
+    keys: list[tuple[str, str, str]] = []
+    source_row_uid = normalize_spaces(row.get("source_row_uid", ""))
+    if source_row_uid:
+        keys.append(("source_row_uid", source_row_uid, ""))
+
+    election = normalize_spaces(row.get("election", ""))
+    locality_code = normalize_code(row.get("source_locality_code", ""))
+    kalpi = normalize_kalpi(row.get("source_kalpi", ""))
+    if election and locality_code and kalpi:
+        keys.append(("locality_kalpi", f"{election}:{locality_code}", kalpi))
+    return keys
+
+
+def row_override_key(row: dict[str, str]) -> tuple[str, str, str]:
+    keys = row_override_lookup_keys(row)
+    if not keys:
+        return ("", "", "")
+    if normalize_spaces(row.get("source_row_uid", "")):
+        return keys[0]
+    return keys[-1]
+
+
+def row_override_index(rows: list[dict[str, str]]) -> dict[tuple[str, str, str], dict[str, str]]:
+    index: dict[tuple[str, str, str], dict[str, str]] = {}
+    for row in rows:
+        key = row_override_key(row)
+        if not key[0] or not key[1]:
+            raise ValueError(f"Invalid polling-place assignment override key: {row}")
+        if key in index:
+            raise ValueError(f"Duplicate polling-place assignment override key: {key}")
+        index[key] = row
+    return index
+
+
+def assignment_from_row_override(row: dict[str, str]) -> dict[str, Any]:
+    method = row["assignment_method"]
+    if method == "special_non_geographic":
+        return {
+            "assignment_method": "special_non_geographic",
+            "assignment_source": "reviewed_polling_place_override",
+            "target_geography_type": row["target_geography_type"] or "special_non_geographic",
+            "target_locality_code": "",
+            "target_locality_name": row["target_locality_name"],
+            "target_stat_area_id": "",
+            "custom_geography_id": row["custom_geography_id"] or "special:envelope_votes",
+            "needs_geocoding": False,
+            "unresolved_reason": "",
+        }
+    if method == "single_stat_locality":
+        required = [
+            row.get("target_locality_code", ""),
+            row.get("target_locality_name", ""),
+            row.get("target_stat_area_id", ""),
+        ]
+        if not all(normalize_spaces(value) for value in required):
+            raise ValueError(f"Incomplete single-stat polling-place override: {row}")
+        return {
+            "assignment_method": "single_stat_locality",
+            "assignment_source": "reviewed_polling_place_stat_override",
+            "target_geography_type": "statistical_area",
+            "target_locality_code": normalize_code(row["target_locality_code"]),
+            "target_locality_name": row["target_locality_name"],
+            "target_stat_area_id": row["target_stat_area_id"],
+            "custom_geography_id": "",
+            "needs_geocoding": False,
+            "unresolved_reason": "",
+        }
+    if method == "direct_address_geocode_needed":
+        required = [
+            row.get("target_locality_code", ""),
+            row.get("target_locality_name", ""),
+        ]
+        if not all(normalize_spaces(value) for value in required):
+            raise ValueError(f"Incomplete direct-geocode polling-place override: {row}")
+        return {
+            "assignment_method": "direct_address_geocode_needed",
+            "assignment_source": "reviewed_component_locality_override",
+            "target_geography_type": "statistical_area_pending_geocode",
+            "target_locality_code": normalize_code(row["target_locality_code"]),
+            "target_locality_name": row["target_locality_name"],
+            "target_stat_area_id": "",
+            "custom_geography_id": "",
+            "needs_geocoding": True,
+            "unresolved_reason": "",
+        }
+    raise ValueError(f"Unsupported polling-place override assignment method: {method}")
 
 
 def locality_indexes(rows: list[dict[str, str]]) -> tuple[dict[str, dict], dict[str, list[dict]]]:
@@ -191,6 +281,7 @@ def assign_row(
     localities_by_code: dict[str, dict],
     localities_by_name: dict[str, list[dict]],
     crosswalk: dict[tuple[str, str], dict],
+    row_overrides: dict[tuple[str, str, str], dict[str, str]],
 ) -> dict[str, Any]:
     if bool_value(row["is_envelope"]):
         return {
@@ -204,6 +295,13 @@ def assign_row(
             "needs_geocoding": False,
             "unresolved_reason": "",
         }
+
+    override = next(
+        (row_overrides[key] for key in row_override_lookup_keys(row) if key in row_overrides),
+        None,
+    )
+    if override:
+        return assignment_from_row_override(override)
 
     reviewed = find_crosswalk(row, crosswalk)
     if reviewed:
@@ -229,10 +327,19 @@ def main() -> None:
     ballot_rows = read_csv(BALLOT_ROWS)
     localities_by_code, localities_by_name = locality_indexes(read_csv(LOCALITIES))
     crosswalk = crosswalk_index(read_csv(CROSSWALK))
+    row_overrides = row_override_index(read_csv(ROW_OVERRIDES))
+    ballot_override_keys = {
+        key
+        for row in ballot_rows
+        for key in row_override_lookup_keys(row)
+    }
+    missing_override_keys = set(row_overrides) - ballot_override_keys
+    if missing_override_keys:
+        raise ValueError(f"Polling-place assignment overrides did not match ballot rows: {sorted(missing_override_keys)}")
 
     output: list[dict[str, Any]] = []
     for row in ballot_rows:
-        assignment = assign_row(row, localities_by_code, localities_by_name, crosswalk)
+        assignment = assign_row(row, localities_by_code, localities_by_name, crosswalk, row_overrides)
         output.append(
             {
                 "source_row_uid": row["source_row_uid"],

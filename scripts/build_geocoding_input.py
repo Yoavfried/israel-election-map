@@ -7,11 +7,12 @@ from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Any
 
-from pipeline_common import PROCESSED_DIR, int_value, normalize_kalpi, write_csv, write_json
+from pipeline_common import MANUAL_DIR, PROCESSED_DIR, int_value, normalize_kalpi, normalize_spaces, write_csv, write_json
 
 
 ASSIGNMENT_PLAN = PROCESSED_DIR / "assignments" / "ballot_assignment_plan.csv"
 POLLING_PLACE_ADDRESSES = PROCESSED_DIR / "addresses" / "polling_place_addresses.csv"
+ROW_OVERRIDES = MANUAL_DIR / "polling_place_assignment_overrides.csv"
 OUT_DIR = PROCESSED_DIR / "geocoding"
 
 
@@ -85,6 +86,32 @@ def status_for_address(address: dict | None) -> str:
     return "missing_address_value"
 
 
+def address_handling_overrides(rows: list[dict[str, str]]) -> dict[str, dict[str, str]]:
+    output: dict[str, dict[str, str]] = {}
+    for row in rows:
+        handling = normalize_spaces(row.get("address_handling", ""))
+        if not handling:
+            continue
+        if handling not in {"component_locality", "retarget_locality"}:
+            raise ValueError(f"Unsupported polling-place address handling: {row}")
+        source_row_uid = normalize_spaces(row.get("source_row_uid", ""))
+        if not source_row_uid:
+            raise ValueError(f"Address handling requires source_row_uid: {row}")
+        if source_row_uid in output:
+            raise ValueError(f"Duplicate address-handling override: {source_row_uid}")
+        output[source_row_uid] = row
+    return output
+
+
+def effective_address_query(address: str, place: str, locality_name: str) -> str:
+    address = normalize_spaces(address)
+    place = normalize_spaces(place)
+    locality_name = normalize_spaces(locality_name)
+    if address:
+        return ", ".join(value for value in [address, locality_name] if value)
+    return ", ".join(value for value in [place, locality_name] if value)
+
+
 def main() -> None:
     sys.stdout.reconfigure(encoding="utf-8")
     parser = argparse.ArgumentParser()
@@ -95,23 +122,42 @@ def main() -> None:
         if row["assignment_method"] == "direct_address_geocode_needed"
     ]
     address_rows = read_csv(POLLING_PLACE_ADDRESSES)
+    handling_by_uid = address_handling_overrides(read_csv(ROW_OVERRIDES))
     by_uid, by_exact, by_base = build_address_indexes(address_rows)
 
     output: list[dict[str, Any]] = []
     for assignment in assignment_rows:
         address, match_method = find_address(assignment, by_uid, by_exact, by_base)
-        status = status_for_address(address)
+        handling_row = handling_by_uid.get(assignment["source_row_uid"])
+        address_handling = normalize_spaces(handling_row.get("address_handling", "")) if handling_row else ""
+        source_address = address["address"] if address else ""
+        effective_address = "" if address_handling == "component_locality" else source_address
+        effective_place = address["place"] if address else ""
+        effective = {**address, "address": effective_address, "place": effective_place} if address else None
+        status = status_for_address(effective)
         output.append(
             {
                 "geocode_key": assignment["source_row_uid"],
                 **assignment,
                 "address_match_status": status,
                 "address_match_method": match_method,
-                "address": address["address"] if address else "",
-                "place": address["place"] if address else "",
-                "address_query": address["address_query"] if address else "",
+                "address": effective_address,
+                "place": effective_place,
+                "address_query": (
+                    effective_address_query(
+                        effective_address,
+                        effective_place,
+                        assignment["target_locality_name"],
+                    )
+                    if address_handling
+                    else (address["address_query"] if address else "")
+                ),
+                "source_address_before_handling": source_address if address_handling else "",
+                "address_handling": address_handling,
                 "address_source_file": address["source_file"] if address else "",
                 "address_source_row_id": address["source_row_id"] if address else "",
+                "source_concentration_code": address.get("source_concentration_code", "") if address else "",
+                "source_ags": address.get("source_ags", "") if address else "",
             }
         )
 

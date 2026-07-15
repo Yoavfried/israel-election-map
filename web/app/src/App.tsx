@@ -1,0 +1,212 @@
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
+import { ControlPanel } from './components/ControlPanel'
+import { CoverageNotice } from './components/CoverageNotice'
+import { DetailsPanel } from './components/DetailsPanel'
+import { LoadingState } from './components/LoadingState'
+import { loadCatalog, loadElectionResults, resolveDataUrl } from './data/client'
+import type {
+  AppCatalog,
+  ElectionResults,
+  GeographyMode,
+  Language,
+} from './domain/schemas'
+import { translate } from './i18n/translations'
+import { loadPreferences, savePreferences } from './state/preferences'
+
+const MapCanvas = lazy(() => import('./components/MapCanvas'))
+
+type Loadable<T> =
+  | { status: 'loading' }
+  | { status: 'ready'; data: T }
+  | { status: 'error'; message: string }
+
+const storage = safeStorage()
+
+export default function App() {
+  const [preferences, setPreferences] = useState(() =>
+    loadPreferences(storage, navigator.language),
+  )
+  const [catalogState, setCatalogState] = useState<Loadable<AppCatalog>>({ status: 'loading' })
+  const [resultsState, setResultsState] = useState<Loadable<ElectionResults>>({ status: 'loading' })
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const { language, electionId, geographyMode } = preferences
+
+  useEffect(() => {
+    let active = true
+    loadCatalog()
+      .then((catalog) => {
+        if (!active) {
+          return
+        }
+        setCatalogState({ status: 'ready', data: catalog })
+        setPreferences((currentPreferences) => {
+          if (catalog.elections.some((election) => election.id === currentPreferences.electionId)) {
+            return currentPreferences
+          }
+          const nextPreferences = {
+            ...currentPreferences,
+            electionId: catalog.elections[0].id,
+          }
+          savePreferences(storage, nextPreferences)
+          return nextPreferences
+        })
+      })
+      .catch((error: unknown) => {
+        if (active) {
+          setCatalogState({ status: 'error', message: errorMessage(error) })
+        }
+      })
+    return () => {
+      active = false
+    }
+  }, [])
+
+  const catalog = catalogState.status === 'ready' ? catalogState.data : null
+  const selectedElection = catalog?.elections.find((election) => election.id === electionId)
+  const selectedMode = catalog?.geographyModes.find((mode) => mode.id === geographyMode)
+
+  useEffect(() => {
+    if (!selectedElection) {
+      return
+    }
+    let active = true
+    setResultsState({ status: 'loading' })
+    loadElectionResults(
+      selectedElection.id,
+      geographyMode,
+      selectedElection.resultUrls[geographyMode],
+    )
+      .then((results) => {
+        if (active) {
+          setResultsState({ status: 'ready', data: results })
+        }
+      })
+      .catch((error: unknown) => {
+        if (active) {
+          setResultsState({ status: 'error', message: errorMessage(error) })
+        }
+      })
+    return () => {
+      active = false
+    }
+  }, [geographyMode, selectedElection])
+
+  useEffect(() => {
+    document.documentElement.lang = language
+    document.documentElement.dir = language === 'he' ? 'rtl' : 'ltr'
+    document.title = translate(language, 'appTitle')
+  }, [language])
+
+  const results =
+    resultsState.status === 'ready' &&
+    resultsState.data.electionId === electionId &&
+    resultsState.data.geographyMode === geographyMode
+      ? resultsState.data
+      : null
+  const resultsById = useMemo(
+    () => new Map(results?.records.map((record) => [record.id, record]) ?? []),
+    [results],
+  )
+  const selectedRecord = selectedId ? resultsById.get(selectedId) ?? null : null
+
+  const updatePreferences = (nextPreferences: typeof preferences) => {
+    setPreferences(nextPreferences)
+    savePreferences(storage, nextPreferences)
+  }
+  const handleElectionChange = (nextElectionId: string) => {
+    setSelectedId(null)
+    updatePreferences({ ...preferences, electionId: nextElectionId })
+  }
+  const handleGeographyChange = (nextMode: GeographyMode) => {
+    setSelectedId(null)
+    updatePreferences({ ...preferences, geographyMode: nextMode })
+  }
+  const toggleLanguage = () => {
+    const nextLanguage: Language = language === 'en' ? 'he' : 'en'
+    updatePreferences({ ...preferences, language: nextLanguage })
+  }
+
+  if (catalogState.status === 'loading') {
+    return <LoadingState language={language} />
+  }
+  if (catalogState.status === 'error' || !catalog || !selectedElection || !selectedMode) {
+    return (
+      <main className="fatal-state" role="alert">
+        <h1>{translate(language, 'dataError')}</h1>
+        <p>{catalogState.status === 'error' ? catalogState.message : 'Invalid catalog selection.'}</p>
+      </main>
+    )
+  }
+
+  return (
+    <main className="app-shell" data-language={language}>
+      <header className="app-header">
+        <div className="brand-lockup">
+          <span className="brand-mark" aria-hidden="true">IL</span>
+          <div>
+            <h1>{translate(language, 'appTitle')}</h1>
+            <p>{translate(language, 'appSubtitle')}</p>
+          </div>
+        </div>
+        <button className="language-toggle" type="button" onClick={toggleLanguage}>
+          {translate(language, 'languageAction')}
+        </button>
+      </header>
+
+      <div className="map-stage">
+        {resultsState.status === 'ready' && results ? (
+          <Suspense fallback={<LoadingState language={language} kind="map" />}>
+            <MapCanvas
+              language={language}
+              geometryUrl={resolveDataUrl(selectedMode.geometryUrl)}
+              markerGeometryUrl={resolveDataUrl(selectedMode.markerGeometryUrl)}
+              bounds={catalog.bounds}
+              records={results.records}
+              parties={results.parties}
+              selectedId={selectedId}
+              onSelect={setSelectedId}
+            />
+          </Suspense>
+        ) : resultsState.status === 'error' ? (
+          <div className="map-error" role="alert">
+            <strong>{translate(language, 'dataError')}</strong>
+            <span>{resultsState.message}</span>
+          </div>
+        ) : (
+          <LoadingState language={language} />
+        )}
+
+        <div className="left-rail">
+          <ControlPanel
+            language={language}
+            elections={catalog.elections}
+            geographyModes={catalog.geographyModes}
+            electionId={electionId}
+            geographyMode={geographyMode}
+            onElectionChange={handleElectionChange}
+            onGeographyModeChange={handleGeographyChange}
+          />
+          <CoverageNotice coverage={selectedElection.coverage} language={language} />
+          <p className="color-policy">{translate(language, 'provisionalColors')}</p>
+          <DetailsPanel
+            language={language}
+            record={selectedRecord}
+            parties={results?.parties ?? []}
+          />
+        </div>
+      </div>
+    </main>
+  )
+}
+
+function safeStorage(): Storage | undefined {
+  try {
+    return window.localStorage
+  } catch {
+    return undefined
+  }
+}
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error)
+}

@@ -1,0 +1,56 @@
+[
+  {
+    "id": "K25",
+    "number": 25,
+    "dateLabel": "2022",
+    "label": { "en": "Knesset 25 · 2022", "he": "הכנסת ה־25 · 2022" }
+  },
+  {
+    "id": "K24",
+    "number": 24,
+    "dateLabel": "2021",
+    "label": { "en": "Knesset 24 · 2021", "he": "הכנסת ה־24 · 2021" }
+  },
+  {
+    "id": "K23",
+    "number": 23,
+    "dateLabel": "2020",
+    "label": { "en": "Knesset 23 · 2020", "he": "הכנסת ה־23 · 2020" }
+  },
+  {
+    "id": "K22",
+    "number": 22,
+    "dateLabel": "2019 Sep",
+    "label": { "en": "Knesset 22 · Sep 2019", "he": "הכנסת ה־22 · ספט׳ 2019" }
+  },
+  {
+    "id": "K21",
+    "number": 21,
+    "dateLabel": "2019 Apr",
+    "label": { "en": "Knesset 21 · Apr 2019", "he": "הכנסת ה־21 · אפר׳ 2019" }
+  },
+  {
+    "id": "K20",
+    "number": 20,
+    "dateLabel": "2015",
+    "label": { "en": "Knesset 20 · 2015", "he": "הכנסת ה־20 · 2015" }
+  },
+  {
+    "id": "K19",
+    "number": 19,
+    "dateLabel": "2013",
+    "label": { "en": "Knesset 19 · 2013", "he": "הכנסת ה־19 · 2013" }
+  },
+  {
+    "id": "K18",
+    "number": 18,
+    "dateLabel": "2009",
+    "label": { "en": "Knesset 18 · 2009", "he": "הכנסת ה־18 · 2009" }
+  },
+  {
+    "id": "K17",
+    "number": 17,
+    "dateLabel": "2006",
+    "label": { "en": "Knesset 17 · 2006", "he": "הכנסת ה־17 · 2006" }
+  }
+]

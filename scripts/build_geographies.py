@@ -2,7 +2,12 @@ from __future__ import annotations
 
 import argparse
 import sys
+from pathlib import Path
 from typing import Any
+
+LOCAL_PYTHON = Path(__file__).resolve().parents[1] / ".local" / "python-geo"
+if LOCAL_PYTHON.exists():
+    sys.path.insert(0, str(LOCAL_PYTHON))
 
 import geopandas as gpd
 import pandas as pd

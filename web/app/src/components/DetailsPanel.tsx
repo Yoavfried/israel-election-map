@@ -1,0 +1,112 @@
+import { useMemo } from 'react'
+import { formatNumber, formatPercent } from '../domain/format'
+import type { Language, Party, ResultRecord } from '../domain/schemas'
+import { translate } from '../i18n/translations'
+
+interface DetailsPanelProps {
+  language: Language
+  record: ResultRecord | null
+  parties: Party[]
+}
+
+export function DetailsPanel({ language, record, parties }: DetailsPanelProps) {
+  const partyById = useMemo(() => new Map(parties.map((party) => [party.id, party])), [parties])
+
+  if (!record) {
+    return (
+      <aside className="details-panel details-panel--empty">
+        <span className="selection-marker" aria-hidden="true" />
+        <div>
+          <h2>{translate(language, 'selectionPromptTitle')}</h2>
+          <p>{translate(language, 'selectionPromptBody')}</p>
+        </div>
+      </aside>
+    )
+  }
+
+  const winner = partyById.get(record.winner.partyId)
+  const orderedParties = Object.entries(record.partyVotes)
+    .filter(([, votes]) => votes > 0)
+    .toSorted((left, right) => right[1] - left[1])
+    .slice(0, 8)
+  const largestPartyVote = orderedParties[0]?.[1] ?? 1
+
+  return (
+    <aside className="details-panel">
+      <div className="details-heading">
+        <div>
+          <p className="eyebrow">
+            {translate(language, 'geographyCode')} {record.code}
+          </p>
+          <h2>{record.names[language]}</h2>
+        </div>
+        <span
+          className="party-swatch party-swatch--large"
+          style={{ backgroundColor: winner?.color ?? '#68706a' }}
+          aria-hidden="true"
+        />
+      </div>
+
+      <div className="winner-card">
+        <span>{translate(language, 'winner')}</span>
+        <strong>{winner?.names[language] ?? record.winner.partyId}</strong>
+        <span>
+          {formatPercent(record.winner.voteShare, language)} {translate(language, 'voteShare')}
+        </span>
+      </div>
+
+      <dl className="metric-grid">
+        <div>
+          <dt>{translate(language, 'turnout')}</dt>
+          <dd>{formatPercent(record.totals.turnout, language)}</dd>
+        </div>
+        <div>
+          <dt>{translate(language, 'actualVoters')}</dt>
+          <dd>{formatNumber(record.totals.actualVoters, language)}</dd>
+        </div>
+        <div>
+          <dt>{translate(language, 'validVotes')}</dt>
+          <dd>{formatNumber(record.totals.validVotes, language)}</dd>
+        </div>
+        <div>
+          <dt>{translate(language, 'margin')}</dt>
+          <dd>{formatNumber(record.winner.marginVotes, language)}</dd>
+        </div>
+      </dl>
+
+      <div className="party-breakdown">
+        <div className="section-heading">
+          <h3>{translate(language, 'ballotBreakdown')}</h3>
+          <span>
+            {formatNumber(record.totals.contributingKalpis, language)}{' '}
+            {translate(language, 'contributingKalpis')}
+          </span>
+        </div>
+        <ol>
+          {orderedParties.map(([partyId, votes]) => {
+            const party = partyById.get(partyId)
+            return (
+              <li key={partyId}>
+                <span
+                  className="party-swatch"
+                  style={{ backgroundColor: party?.color ?? '#68706a' }}
+                  aria-hidden="true"
+                />
+                <span className="party-name">{party?.names[language] ?? partyId}</span>
+                <span className="party-votes">{formatNumber(votes, language)}</span>
+                <span className="party-bar" aria-hidden="true">
+                  <span
+                    style={{
+                      inlineSize: `${(votes / largestPartyVote) * 100}%`,
+                      backgroundColor: party?.color ?? '#68706a',
+                    }}
+                  />
+                </span>
+              </li>
+            )
+          })}
+        </ol>
+      </div>
+    </aside>
+  )
+}

@@ -1,51 +1,72 @@
 # Israel Election Map
 
-Local-first web map for exploring Israeli Knesset election results by geography.
+Local-first web map for exploring K17-K25 Knesset election results on 2022 Israeli geography.
 
-The project is currently in data-discovery and foundation setup. The first supported geography modes are planned to be:
+The repository contains both the reproducible election/geography pipeline and a React/TypeScript map client. Historical ballot rows are assigned to 2022 statistical areas where the evidence supports it; inferred areas are not presented as official historical polling boundaries.
 
-1. Statistical areas
-2. Localities
+## Current Status
 
-Kalpi-level results are part of the source data, but the project will not present inferred areas as official kalpi borders. Statistical-area assignment is an approximation based on polling-place address geocoding plus a single-stat locality shortcut.
+- Official K17-K25 ballot results are normalized into 96,529 source rows.
+- Every row has a handling rule: 2022 statistical area, reviewed custom geography, address placement required, envelope, or reviewed non-geographic exception.
+- OSM is the first address-placement layer. Photon is reserved for unresolved fallback work.
+- The current OSM audit leaves 4,893 unique unresolved location signatures covering 52,437 non-envelope ballot rows.
+- The public assignment builder does not yet promote OSM candidates. The web app therefore shows only reviewed assignments already present in `ballot_geography_assignments.csv`, with roughly 12-13% of actual voters mapped per election.
+- K17 scan recovery and the completed K18 visual-review corrections are part of the normalized source pipeline.
 
-## Current Direction
+The current methodology, counts, unmatched categories, and promotion boundary are documented in `docs/GEOGRAPHIC_ASSIGNMENT_STATUS.md`.
 
-- Use official Knesset election results from data.gov.il for K17-K25.
-- K16 / 2003 is deferred until a usable election-specific polling-place address source is recovered.
-- Use the 2022 statistical-area FileGDB as the canonical statistical-area polygon source.
-- Derive locality polygons by dissolving the 2022 statistical-area polygons; locality mode must not show internal statistical-area borders.
-- Build both statistical-area and locality totals from the row-level ballot pipeline, not from official locality aggregate files.
-- Use the reviewed locality crosswalk and single-stat locality assignment table before geocoding.
-- Preserve raw source data and generated/normalized data separately.
-- Keep source metadata, assignment method, and mapped/unmapped coverage visible in the product.
+## Assignment Strategy
 
-Current K17-K25 statistical-area status: row assignment is classified for every result row, and every relevant row has a geocoder query. A full local Photon candidate run exists, but no production geocode cache has been approved yet. Candidate coordinates must pass point-in-expected-locality validation, manual review, and historical AGS QA where source AGS exists before promotion. Some K17/K18/K19 rows are place-name-only and need provider/manual review rather than blind acceptance.
+1. Exclude official envelope and reviewed non-geographic rows.
+2. Assign a locality directly when it has exactly one 2022 statistical area.
+3. In multi-area localities, accept an OSM street only when its 25 m corridor lies in one area.
+4. Use an exact OSM house number to resolve streets that span or touch multiple areas.
+5. Keep unresolved place names, suspicious source text, and OSM misses in explicit review inventories.
+6. Use Photon only after OSM, with expected-locality validation and point-in-2022-area assignment.
 
-Current core docs:
+Source AGS is diagnostic context, not a hard building-location check. Multiple kalpis and multiple source AGS values can share one polling-place building, and one observed AGS does not prove that the building lies inside it.
 
-- `docs/PROJECT_PLAN.md`
-- `docs/DATA_SOURCES.md`
-- `docs/DATA_PIPELINE.md`
-- `docs/POLLING_PLACE_ADDRESSES.md`
-- `docs/STATISTICAL_AREA_ASSIGNMENT_COVERAGE.md`
-- `docs/LOCALITY_CROSSWALK_RESOLUTION_PLAN.md`
-- `docs/GEOCODING_SPIKE.md`
-- `docs/AGS_HISTORICAL_QA.md`
-- `docs/GOVMAP_BROWSER_SPIKE.md`
-- `docs/ARCGIS_GEOCODING_SPIKE.md`
-- `docs/PHOTON_GEOCODING_SPIKE.md`
+## Run
+
+```powershell
+python -m pip install -r requirements.txt
+python scripts/run_pipeline.py
+```
+
+When the generated 2022 geography files already exist, the non-geography stages can be reproduced without rebuilding the FileGDB layer:
+
+```powershell
+python scripts/run_pipeline.py --skip-geographies
+```
+
+Run the web app:
+
+```powershell
+cd web/app
+npm install
+npm run dev
+```
+
+Vite serves the app at `http://localhost:4173`. The frontend compiler reads `data/processed/` and writes disposable, validated assets under `web/app/public/data/v1/`.
+
+## Documentation
+
+- `docs/GEOGRAPHIC_ASSIGNMENT_STATUS.md` - current end-to-end assignment and unmatched inventory.
+- `docs/POLLING_PLACE_ADDRESS_QUALITY_AUDIT.md` - source fidelity, OCR/manual review, and OSM address QA.
+- `docs/DATA_PIPELINE.md` - stages, outputs, commands, and verified run counts.
+- `docs/POLLING_PLACE_ADDRESSES.md` - election-specific address sources.
+- `docs/AGS_HISTORICAL_QA.md` - why AGS is diagnostic rather than a hard geocode gate.
+- `docs/STATISTICAL_AREA_ASSIGNMENT_COVERAGE.md` - assignments currently promoted to public outputs.
+- `web/app/docs/ARCHITECTURE.md` - frontend data contract and product boundary.
 
 ## Repository Layout
 
-- `docs/` - project plan, source notes, decisions, and open questions.
-- `data/` - local raw/processed data directories, intentionally gitignored.
-- `scripts/` - ingestion, normalization, assignment, and aggregate-output scripts.
-- `src/` - future web application source.
-
-## Status
-
-No product web app has been scaffolded yet. A temporary static GovMap provider-test page lives in `web/geocode-spike/`. The current data pipeline runs through final row-level geography assignment and public aggregate CSV generation; outputs are partial until a reviewed geocode cache is added. See `docs/DATA_PIPELINE.md`.
+- `data/manual/` - committed reviewed corrections and assignment overrides.
+- `data/raw/` and `data/processed/` - local source and generated data, intentionally ignored by Git.
+- `docs/` - methodology, source notes, decisions, and committed reference tables.
+- `scripts/` - ingestion, normalization, QA, OSM matching, assignment, and aggregation.
+- `web/app/` - Vite, React, TypeScript, and MapLibre client.
+- `web/geocode-spike/` - static provider-research page retained for geocoder investigation.
 
 ## License
 

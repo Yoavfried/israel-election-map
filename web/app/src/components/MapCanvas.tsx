@@ -1,0 +1,337 @@
+import { useEffect, useMemo, useRef, useState } from 'react'
+import maplibregl from 'maplibre-gl'
+import type {
+  CircleLayerSpecification,
+  FillLayerSpecification,
+  LineLayerSpecification,
+  Map as MapLibreMap,
+} from 'maplibre-gl'
+import 'maplibre-gl/dist/maplibre-gl.css'
+import { buildMarkerVisibilityFilter, mayHaveDisplayMarker } from '../domain/mapPresentation'
+import type { Language, Party, ResultRecord } from '../domain/schemas'
+import { translate } from '../i18n/translations'
+
+const SOURCE_ID = 'election-geographies'
+const MARKER_SOURCE_ID = 'election-geography-markers'
+const FILL_LAYER_ID = 'election-fill'
+const LINE_LAYER_ID = 'election-line'
+const MARKER_LAYER_ID = 'election-markers'
+const KINNERET_GEOGRAPHY_ID = 'stat2022:9920'
+const MAP_BACKGROUND_COLOR = '#f3f0e8'
+const UNMAPPED_GEOGRAPHY_COLOR = '#aeb5b0'
+
+interface MapCanvasProps {
+  language: Language
+  geometryUrl: string
+  markerGeometryUrl: string
+  bounds: [[number, number], [number, number]]
+  records: ResultRecord[]
+  parties: Party[]
+  selectedId: string | null
+  onSelect: (id: string | null) => void
+}
+
+const baseStyle = {
+  version: 8 as const,
+  sources: {},
+  layers: [
+    {
+      id: 'paper-background',
+      type: 'background' as const,
+      paint: { 'background-color': MAP_BACKGROUND_COLOR },
+    },
+  ],
+}
+
+export default function MapCanvas({
+  language,
+  geometryUrl,
+  markerGeometryUrl,
+  bounds,
+  records,
+  parties,
+  selectedId,
+  onSelect,
+}: MapCanvasProps) {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const mapRef = useRef<MapLibreMap | null>(null)
+  const onSelectRef = useRef(onSelect)
+  const recordsByIdRef = useRef(new Map<string, ResultRecord>())
+  const [mapReady, setMapReady] = useState(false)
+  const [mapError, setMapError] = useState<string | null>(null)
+  const partyById = useMemo(() => new Map(parties.map((party) => [party.id, party])), [parties])
+  const recordsById = useMemo(() => new Map(records.map((record) => [record.id, record])), [records])
+
+  onSelectRef.current = onSelect
+  recordsByIdRef.current = recordsById
+
+  useEffect(() => {
+    if (!containerRef.current) {
+      return
+    }
+
+    try {
+      const map = new maplibregl.Map({
+        container: containerRef.current,
+        style: baseStyle,
+        center: [35.05, 31.55],
+        zoom: 6.4,
+        minZoom: 5.4,
+        maxZoom: 15,
+        attributionControl: false,
+        dragRotate: false,
+        pitchWithRotate: false,
+      })
+      mapRef.current = map
+      map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-right')
+      map.once('load', () => setMapReady(true))
+      map.on('error', (event) => {
+        if (event.error) {
+          setMapError(event.error.message)
+        }
+      })
+    } catch (error) {
+      setMapError(error instanceof Error ? error.message : String(error))
+    }
+
+    return () => {
+      mapRef.current?.remove()
+      mapRef.current = null
+    }
+  }, [])
+
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || !mapReady) {
+      return
+    }
+
+    if (map.getLayer(MARKER_LAYER_ID)) {
+      map.removeLayer(MARKER_LAYER_ID)
+    }
+    if (map.getLayer(LINE_LAYER_ID)) {
+      map.removeLayer(LINE_LAYER_ID)
+    }
+    if (map.getLayer(FILL_LAYER_ID)) {
+      map.removeLayer(FILL_LAYER_ID)
+    }
+    if (map.getSource(SOURCE_ID)) {
+      map.removeSource(SOURCE_ID)
+    }
+    if (map.getSource(MARKER_SOURCE_ID)) {
+      map.removeSource(MARKER_SOURCE_ID)
+    }
+
+    map.addSource(SOURCE_ID, {
+      type: 'geojson',
+      data: geometryUrl,
+      promoteId: 'id',
+    })
+    map.addSource(MARKER_SOURCE_ID, {
+      type: 'geojson',
+      data: markerGeometryUrl,
+      promoteId: 'id',
+    })
+
+    const fillLayer: FillLayerSpecification = {
+      id: FILL_LAYER_ID,
+      source: SOURCE_ID,
+      type: 'fill',
+      filter: [
+        'all',
+        ['!=', ['get', 'displayMode'], 'marker'],
+        ['!=', ['get', 'id'], KINNERET_GEOGRAPHY_ID],
+      ],
+      paint: {
+        'fill-color': [
+          'case',
+          ['boolean', ['feature-state', 'hasData'], false],
+          ['to-color', ['coalesce', ['feature-state', 'color'], '#69736d']],
+          UNMAPPED_GEOGRAPHY_COLOR,
+        ],
+        'fill-opacity': [
+          'case',
+          ['boolean', ['feature-state', 'hasData'], false],
+          ['case', ['boolean', ['feature-state', 'selected'], false], 0.9, 0.7],
+          0.28,
+        ],
+      },
+    }
+    const lineLayer: LineLayerSpecification = {
+      id: LINE_LAYER_ID,
+      source: SOURCE_ID,
+      type: 'line',
+      filter: [
+        'all',
+        ['!=', ['get', 'displayMode'], 'marker'],
+        ['!=', ['get', 'id'], KINNERET_GEOGRAPHY_ID],
+      ],
+      paint: {
+        'line-color': [
+          'case',
+          ['boolean', ['feature-state', 'selected'], false],
+          '#151815',
+          '#5d655f',
+        ],
+        'line-width': [
+          'case',
+          ['boolean', ['feature-state', 'selected'], false],
+          2.5,
+          0.55,
+        ],
+        'line-opacity': [
+          'case',
+          ['boolean', ['feature-state', 'hasData'], false],
+          0.62,
+          0.3,
+        ],
+      },
+    }
+    const markerLayer: CircleLayerSpecification = {
+      id: MARKER_LAYER_ID,
+      source: MARKER_SOURCE_ID,
+      type: 'circle',
+      filter: buildMarkerVisibilityFilter([...recordsByIdRef.current.values()]),
+      paint: {
+        'circle-color': [
+          'case',
+          ['boolean', ['feature-state', 'hasData'], false],
+          ['to-color', ['coalesce', ['feature-state', 'color'], '#69736d']],
+          '#aeb2ac',
+        ],
+        'circle-opacity': [
+          'case',
+          ['boolean', ['feature-state', 'hasData'], false],
+          0.82,
+          0.42,
+        ],
+        'circle-radius': [
+          'case',
+          ['boolean', ['feature-state', 'selected'], false],
+          6.5,
+          4.5,
+        ],
+        'circle-stroke-color': [
+          'case',
+          ['boolean', ['feature-state', 'selected'], false],
+          '#151815',
+          '#faf8f1',
+        ],
+        'circle-stroke-width': [
+          'case',
+          ['boolean', ['feature-state', 'selected'], false],
+          2,
+          1,
+        ],
+      },
+    }
+    map.addLayer(fillLayer)
+    map.addLayer(lineLayer)
+    map.addLayer(markerLayer)
+    map.fitBounds(bounds, { padding: 36, duration: 0 })
+
+    const handleClick = (event: maplibregl.MapLayerMouseEvent) => {
+      const id = featureId(event)
+      if (id && recordsByIdRef.current.has(id)) {
+        onSelectRef.current(id)
+      }
+    }
+    const updatePointer = (event: maplibregl.MapLayerMouseEvent) => {
+      const id = featureId(event)
+      map.getCanvas().style.cursor = id && recordsByIdRef.current.has(id) ? 'pointer' : ''
+    }
+    const hidePointer = () => {
+      map.getCanvas().style.cursor = ''
+    }
+    map.on('click', FILL_LAYER_ID, handleClick)
+    map.on('click', MARKER_LAYER_ID, handleClick)
+    map.on('mousemove', FILL_LAYER_ID, updatePointer)
+    map.on('mousemove', MARKER_LAYER_ID, updatePointer)
+    map.on('mouseleave', FILL_LAYER_ID, hidePointer)
+    map.on('mouseleave', MARKER_LAYER_ID, hidePointer)
+
+    return () => {
+      map.off('click', FILL_LAYER_ID, handleClick)
+      map.off('click', MARKER_LAYER_ID, handleClick)
+      map.off('mousemove', FILL_LAYER_ID, updatePointer)
+      map.off('mousemove', MARKER_LAYER_ID, updatePointer)
+      map.off('mouseleave', FILL_LAYER_ID, hidePointer)
+      map.off('mouseleave', MARKER_LAYER_ID, hidePointer)
+    }
+  }, [bounds, geometryUrl, mapReady, markerGeometryUrl])
+
+  useEffect(() => {
+    const map = mapRef.current
+    if (
+      !map ||
+      !mapReady ||
+      !map.getSource(SOURCE_ID) ||
+      !map.getSource(MARKER_SOURCE_ID) ||
+      !map.getLayer(MARKER_LAYER_ID)
+    ) {
+      return
+    }
+
+    map.setFilter(MARKER_LAYER_ID, buildMarkerVisibilityFilter(records))
+
+    const applyFeatureStates = () => {
+      if (!map.isSourceLoaded(SOURCE_ID) || !map.isSourceLoaded(MARKER_SOURCE_ID)) {
+        return
+      }
+      map.removeFeatureState({ source: SOURCE_ID })
+      map.removeFeatureState({ source: MARKER_SOURCE_ID })
+      for (const record of records) {
+        const party = partyById.get(record.winner.partyId)
+        const state = {
+          hasData: true,
+          color: party?.color ?? '#69736d',
+          selected: record.id === selectedId,
+        }
+        map.setFeatureState(
+          { source: SOURCE_ID, id: record.id },
+          state,
+        )
+        if (mayHaveDisplayMarker(record)) {
+          map.setFeatureState({ source: MARKER_SOURCE_ID, id: record.id }, state)
+        }
+      }
+    }
+    const handleSourceData = (event: maplibregl.MapSourceDataEvent) => {
+      if (
+        (event.sourceId === SOURCE_ID || event.sourceId === MARKER_SOURCE_ID) &&
+        event.isSourceLoaded
+      ) {
+        applyFeatureStates()
+      }
+    }
+
+    map.on('sourcedata', handleSourceData)
+    applyFeatureStates()
+    return () => {
+      map.off('sourcedata', handleSourceData)
+    }
+  }, [geometryUrl, mapReady, markerGeometryUrl, partyById, records, selectedId])
+
+  if (mapError) {
+    return (
+      <div className="map-error" role="alert">
+        <strong>{translate(language, 'dataError')}</strong>
+        <span>{mapError}</span>
+      </div>
+    )
+  }
+
+  return (
+    <div
+      ref={containerRef}
+      className="map-canvas"
+      role="region"
+      aria-label={translate(language, 'mapLabel')}
+    />
+  )
+}
+
+function featureId(event: maplibregl.MapLayerMouseEvent): string | null {
+  const id = event.features?.[0]?.id
+  return typeof id === 'string' ? id : null
+}

@@ -1,6 +1,6 @@
 # Polling-Place Address Coverage
 
-Last updated: 2026-07-07
+Last updated: 2026-07-15
 
 ## Purpose
 
@@ -32,7 +32,7 @@ Current product scope is K17-K25. K16 / 2003 is deferred until a usable election
 | K20 / 2015 | `data/raw/archive_knesset20_tell_the_polls_9_3.xls` | Election-specific archived official XLS; high confidence |
 | K19 / 2013 | `data/raw/archive_knesset19_all_stations.pdf` | Election-specific archived official Excel-generated PDF; high confidence after parser cleanup |
 | K18 / 2009 | `data/raw/archive_knesset18_kalpilist18.pdf` | Election-specific scanned PDF with embedded OCR text; reconciliation complete for ordinary rows |
-| K17 / 2006 | Address field inside official ballot-result file plus `data/raw/archive_knesset17_kalpies-list17-*.pdf` | Election-specific; high confidence for addressed rows; targeted scan extraction recovered names for 11 remaining multi-stat rows |
+| K17 / 2006 | Address field inside official ballot-result file plus `data/raw/archive_knesset17_kalpies-list17-*.pdf` | Election-specific; direct scan transcription recovered 456 polling-place names, including all 344 rows formerly described as locality-only/no-place |
 
 Official election results package:
 
@@ -103,7 +103,7 @@ Reconciliation:
 
 - Source polling-place rows: 12,127.
 - Rows with address: 12,127.
-- Geocode-needed rows linked to ready address strings: 10,195.
+- Geocode-needed rows linked to ready address strings: 10,193.
 
 ### K23 / 2020
 
@@ -120,7 +120,8 @@ Reconciliation:
 - Source polling-place rows: 10,631.
 - Rows with address: 10,631.
 - Rows with AGS source metadata: 8,031.
-- Geocode-needed rows linked to ready address strings: 8,967.
+- Geocode-needed rows linked to ready address strings: 8,964.
+- Normalized address rows now preserve `source_ags` and `source_concentration_code` for downstream geocoding QA.
 
 ### K22 / 2019 Sep
 
@@ -136,7 +137,7 @@ Reconciliation:
 
 - Source polling-place rows: 10,543.
 - Rows with address: 10,543.
-- Geocode-needed rows linked to ready address strings: 8,881.
+- Geocode-needed rows linked to ready address strings: 8,878.
 
 ### K21 / 2019 Apr
 
@@ -177,9 +178,11 @@ This table reflects the address sources currently present under `data/raw` and `
 | K20 | 10,464 | 10,464 | 0 | No |
 | K19 | 10,239 | 10,233 | 6 | No |
 | K18 | 9,263 | 9,248 | 15 | No |
-| K17 | 8,273 | 8,262 | 11 | No |
+| K17 | 8,718 | 8,262 | 456 | No |
 
 K22-K24 address reports were recovered in an earlier research pass, then were stranded in the old Codex scratch folder during project-folder reorganization. They are now copied into `data/raw` and parsed by the pipeline.
+
+Reviewed K18 scan corrections and source confirmations are stored separately in `data/manual/manual_k18_address_reviews.csv` and applied by normalization. The generated OCR-reconciliation CSV is not edited by hand. The overlay now contains 126 rows: 121 corrections and 5 confirmations of weak text visible in the scan; its final 113-row batch covers the 82 suspicious signatures reviewed by the user.
 
 ## Geocoding Input Readiness
 
@@ -187,25 +190,60 @@ This table covers only rows that need address-level point-in-polygon assignment 
 
 | Election | Ready address rows | Place-only rows | Missing address rows | Missing-address actual voters |
 |---|---:|---:|---:|---:|
-| K25 | 9,834 | 0 | 0 | 0 |
-| K24 | 10,195 | 0 | 0 | 0 |
-| K23 | 8,967 | 0 | 0 | 0 |
-| K22 | 8,881 | 0 | 0 | 0 |
-| K21 | 8,808 | 0 | 0 | 0 |
-| K20 | 8,519 | 0 | 0 | 0 |
-| K19 | 8,309 | 6 | 0 | 0 |
-| K18 | 7,769 | 11 | 0 | 0 |
-| K17 | 6,984 | 11 | 0 | 0 |
+| K25 | 9,817 | 0 | 0 | 0 |
+| K24 | 10,193 | 0 | 0 | 0 |
+| K23 | 8,964 | 0 | 0 | 0 |
+| K22 | 8,878 | 0 | 0 | 0 |
+| K21 | 8,806 | 0 | 0 | 0 |
+| K20 | 8,516 | 0 | 0 | 0 |
+| K19 | 8,307 | 6 | 0 | 0 |
+| K18 | 7,739 | 35 | 0 | 0 |
+| K17 | 6,530 | 456 | 0 | 0 |
+
+## Address-Only Geocoding Scope
+
+The broad geocoding work-unit table keeps all rows that need geographic placement, including place-name and review cases. For the OSM-first exact-address/street pass and any later geocoder fallback, the scoped file is:
+
+- `data/processed/geocoding/geocoding_address_work_units.csv`
+
+It keeps only deduplicated street-number-locality queries from rows in multi-stat 2022 localities. Current counts:
+
+| Metric | Count |
+|---|---:|
+| Unique geocoding units | 7,190 |
+| Proper street-number-locality address units | 5,663 |
+| Proper street-number-locality address rows | 62,506 |
+| Excluded units needing manual or non-address handling | 1,527 |
+| Proper address units with K23 source AGS | 2,071 |
+
+The 1,527 excluded units are not discarded. They remain in the broad geocoding work-unit table and manual/review queues; they are only excluded from the clean OSM exact-address input and later street-address geocoder fallbacks.
+
+| Exclusion scope | Units | Rows | Meaning |
+|---|---:|---:|---|
+| `excluded_missing_house_number` | 836 | 10,317 | Address text has no house number, so a street/locality result cannot identify a building. |
+| `excluded_not_street_address_query` | 590 | 5,285 | Query is place-name-based, such as school/place plus locality, not street-number-locality. |
+| `excluded_suspicious_ocr_or_prefix` | 99 | 135 | Address has an OCR-like prefix, Latin/replacement character, digit substitution, or implausibly short parsed street. |
+| `excluded_missing_target_locality_code` | 2 | 4 | Missing target locality code, so spatial locality validation cannot be automated. |
+
+The broader source-fidelity and usability audit is documented in `docs/POLLING_PLACE_ADDRESS_QUALITY_AUDIT.md`. It checks all 93,991 normalized source rows against available source evidence, finds zero missing evidence links and zero normalized-field mismatches, and identifies 1,525 address-content review units. Of those, 615 PDF/OCR units are independently corroborated by a matching digital-election query, and 450 still require a visual decision.
 
 Interpretation:
 
 - K22-K25 and K20-K21 have ready address strings for all rows that need geocoding.
 - K19 and K18 have a small number of place-only rows that need manual/reviewed geocoding.
-- K17 has 11 place-only rows recovered from targeted review of the scanned polling-place lists.
+- K17 has 456 place-only rows recovered directly from the scanned polling-place lists.
 
-## K17 Remaining Rows
+## K17 Scan Recovery
 
-K17 has 15 non-envelope rows with an empty address field.
+All 344 K17 rows previously described as locality-only with no place have now been transcribed directly from the far-left `מקום הקלפי` scan column. The current unresolved locality-only/no-place count is zero. The exact polls are in `docs/K17_LOCALITY_ONLY_SCAN_RECOVERY.csv`.
+
+The Maghar scan lists stations 1-20, while the digital K17 result table contains only 1-16. Stations 17-20 are absent result records rather than blank-address rows.
+
+### Superseded Partial Snapshot
+
+The table below records the earlier 11-row partial recovery and is retained only as investigation history; it is not the current scope.
+
+At that stage K17 had 15 non-envelope rows with an empty address field.
 
 Rows assignable without geocoding:
 
@@ -242,6 +280,8 @@ Geocoding is only needed where:
 
 Rows already assignable by the single-stat locality shortcut should not be geocoded unless a QA/debug view needs the point.
 
+`data/manual/polling_place_assignment_overrides.csv` stores reviewed row-level exceptions. Dimona kalpi 91 at `מחנה עדי` in K22-K25 is classified there as envelope votes and is excluded before geocoding.
+
 Row-level assignment should store one method:
 
 - `single_stat_locality`
@@ -260,7 +300,8 @@ Current position:
 
 - GovMap remains the preferred official Israeli candidate, but approval/token behavior, rate limits, coordinate fields, and caching/publication terms still need live verification.
 - ArcGIS is a fallback only if an access token/API key with stored-geocoding rights is available.
-- Photon is a free local candidate source. A full local run exists, but it already showed wrong-locality matches, so Photon output is candidate data only until it passes locality-polygon validation, manual review, and historical AGS QA where source AGS exists.
+- Direct OSM exact-address and street geometry are the first placement layers after address-quality validation.
+- Photon is a later free local fallback. A full local run exists, but it already showed wrong-locality matches, so Photon output is candidate data only until it passes locality-polygon validation and manual review. Source/historical AGS checks are supplemental diagnostics only; multiple source AGS values at one address prove the field is not a building-location truth, and single-source-AGS rows cannot be treated as hard passes either.
 - Google geocoding should not be the primary source for public downloadable coordinates unless its storage and redistribution constraints are explicitly cleared.
 - Public Nominatim should not be used for bulk geocoding. The only open-data path currently considered is self-hosted Nominatim/Photon.
 
@@ -280,6 +321,7 @@ Rules:
 
 ## Current Blockers
 
+- Deciding which of the 450 PDF/OCR-only address-content units that lack digital-election or reviewed-image corroboration warrant the next visual-review batch.
 - Geocoding/reviewing the K17, K18, and K19 place-name-only rows.
 - Building and reviewing the geocoding cache for addressed K17-K25 multi-stat localities.
 - Designing custom point-size polygon buckets in the frontend.

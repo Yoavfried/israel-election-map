@@ -1,6 +1,6 @@
 # Project Plan
 
-Last updated: 2026-07-07
+Last updated: 2026-07-15
 
 ## Goal
 
@@ -108,21 +108,21 @@ Current geocoding-input readiness:
 
 | Election | Ready address rows | Place-only rows | Missing address rows | Missing-address actual voters |
 |---|---:|---:|---:|---:|
-| K25 | 9,834 | 0 | 0 | 0 |
-| K24 | 10,195 | 0 | 0 | 0 |
-| K23 | 8,967 | 0 | 0 | 0 |
-| K22 | 8,881 | 0 | 0 | 0 |
-| K21 | 8,808 | 0 | 0 | 0 |
-| K20 | 8,519 | 0 | 0 | 0 |
-| K19 | 8,309 | 6 | 0 | 0 |
-| K18 | 7,769 | 11 | 0 | 0 |
-| K17 | 6,984 | 11 | 0 | 0 |
+| K25 | 9,817 | 0 | 0 | 0 |
+| K24 | 10,193 | 0 | 0 | 0 |
+| K23 | 8,964 | 0 | 0 | 0 |
+| K22 | 8,878 | 0 | 0 | 0 |
+| K21 | 8,806 | 0 | 0 | 0 |
+| K20 | 8,516 | 0 | 0 | 0 |
+| K19 | 8,307 | 6 | 0 | 0 |
+| K18 | 7,739 | 35 | 0 | 0 |
+| K17 | 6,530 | 456 | 0 | 0 |
 
 Interpretation:
 
 - K22-K25 and K20-K21 have ready address strings for rows that need geocoding.
 - K19 and K18 have a small number of place-only rows that need manual/reviewed geocoding.
-- K17 has 11 place-only rows recovered from targeted review of the scanned polling-place lists.
+- K17 has 456 place-only rows recovered directly from the scanned polling-place lists, including all 344 rows formerly described as locality-only/no-place.
 - K16 has no usable polling-place address source and is deferred from current scope.
 
 ## Reviewed Assignment Coverage
@@ -131,15 +131,15 @@ After applying the reviewed locality crosswalk, custom buckets, and the FileGDB-
 
 | Election | Mapped rows now | Mapped actual voters now | Pending/missing geocode rows | Pending/missing geocode actual voters |
 |---|---:|---:|---:|---:|
-| K25 | 1,866 | 607,457 | 9,834 | 3,723,709 |
-| K24 | 1,925 | 576,281 | 10,195 | 3,433,896 |
-| K23 | 1,657 | 603,487 | 8,967 | 3,680,687 |
-| K22 | 1,651 | 591,471 | 8,881 | 3,590,594 |
-| K21 | 1,645 | 574,009 | 8,808 | 3,524,678 |
-| K20 | 1,593 | 543,828 | 8,519 | 3,475,496 |
-| K19 | 1,560 | 488,732 | 8,315 | 3,128,444 |
-| K18 | 1,479 | 413,520 | 7,780 | 2,815,741 |
-| K17 | 1,279 | 376,882 | 6,995 | 2,635,068 |
+| K25 | 1,882 | 613,521 | 9,817 | 3,717,505 |
+| K24 | 1,926 | 576,695 | 10,193 | 3,433,319 |
+| K23 | 1,659 | 604,128 | 8,964 | 3,679,886 |
+| K22 | 1,653 | 592,134 | 8,878 | 3,589,777 |
+| K21 | 1,647 | 574,684 | 8,806 | 3,524,003 |
+| K20 | 1,596 | 544,451 | 8,516 | 3,474,873 |
+| K19 | 1,562 | 489,305 | 8,313 | 3,127,871 |
+| K18 | 1,485 | 415,673 | 7,774 | 2,813,588 |
+| K17 | 1,288 | 380,986 | 6,986 | 2,630,964 |
 
 Full coverage artifacts:
 
@@ -173,11 +173,11 @@ Keep K23 AGS as source metadata only. Use geocoded polling-place addresses plus 
 
 ## Historical AGS QA
 
-Historical AGS validation is now the preferred stronger QA layer for geocoded candidates, where source AGS metadata exists. The goal is to test whether a candidate coordinate falls inside the official historical statistical-area polygon named by the source row. This is stronger than the current locality-polygon check.
+Historical/source AGS validation is a diagnostic QA layer for geocoded candidates where source AGS metadata exists. The original goal was to test whether a candidate coordinate falls inside the official historical statistical-area polygon named by the source row, but K23 shows that source AGS can describe the ballot row/voter assignment rather than the polling-place building itself.
 
 Current finding: the local K23 polling-place report has explicit AGS metadata; inspected K17-K22/K24-K25 local sources do not yet expose equivalent AGS fields. The 2008 CBS statistical-area package exists on data.gov.il, but the actual archive still needs to be downloaded outside the command-line browser challenge.
 
-Do not finalize the real bad-match list for Photon until historical AGS QA has been run where possible. Keep `outside_expected_locality` as blocked-from-auto-accept, not final rejection. See `docs/AGS_HISTORICAL_QA.md`.
+Do not use source AGS as a hard accept/reject gate. Keep `outside_expected_locality` as blocked-from-auto-accept, and keep source-AGS mismatches as manual-review diagnostics. See `docs/AGS_HISTORICAL_QA.md`.
 
 ## Geocoding And Assignment Pipeline
 
@@ -200,7 +200,9 @@ Geocoding provider decision status:
 
 - GovMap remains the preferred official Israeli candidate, but approval/token behavior, rate limits, coordinate fields, and caching/publication terms still need live verification.
 - ArcGIS is a paid/stored-geocoding fallback only if a token/API key with the right storage privileges is available.
-- Photon is a free self-hosted candidate. A full local run exists, but it is not trusted blindly; candidate coordinates must pass locality-polygon validation and historical AGS QA where source AGS exists before promotion.
+- A source-fidelity and usability audit runs before geographic matching. It verifies all 93,991 normalized address-source rows against available evidence, excludes malformed/non-address inputs from the clean exact-address scope, and keeps PDF/OCR-only cases in a finite 450-unit visual-review queue.
+- OSM geometry from the local Geofabrik PBF is the first address-placement layer. After canonical physical-address deduplication, the numbered-address scope contains 4,210 addresses. A strict 25 m street corridor or exact OSM house number assigns 1,346 canonical addresses; nine reviewed OSM/component-locality exceptions bring the OSM-first resolved total to 1,355. At strict query-lineage grain this is 1,922 units, 24,211 source rows, and 9,463,605 actual voters. Exact matching accepts `addr:street` or `addr:place` with `addr:housenumber`, and exact scalar numbers outrank matching multi-value tags. These candidates are not yet promoted into the final assignment stage.
+- Photon is a free self-hosted fallback for unresolved OSM cases. A full local run exists, but it is not trusted blindly; candidate coordinates must pass locality-polygon validation before promotion. Source/historical AGS QA is supplemental diagnostic context only because one polling-place address can serve multiple source AGS values, and even single-source-AGS cases do not prove the building lies in that AGS.
 - Do not use Google as the primary geocoder for public downloadable coordinates unless its storage and redistribution constraints are explicitly cleared.
 - Do not use public Nominatim for bulk geocoding. The only open-data path currently considered is self-hosted Nominatim/Photon.
 
@@ -250,29 +252,24 @@ For localities:
 
 ## Frontend Direction
 
-Map-first interface:
+Implemented map-first foundation under `web/app/`:
 
 - Election dropdown for K17-K25.
 - Geography switch: Statistical areas / Localities.
-- Coloring mode:
-  - Winning party
-  - Selected party vote share
-  - Turnout
-  - Margin
-- Details panel:
-  - Area name/code
-  - Vote totals
-  - Winning party and margin
-  - Party distribution
-  - Contributing kalpis
-  - Unresolved vote impact where relevant
+- Winning-party map coloring with unmapped polygons kept visible.
+- Area details with totals, winner/margin, party distribution, and contributing kalpis.
+- English/Hebrew switching with document-level LTR/RTL.
+- Explicit mapped/pending voter coverage for every election.
+- Build-time CSV/GeoJSON compiler with Zod-validated browser assets.
 
-Candidate stack:
+Implemented stack:
 
-- React or Svelte
-- MapLibre GL
-- Static local JSON/GeoJSON initially
-- PMTiles/vector tiles later if geometry is heavy
+- React, TypeScript, and Vite.
+- MapLibre GL.
+- Static local JSON/GeoJSON generated from `data/processed/`.
+- PMTiles/vector tiles later if production transfer or mobile parsing requires them.
+
+Still planned: selected-party share, turnout, and margin coloring; searchable geography navigation; contribution drill-down; reviewed cross-election party names/colors; and browser accessibility/performance release gates. See `web/app/docs/ARCHITECTURE.md`.
 
 ## Open Questions
 

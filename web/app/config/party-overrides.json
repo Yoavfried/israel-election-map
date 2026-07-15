@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "ignoredResultColumns": {
+    "K18": {
+      "ת. עדכון": "Trailing K18 source metadata field whose value is not part of the valid-vote total; it is not a ballot list."
+    }
+  },
+  "elections": {}
+}

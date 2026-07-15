@@ -1,20 +1,22 @@
 # AGS Historical QA
 
-Last updated: 2026-07-08
+Last updated: 2026-07-15
 
 ## Purpose
 
-The strongest available QA for geocoded polling-place coordinates is not only checking that a point falls inside the expected 2022 locality. The stronger check is:
+The intended source-AGS QA check was:
 
 > source polling-place row has an official AGS/statistical-area code -> geocoded coordinate falls inside the polygon for that same historical AGS layer
 
-If this passes, it is strong evidence that the geocoded point is not merely in the correct municipality, but in the correct small-area geography used by the election/polling-place source.
+This check is now treated as diagnostic only. It can flag suspicious geocoder output, but it cannot certify that the polling-place building is inside the row's AGS. A polling-place building can serve voters from more than one source AGS, and the same uncertainty can exist even when a deduplicated address currently has only one observed source AGS.
 
-This QA does not replace the product assignment target. The product still maps K17-K25 onto 2022 statistical-area polygons. Historical AGS QA is a validation layer for candidate geocodes.
+This QA does not replace the product assignment target. The product still maps K17-K25 onto 2022 statistical-area polygons by polling-place building coordinate where address geocoding is needed.
 
 ## Current Source Findings
 
-Local raw polling-place/result sources inspected on 2026-07-08:
+Local raw polling-place/result sources inspected on 2026-07-09:
+
+The local CSV/XLS/XLSX header audit found exactly one AGS-like field under `data/raw`: K23 `archive_knesset23_kalpies_report_19_1_20_1.xlsx` has `AGS`/`source_ags` source metadata (`אג"ס` in the workbook). The other local workbooks are slimmer polling-place/address reports such as `tofes_b` or current kalpi-place lists. The current normalizer attempts to preserve an AGS field for every Excel source when that column exists, so the current evidence points to source-file coverage rather than the pipeline dropping AGS during cleaning.
 
 | Election | Local source checked | Explicit AGS field found? | Notes |
 | --- | --- | --- | --- |
@@ -43,14 +45,46 @@ Next source action: obtain the actual `50400-2008.7z` archive manually in a brow
 
 ## QA Decision
 
-Do not classify Photon `outside_expected_locality` results as definitively bad until historical AGS QA has been applied where possible.
+Do not use source AGS as a hard accept/reject gate for geocoded polling-place coordinates. A source-AGS pass is supportive context only. A source-AGS fail is a manual-review signal, not proof that the geocoder is wrong, because the source AGS may describe the voters/kalpi assignment rather than the physical polling-place building.
+
+The hard automated spatial gate remains the expected 2022 dissolved locality polygon, plus final point-in-2022-statistical-area assignment for reviewed coordinates. AGS diagnostics can be kept in the review queue, but they should not override locality validation or manual review.
+
+## Implemented Source-AGS Plumbing
+
+As of 2026-07-09:
+
+- `scripts/normalize_polling_places.py` preserves K23 `אג"ס` as `source_ags` and the concentration code as `source_concentration_code`.
+- `scripts/build_geocoding_input.py` carries those fields into `geocoding_input.csv`.
+- `scripts/build_geocoding_work_units.py` carries those fields into `geocoding_work_unit_rows.csv` and aggregates them into `geocoding_work_units.csv`.
+- `scripts/validate_geocode_candidate_source_ags.py` checks candidate points against a supplied statistical-area layer.
+
+The current rebuilt work-unit table contains 2,367 units with source AGS metadata, including 2,071 clean numbered-address units.
+
+Current limitation: the only statistical-area polygon layer present locally is 2022. The validator therefore currently checks K23 source AGS against 2022 `stat_2022` where the source locality/AGS pair exists in that layer. This is diagnostic screening only; it is not final old-boundary QA and is not a hard geocode validation rule.
+
+Current full Photon candidate result against the 2022 layer:
+
+| Validation status | Units |
+| --- | ---: |
+| `single_source_ags_candidate_inside_expected_ags` | 473 |
+| `single_source_ags_candidate_outside_expected_ags` | 567 |
+| `single_source_ags_not_in_stat_layer` | 496 |
+| `multi_source_ags_candidate_inside_one_expected_ags` | 267 |
+| `multi_source_ags_candidate_outside_expected_ags` | 259 |
+| `multi_source_ags_not_in_stat_layer` | 204 |
+| `multi_source_ags_candidate_outside_stat_area` | 1 |
+| `candidate_not_matched` | 100 |
+| `candidate_outside_stat_area` | 2 |
+| `no_source_ags` | 4,827 |
+
+K23 source AGS is not one-to-one per deduplicated address: 1,613 AGS-bearing work units have one source AGS value, while 756 have multiple source AGS values because multiple kalpies can share the same polling-place address. This proves `source_ags` is not always the polling-place building's containing AGS. It also means single-source-AGS rows cannot be assumed safe: they may simply be cases where the same building currently has only one observed source AGS in our scoped data. Treat all source-AGS checks as review diagnostics rather than geocode pass/fail rules.
 
 Review buckets after AGS QA should be:
 
 | Bucket | Meaning |
 | --- | --- |
-| `historical_ags_pass` | Candidate coordinate falls inside the official historical AGS polygon for the source row. Strong candidate for acceptance. |
-| `historical_ags_fail` | Candidate coordinate has source AGS but does not fall inside that AGS polygon. Strong reject/manual review. |
+| `historical_ags_pass` | Candidate coordinate falls inside the official historical AGS polygon for the source row. Supportive context, not auto-accept. |
+| `historical_ags_fail` | Candidate coordinate has source AGS but does not fall inside that AGS polygon. Manual-review signal, not automatic rejection. |
 | `no_source_ags` | Source row has no known AGS key, so only locality/stat-area/current checks are available. |
 | `missing_historical_polygon` | Source has AGS but the matching historical polygon layer is not available or cannot be matched. |
 | `known_crosswalk_exception` | Apparent wrong-locality case explained by reviewed split/merge/name-change/custom-bucket handling. |

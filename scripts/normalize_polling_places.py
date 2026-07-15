@@ -7,6 +7,11 @@ import sys
 from pathlib import Path
 from typing import Any
 
+
+LOCAL_AUDIT_PYTHON = Path(__file__).resolve().parents[1] / ".local" / "python-audit"
+if LOCAL_AUDIT_PYTHON.exists():
+    sys.path.insert(0, str(LOCAL_AUDIT_PYTHON))
+
 import pandas as pd
 import pdfplumber
 
@@ -25,6 +30,7 @@ ADDRESS_SOURCES = {
     "K20": RAW_DIR / "archive_knesset20_tell_the_polls_9_3.xls",
     "K19": RAW_DIR / "archive_knesset19_all_stations.pdf",
     "K18": PROCESSED_DIR / "k18_polling_places_resolved.csv",
+    "K18_VISUAL_REVIEWS": MANUAL_DIR / "manual_k18_address_reviews.csv",
     "K17": PROCESSED_DIR / "normalized" / "ballot_rows.csv",
     "K17_MANUAL_PLACES": MANUAL_DIR / "manual_k17_scanned_place_names.csv",
 }
@@ -38,6 +44,8 @@ FIELDS = [
     "source_locality_name",
     "source_kalpi",
     "source_eligible_voters",
+    "source_concentration_code",
+    "source_ags",
     "address",
     "place",
     "address_query",
@@ -57,6 +65,27 @@ def address_query(address: str, locality_name: str, place: str = "") -> str:
     return ", ".join(part for part in [clean(place), clean(locality_name)] if part)
 
 
+def first_source_value(source: pd.Series, names: list[str]) -> Any:
+    for name in names:
+        if name in source.index:
+            return source.get(name, "")
+    return ""
+
+
+def source_concentration_value(source: pd.Series) -> Any:
+    return first_source_value(
+        source,
+        [
+            "\u05e1\u05de\u05dc \u05e8\u05db\u05d5\u05d6",
+            "\u05e1\u05de\u05dc \u05e8\u05d9\u05db\u05d5\u05d6",
+        ],
+    )
+
+
+def source_ags_value(source: pd.Series) -> Any:
+    return first_source_value(source, ['\u05d0\u05d2"\u05e1'])
+
+
 def row(
     election: str,
     source_file: Path,
@@ -67,6 +96,8 @@ def row(
     eligible: Any,
     address: Any,
     place: Any,
+    source_concentration_code: Any = "",
+    source_ags: Any = "",
     source_status: str = "addressed",
 ) -> dict[str, Any]:
     code = normalize_code(locality_code)
@@ -84,6 +115,8 @@ def row(
         "source_locality_name": name,
         "source_kalpi": kalpi_norm,
         "source_eligible_voters": int_value(eligible),
+        "source_concentration_code": normalize_code(source_concentration_code),
+        "source_ags": normalize_code(source_ags),
         "address": address_text,
         "place": place_text,
         "address_query": address_query(address_text, name, place_text),
@@ -108,6 +141,8 @@ def read_excel_source(election: str, path: Path) -> list[dict[str, Any]]:
                 place=source.get("מקום קלפי", ""),
             )
         )
+        rows[-1]["source_concentration_code"] = normalize_code(source_concentration_value(source))
+        rows[-1]["source_ags"] = normalize_code(source_ags_value(source))
     return rows
 
 
@@ -162,12 +197,41 @@ def read_k19_pdf(path: Path) -> list[dict[str, Any]]:
     return rows
 
 
-def read_k18_resolved(path: Path) -> list[dict[str, Any]]:
+def read_k18_visual_reviews(path: Path) -> dict[tuple[str, str], dict[str, str]]:
+    reviews: dict[tuple[str, str], dict[str, str]] = {}
+    with path.open(encoding="utf-8-sig", newline="") as handle:
+        for source in csv.DictReader(handle):
+            if source.get("election") != "K18":
+                continue
+            if source.get("review_status") not in {"corrected", "confirmed_source"}:
+                raise ValueError(f"Invalid K18 visual-review status: {source}")
+            key = (normalize_code(source.get("locality_code", "")), normalize_kalpi(source.get("kalpi", "")))
+            if not all(key):
+                raise ValueError(f"Invalid K18 visual-review key: {source}")
+            if key in reviews:
+                raise ValueError(f"Duplicate K18 visual-review key: {key}")
+            reviews[key] = source
+    return reviews
+
+
+def read_k18_resolved(
+    path: Path,
+    visual_reviews: dict[tuple[str, str], dict[str, str]] | None = None,
+) -> list[dict[str, Any]]:
     rows = []
+    visual_reviews = visual_reviews or {}
+    applied_reviews: set[tuple[str, str]] = set()
     with path.open(encoding="utf-8-sig", newline="") as handle:
         for source in csv.DictReader(handle):
             if source["resolved_status"] != "matched":
                 continue
+            key = (normalize_code(source["official_locality_code"]), normalize_kalpi(source["official_kalpi"]))
+            review = visual_reviews.get(key)
+            if review:
+                applied_reviews.add(key)
+            corrected = bool(review and review["review_status"] == "corrected")
+            address = review.get("corrected_address", "") if corrected else ""
+            place = review.get("corrected_place", "") if corrected else ""
             rows.append(
                 row(
                     election="K18",
@@ -177,10 +241,14 @@ def read_k18_resolved(path: Path) -> list[dict[str, Any]]:
                     locality_name=source["official_locality_name"],
                     kalpi=source["official_kalpi"],
                     eligible=source["official_eligible"],
-                    address=source["address"],
-                    place=source["place"],
+                    address=address or source["address"],
+                    place=place or source["place"],
+                    source_status=f"addressed_visual_{review['review_status']}" if review else "addressed",
                 )
             )
+    unapplied = set(visual_reviews) - applied_reviews
+    if unapplied:
+        raise ValueError(f"K18 visual reviews did not match resolved rows: {sorted(unapplied)}")
     return rows
 
 
@@ -250,8 +318,20 @@ def main() -> None:
     else:
         missing_sources.append({"election": "K19", "expected_path": str(ADDRESS_SOURCES["K19"]), "reason": "missing_file"})
 
+    k18_visual_reviews: dict[tuple[str, str], dict[str, str]] = {}
+    if ADDRESS_SOURCES["K18_VISUAL_REVIEWS"].exists():
+        k18_visual_reviews = read_k18_visual_reviews(ADDRESS_SOURCES["K18_VISUAL_REVIEWS"])
+    else:
+        missing_sources.append(
+            {
+                "election": "K18_VISUAL_REVIEWS",
+                "expected_path": str(ADDRESS_SOURCES["K18_VISUAL_REVIEWS"]),
+                "reason": "missing_file",
+            }
+        )
+
     if ADDRESS_SOURCES["K18"].exists():
-        rows.extend(read_k18_resolved(ADDRESS_SOURCES["K18"]))
+        rows.extend(read_k18_resolved(ADDRESS_SOURCES["K18"], k18_visual_reviews))
     else:
         missing_sources.append({"election": "K18", "expected_path": str(ADDRESS_SOURCES["K18"]), "reason": "missing_file"})
 

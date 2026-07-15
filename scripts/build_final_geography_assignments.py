@@ -7,8 +7,18 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
-import geopandas as gpd
+LOCAL_PYTHON = Path(__file__).resolve().parents[1] / ".local" / "python-geo"
+if LOCAL_PYTHON.exists():
+    sys.path.insert(0, str(LOCAL_PYTHON))
+
 import pandas as pd
+
+try:
+    import geopandas as gpd
+except ModuleNotFoundError as error:
+    if error.name != "geopandas":
+        raise
+    gpd = None
 
 from pipeline_common import PROCESSED_DIR, int_value, write_csv, write_json
 
@@ -109,13 +119,25 @@ def geocode_is_usable(row: pd.Series) -> bool:
     return True
 
 
-def load_geocoded_points(path: Path) -> tuple[gpd.GeoDataFrame, set[str]]:
+def empty_geocoded_points() -> pd.DataFrame:
+    return pd.DataFrame(columns=["geocode_key", "geometry"])
+
+
+def require_geopandas() -> Any:
+    if gpd is None:
+        raise ModuleNotFoundError(
+            "GeoPandas is required only when a reviewed geocoded-points cache contains usable coordinates"
+        )
+    return gpd
+
+
+def load_geocoded_points(path: Path) -> tuple[Any, set[str]]:
     if not path.exists():
-        return gpd.GeoDataFrame(columns=["geocode_key", "geometry"], geometry="geometry", crs="EPSG:4326"), set()
+        return empty_geocoded_points(), set()
 
     raw = pd.read_csv(path, dtype=str, encoding="utf-8-sig").fillna("")
     if raw.empty:
-        return gpd.GeoDataFrame(columns=["geocode_key", "geometry"], geometry="geometry", crs="EPSG:4326"), set()
+        return empty_geocoded_points(), set()
 
     columns = set(raw.columns)
     key_col = first_existing(columns, ["geocode_key", "source_row_uid", "address_uid"])
@@ -144,11 +166,12 @@ def load_geocoded_points(path: Path) -> tuple[gpd.GeoDataFrame, set[str]]:
     usable["geocode_key"] = usable[key_col]
     geocode_keys = set(usable["geocode_key"])
     if usable.empty:
-        return gpd.GeoDataFrame(columns=["geocode_key", "geometry"], geometry="geometry", crs="EPSG:4326"), geocode_keys
+        return empty_geocoded_points(), geocode_keys
 
-    points = gpd.GeoDataFrame(
+    geo = require_geopandas()
+    points = geo.GeoDataFrame(
         usable,
-        geometry=gpd.points_from_xy(usable["_x"], usable["_y"]),
+        geometry=geo.points_from_xy(usable["_x"], usable["_y"]),
         crs=crs,
     )
     if str(points.crs).upper() not in {"EPSG:4326", "OGC:CRS84"}:
@@ -156,8 +179,8 @@ def load_geocoded_points(path: Path) -> tuple[gpd.GeoDataFrame, set[str]]:
     return points, geocode_keys
 
 
-def load_stat_areas() -> gpd.GeoDataFrame:
-    stats = gpd.read_file(STAT_AREAS)
+def load_stat_areas() -> Any:
+    stats = require_geopandas().read_file(STAT_AREAS)
     if stats.crs is None:
         stats = stats.set_crs("EPSG:4326")
     elif str(stats.crs).upper() not in {"EPSG:4326", "OGC:CRS84"}:
@@ -175,15 +198,16 @@ def load_stat_areas() -> gpd.GeoDataFrame:
     ].copy()
 
 
-def spatially_assign_points(points: gpd.GeoDataFrame, stats: gpd.GeoDataFrame) -> tuple[dict[str, dict], set[str]]:
+def spatially_assign_points(points: Any, stats: Any) -> tuple[dict[str, dict], set[str]]:
     if points.empty:
         return {}, set()
 
-    joined = gpd.sjoin(points, stats, how="left", predicate="within")
+    geo = require_geopandas()
+    joined = geo.sjoin(points, stats, how="left", predicate="within")
     missing_mask = joined["stat_area_id"].isna()
     if missing_mask.any():
         missing_points = points[points["geocode_key"].isin(joined.loc[missing_mask, "geocode_key"])]
-        fallback = gpd.sjoin(missing_points, stats, how="left", predicate="intersects")
+        fallback = geo.sjoin(missing_points, stats, how="left", predicate="intersects")
         joined = pd.concat([joined.loc[~missing_mask], fallback], ignore_index=True)
 
     assigned: dict[str, dict] = {}
@@ -305,7 +329,7 @@ def main() -> None:
     geocoding_input = load_geocoding_input()
     geocoding_units = load_geocoding_unit_index()
     geocoded_points, geocode_keys = load_geocoded_points(args.geocoded_points)
-    stats = load_stat_areas() if not geocoded_points.empty else gpd.GeoDataFrame()
+    stats = load_stat_areas() if not geocoded_points.empty else pd.DataFrame()
     geocoded_assignments, geocoded_outside = spatially_assign_points(geocoded_points, stats)
 
     output: list[dict[str, Any]] = []
