@@ -4,6 +4,17 @@ import { ControlPanel } from './ControlPanel'
 
 describe('ControlPanel', () => {
   it('renders localized election and geography options', () => {
+    const coverage = {
+      totalRows: 1,
+      totalActualVoters: 1,
+      mappedRows: 1,
+      mappedActualVoters: 1,
+      mappedActualVoterShare: 1,
+      pendingRows: 0,
+      pendingActualVoters: 0,
+      unmappedRows: 0,
+      unmappedActualVoters: 0,
+    }
     const html = renderToStaticMarkup(
       <ControlPanel
         language="he"
@@ -13,16 +24,9 @@ describe('ControlPanel', () => {
             number: 25,
             dateLabel: '2022',
             label: { en: 'Knesset 25', he: 'הכנסת ה־25' },
-            coverage: {
-              totalRows: 1,
-              totalActualVoters: 1,
-              mappedRows: 1,
-              mappedActualVoters: 1,
-              mappedActualVoterShare: 1,
-              pendingRows: 0,
-              pendingActualVoters: 0,
-              unmappedRows: 0,
-              unmappedActualVoters: 0,
+            coverageByMode: {
+              'statistical-area': coverage,
+              locality: coverage,
             },
             resultUrls: { 'statistical-area': 'stat.json', locality: 'locality.json' },
           },

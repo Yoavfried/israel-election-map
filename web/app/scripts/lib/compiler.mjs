@@ -88,9 +88,38 @@ export function buildCustomMetadataIndex(featureCollection) {
   return index
 }
 
-export function pruneGeography(featureCollection, mode, customFeatureCollection) {
+export function buildCompositeMetadataIndex(featureCollection) {
+  assertFeatureCollection(featureCollection, 'composite locality')
+  const index = new Map()
+  for (const feature of featureCollection.features) {
+    const properties = feature.properties ?? {}
+    const id = properties.composite_locality_id
+    if (!id) {
+      throw new Error('Composite locality feature is missing composite_locality_id')
+    }
+    index.set(id, {
+      id,
+      localityId: id,
+      localityCode: '',
+      nameHe: properties.name_he || id,
+      nameEn: properties.name_en || properties.name_he || id,
+      statAreaNumber: '',
+      yishuvStat2022: '',
+      isComposite: true,
+    })
+  }
+  return index
+}
+
+export function pruneGeography(
+  featureCollection,
+  mode,
+  customFeatureCollection,
+  compositeFeatureCollection = { type: 'FeatureCollection', features: [] },
+) {
   assertFeatureCollection(featureCollection, mode)
   assertFeatureCollection(customFeatureCollection, 'custom geography')
+  assertFeatureCollection(compositeFeatureCollection, 'composite locality')
 
   const features = featureCollection.features.map((feature) => {
     const properties = feature.properties ?? {}
@@ -115,11 +144,50 @@ export function pruneGeography(featureCollection, mode, customFeatureCollection)
         nameHe: properties.locality_name_he || '',
         nameEn: properties.locality_name_en || properties.locality_name_he || '',
         displayMode,
+        isComposite: false,
         ...(mode === 'statistical-area' ? { statAreaNumber } : {}),
       },
       geometry: roundGeometry(feature.geometry),
     }
   })
+
+  if (mode === 'locality') {
+    for (const feature of compositeFeatureCollection.features) {
+      const properties = feature.properties ?? {}
+      const id = properties.composite_locality_id
+      if (!id) {
+        throw new Error('Composite locality feature is missing composite_locality_id')
+      }
+      const componentCodes = splitPipeValues(properties.component_locality_codes)
+      const inferredDisplayMode =
+        componentCodes.length > 0 &&
+        componentCodes.every(isWestBankSettlementCode) &&
+        isPointLikeGeometry(feature.geometry)
+          ? 'marker'
+          : 'polygon'
+      const displayMode = properties.display_mode || inferredDisplayMode
+      if (!['polygon', 'marker'].includes(displayMode)) {
+        throw new Error(`${id} has invalid composite display mode: ${displayMode}`)
+      }
+      features.push({
+        type: 'Feature',
+        id,
+        properties: {
+          id,
+          geographyType: 'locality',
+          localityId: id,
+          localityCode: '',
+          nameHe: properties.name_he || id,
+          nameEn: properties.name_en || properties.name_he || id,
+          displayMode,
+          isComposite: true,
+          activeElections: splitPipeValues(properties.elections),
+          componentLocalityIds: splitPipeValues(properties.component_locality_ids),
+        },
+        geometry: roundGeometry(feature.geometry),
+      })
+    }
+  }
 
   for (const feature of customFeatureCollection.features) {
     const properties = feature.properties ?? {}
@@ -148,6 +216,26 @@ export function pruneGeography(featureCollection, mode, customFeatureCollection)
   }
 }
 
+export function buildHiddenLocalityIds(featureCollection, electionId) {
+  assertFeatureCollection(featureCollection, 'locality display geography')
+  const hidden = new Set()
+  for (const feature of featureCollection.features) {
+    const properties = feature.properties ?? {}
+    if (!properties.isComposite) {
+      continue
+    }
+    const active = (properties.activeElections ?? []).includes(electionId)
+    if (active) {
+      for (const componentId of properties.componentLocalityIds ?? []) {
+        hidden.add(componentId)
+      }
+    } else if (properties.id) {
+      hidden.add(properties.id)
+    }
+  }
+  return [...hidden].toSorted()
+}
+
 export function buildDisplayMarkers(featureCollection) {
   assertFeatureCollection(featureCollection, 'display geography')
 
@@ -167,33 +255,38 @@ export function buildDisplayMarkers(featureCollection) {
   }
 }
 
-export function buildCoverage(summaryRow) {
+export function buildCoverage(summaryRow, mode) {
   if (!summaryRow) {
     throw new Error('Missing election coverage summary')
   }
 
+  const prefix = mode === 'locality' ? 'locality_mode' : 'statistical_mode'
+
   return {
-    totalRows: numberValue(summaryRow.rows, 'rows'),
-    totalActualVoters: numberValue(summaryRow.total_actual_voters, 'total_actual_voters'),
-    mappedRows: numberValue(summaryRow.mapped_geographic_rows, 'mapped_geographic_rows'),
+    totalRows: numberValue(summaryRow.geographic_scope_rows, 'geographic_scope_rows'),
+    totalActualVoters: numberValue(
+      summaryRow.geographic_scope_actual_voters,
+      'geographic_scope_actual_voters',
+    ),
+    mappedRows: numberValue(summaryRow[`${prefix}_mapped_rows`], `${prefix}_mapped_rows`),
     mappedActualVoters: numberValue(
-      summaryRow.mapped_geographic_actual_voters,
-      'mapped_geographic_actual_voters',
+      summaryRow[`${prefix}_mapped_actual_voters`],
+      `${prefix}_mapped_actual_voters`,
     ),
     mappedActualVoterShare: numberValue(
-      summaryRow.mapped_actual_voter_share,
-      'mapped_actual_voter_share',
+      summaryRow[`${prefix}_mapped_actual_voter_share`],
+      `${prefix}_mapped_actual_voter_share`,
     ),
-    pendingRows: numberValue(
-      summaryRow.pending_or_missing_geocode_rows,
-      'pending_or_missing_geocode_rows',
-    ),
+    pendingRows: numberValue(summaryRow[`${prefix}_pending_rows`], `${prefix}_pending_rows`),
     pendingActualVoters: numberValue(
-      summaryRow.pending_or_missing_geocode_actual_voters,
-      'pending_or_missing_geocode_actual_voters',
+      summaryRow[`${prefix}_pending_actual_voters`],
+      `${prefix}_pending_actual_voters`,
     ),
-    unmappedRows: numberValue(summaryRow.unmapped_rows, 'unmapped_rows'),
-    unmappedActualVoters: numberValue(summaryRow.unmapped_actual_voters, 'unmapped_actual_voters'),
+    unmappedRows: numberValue(summaryRow[`${prefix}_pending_rows`], `${prefix}_pending_rows`),
+    unmappedActualVoters: numberValue(
+      summaryRow[`${prefix}_pending_actual_voters`],
+      `${prefix}_pending_actual_voters`,
+    ),
   }
 }
 
@@ -202,16 +295,18 @@ export function buildResultPayload({
   mode,
   primaryRows,
   customRows,
+  envelopeRows = [],
   metadataById,
   customMetadataById,
   coverage,
+  hiddenGeographyIds = [],
   partyOverrides = {},
   excludedPartyColumns = [],
 }) {
   const primaryType = mode === 'statistical-area' ? 'statistical-area' : 'locality'
   const records = []
   const excludedColumns = new Set(excludedPartyColumns)
-  const partyIds = inferPartyColumns(primaryRows, customRows).filter(
+  const partyIds = inferPartyColumns(primaryRows, customRows, envelopeRows).filter(
     (partyId) => !excludedColumns.has(partyId),
   )
 
@@ -233,20 +328,51 @@ export function buildResultPayload({
     records.push(buildResultRecord(row, id, 'custom', metadata, partyIds))
   }
 
+  if (envelopeRows.length > 1) {
+    throw new Error(`${electionId} envelope results contain more than one aggregate row`)
+  }
+  const envelopeRow = envelopeRows[0]
+  const envelope = envelopeRow
+    ? buildResultRecord(
+        envelopeRow,
+        envelopeRow.envelope_id || 'envelope:official',
+        'envelope',
+        {
+          id: envelopeRow.envelope_id || 'envelope:official',
+          customKey: 'envelope',
+          nameHe: envelopeRow.envelope_name_he || 'מעטפות חיצוניות',
+          nameEn: envelopeRow.envelope_name_en || 'Envelope votes',
+        },
+        partyIds,
+      )
+    : null
+
   const duplicateIds = findDuplicateIds(records)
   if (duplicateIds.length > 0) {
     throw new Error(`${electionId} ${mode} results contain duplicate IDs: ${duplicateIds.join(', ')}`)
   }
 
+  const hiddenIds = new Set(hiddenGeographyIds)
+  const hiddenResultIds = records
+    .filter((record) => hiddenIds.has(record.id))
+    .map((record) => record.id)
+  if (hiddenResultIds.length > 0) {
+    throw new Error(
+      `${electionId} ${mode} hides geographies that also have results: ${hiddenResultIds.join(', ')}`,
+    )
+  }
+
   const parties = partyIds.map((partyId) => buildPartyDefinition(electionId, partyId, partyOverrides[partyId]))
 
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     electionId,
     geographyMode: mode,
     coverage,
     parties,
     records,
+    envelope,
+    hiddenGeographyIds: [...hiddenIds].toSorted(),
   }
 }
 
@@ -302,6 +428,13 @@ function buildResultRecord(row, id, geographyType, metadata, partyColumns) {
     },
     partyVotes,
   }
+}
+
+function splitPipeValues(value) {
+  return String(value ?? '')
+    .split('|')
+    .map((part) => part.trim())
+    .filter(Boolean)
 }
 
 function inferPartyColumns(...rowGroups) {

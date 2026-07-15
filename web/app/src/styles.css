@@ -58,6 +58,7 @@ select:focus-visible {
     .language-toggle,
     .field,
     .coverage-notice,
+    .envelope-summary,
     .color-policy,
     .details-panel,
     .loading-state,
@@ -184,6 +185,7 @@ select:focus-visible {
 
 .control-panel,
 .coverage-notice,
+.envelope-summary,
 .details-panel,
 .color-policy {
   border: 1px solid rgba(23, 26, 23, 0.11);
@@ -278,6 +280,56 @@ select:focus-visible {
   color: #6f3d23;
   font-size: 0.72rem;
   line-height: 1.42;
+}
+
+.envelope-summary {
+  display: grid;
+  gap: 8px;
+  inline-size: 100%;
+  padding: 13px 15px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.envelope-summary:hover {
+  border-color: rgba(28, 100, 87, 0.38);
+  background: var(--paper-solid);
+}
+
+.envelope-summary--selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(28, 100, 87, 0.14), var(--shadow);
+}
+
+.envelope-summary__heading,
+.envelope-summary__result {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  min-inline-size: 0;
+}
+
+.envelope-summary__heading strong {
+  font-size: 0.82rem;
+}
+
+.envelope-summary__heading span {
+  color: var(--muted);
+  font-size: 0.65rem;
+}
+
+.envelope-summary__result strong {
+  font-size: 1.08rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.envelope-summary__result span {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.7rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .color-policy {
@@ -561,6 +613,11 @@ select:focus-visible {
   }
 
   .coverage-notice {
+    padding: 10px 12px;
+    border-radius: 15px;
+  }
+
+  .envelope-summary {
     padding: 10px 12px;
     border-radius: 15px;
   }

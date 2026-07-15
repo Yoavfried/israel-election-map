@@ -93,6 +93,12 @@ At query-lineage grain, strict street or exact-address geometry resolves 1,922 u
 
 The missing-number pass contains 829 query units and 815 canonical locality/street pairs. A strict one-area corridor resolves 138 units, representing 132 pairs and 1,433 ballot rows. The remaining 683 pairs are 389 OSM misses, 167 streets spanning multiple areas, and 127 corridors crossing a boundary.
 
+## Locality Mode Is Complete
+
+The unmatched inventory below applies to statistical-area placement, not locality totals. Locality mode assigns all 92,945 geographic-scope rows directly through the reviewed locality crosswalk, election-specific composite municipalities, or reviewed custom geographies. Official envelope votes are aggregated separately as one national result per election.
+
+The composite municipalities are באקה-ג'ת, עיר כרמל, and שגור in K17-K18, plus שער שומרון in K25. Their component polygons are unioned only for the elections where the composite source municipality exists. See `docs/LOCALITY_MODE.md` for the exact rows, voters, components, and frontend behavior.
+
 ## Current Unmatched Inventory
 
 After the accepted single-locality and current OSM rules:
@@ -152,7 +158,7 @@ Only the local K23 polling-place workbook exposes an explicit AGS field. Source 
 
 ## Public Output Boundary
 
-The OSM inventory above is analytical evidence. `scripts/build_final_geography_assignments.py` does not yet promote OSM candidates into `ballot_geography_assignments.csv`. The current web app and committed coverage table therefore show only single-area locality assignments and reviewed custom geographies. Current public mapped-voter coverage ranges from 11.96% to 13.26% by election.
+The OSM inventory above is analytical evidence. `scripts/build_final_geography_assignments.py` does not yet promote OSM candidates into `ballot_geography_assignments.csv`. Statistical-area mode therefore shows only single-area locality assignments and reviewed custom geographies; its current mapped-voter coverage ranges from 12.65% to 14.38% of the geographic scope by election. Locality mode is independently complete at 100%, and envelope results are visible separately rather than counted as unmapped geography.
 
 Promoting OSM matches is the next implementation step. It must preserve whether each row was assigned by locality, strict street corridor, exact house number, or reviewed exception, along with the OSM source/version and canonical address key.
 

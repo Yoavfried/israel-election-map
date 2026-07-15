@@ -23,7 +23,7 @@ python scripts/run_pipeline.py --skip-geographies
 Stages:
 
 - `fetch_election_results.py` fetches K17-K25 official ballot rows through data.gov.il CKAN datastore and writes a source manifest.
-- `build_geographies.py` converts the 2022 statistical-area FileGDB to WGS84 GeoJSON, dissolves localities, creates metadata, and writes custom synthetic geographies.
+- `build_geographies.py` converts the 2022 statistical-area FileGDB to WGS84 GeoJSON, dissolves localities, unions reviewed election-specific composites, creates metadata, and writes custom synthetic geographies.
 - `normalize_election_results.py` normalizes official ballot rows into a stable row index and per-election wide vote files.
 - `normalize_polling_places.py` normalizes available election-specific polling-place address sources.
 - `build_assignment_plan.py` applies envelope detection, reviewed locality crosswalks, row-level polling-place overrides, single-stat shortcuts, custom buckets, and geocode-needed classification.
@@ -40,8 +40,8 @@ Stages:
 - `build_osm_street_stat_lookup.py` reads the local Geofabrik PBF street geometries and classifies canonical locality-street pairs by whether the OSM street corridor stays inside one 2022 statistical area.
 - `build_osm_address_stat_lookup.py` reads exact OSM `addr:housenumber` objects with `addr:street` or `addr:place` from points, lines, and multipolygons; exact scalar numbers outrank matching multi-value tags, and reviewed exceptions come from `data/manual/manual_osm_address_stat_reviews.csv` with stale-status validation.
 - `build_unmatched_location_inventory.py` reconciles non-envelope rows after single-area locality, reviewed custom-geography, exact-address OSM, and missing-number street matches, then emits unique-signature category and reason summaries.
-- `build_final_geography_assignments.py` consumes an optional reviewed geocode cache and writes final row-level geography assignments; without a geocode cache it writes explicit pending-geocode diagnostics.
-- `build_public_outputs.py` writes statistical-area, locality, custom-geography, contribution, and unmapped CSV outputs for the website and public downloads.
+- `build_final_geography_assignments.py` writes independent locality and statistical-area assignment fields, then consumes an optional reviewed geocode cache for rows that still need statistical-area placement.
+- `build_public_outputs.py` writes statistical-area, complete locality, custom-geography, envelope, contribution, and unmapped CSV outputs for the website and public downloads.
 
 Dependency note:
 
@@ -51,7 +51,7 @@ Dependency note:
 
 Known current input gap:
 
-- `data/processed/geocoding/geocoded_points.csv` does not exist yet, so final outputs are partial until reviewed coordinates are added.
+- `data/processed/geocoding/geocoded_points.csv` does not exist yet, so statistical-area outputs remain partial until reviewed coordinates are added. Locality output is complete for the current scope.
 - The GovMap token request is domain-approved for `yoavfried.com`; use `web/geocode-spike/` for live browser testing if direct Python calls are blocked.
 - ArcGIS is being tested as a fallback provider. Retained ArcGIS geocodes should use `forStorage=true` and an access token/API key with stored-geocoding privileges.
 - OSM exact-address and street geometry are the first address-placement layers. Photon is a later local fallback; its results require point-in-expected-locality validation before promotion.

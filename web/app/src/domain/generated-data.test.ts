@@ -4,7 +4,7 @@ import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { AppCatalogSchema, ElectionResultsSchema } from './schemas'
 
-const dataRoot = resolve(import.meta.dirname, '..', '..', 'public', 'data', 'v1')
+const dataRoot = resolve(import.meta.dirname, '..', '..', 'public', 'data', 'v2')
 
 describe('generated web data', () => {
   it('matches the runtime schemas and asset checksums', async () => {
@@ -63,9 +63,18 @@ describe('generated web data', () => {
         const geometryIds = featureIdsByMode.get(mode.id)
         expect(payload.electionId).toBe(election.id)
         expect(payload.geographyMode).toBe(mode.id)
+        expect(payload.envelope?.geographyType).toBe('envelope')
         expect(new Set(payload.records.map((record) => record.id)).size).toBe(payload.records.length)
         for (const record of payload.records) {
           expect(geometryIds?.has(record.id), `${election.id}/${mode.id}/${record.id}`).toBe(true)
+        }
+        for (const hiddenId of payload.hiddenGeographyIds) {
+          expect(geometryIds?.has(hiddenId), `${election.id}/${mode.id}/${hiddenId}`).toBe(true)
+          expect(payload.records.some((record) => record.id === hiddenId)).toBe(false)
+        }
+        if (mode.id === 'locality') {
+          expect(payload.coverage.mappedActualVoterShare).toBe(1)
+          expect(payload.coverage.pendingRows).toBe(0)
         }
       }
     }

@@ -12,15 +12,17 @@ if LOCAL_PYTHON.exists():
 import geopandas as gpd
 import pandas as pd
 from pyproj import Transformer
+from shapely import union_all
 from shapely.geometry import Point
 from shapely.ops import transform
 
-from pipeline_common import PROCESSED_DIR, RAW_DIR, ensure_dir, write_csv, write_json
+from pipeline_common import MANUAL_DIR, PROCESSED_DIR, RAW_DIR, ensure_dir, write_csv, write_json
 
 
 GDB_PATH = RAW_DIR / "ezorim_statistiim_2022.gdb"
 LAYER_NAME = "statistical_areas_2022"
 OUT_DIR = PROCESSED_DIR / "geographies"
+COMPOSITE_LOCALITIES_PATH = MANUAL_DIR / "composite_localities.csv"
 
 CUSTOM_GEOGRAPHIES = [
     {
@@ -167,6 +169,72 @@ def build_localities(stats: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
     return dissolved
 
 
+def split_pipe_values(value: Any) -> list[str]:
+    return [part.strip() for part in str(value or "").split("|") if part.strip()]
+
+
+def build_composite_localities(localities: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
+    if not COMPOSITE_LOCALITIES_PATH.exists():
+        raise FileNotFoundError(
+            f"Missing reviewed composite-locality table: {COMPOSITE_LOCALITIES_PATH}"
+        )
+
+    config = pd.read_csv(COMPOSITE_LOCALITIES_PATH, dtype=str, encoding="utf-8-sig").fillna("")
+    required = {
+        "composite_locality_id",
+        "elections",
+        "source_locality_name",
+        "name_he",
+        "name_en",
+        "component_locality_codes",
+        "display_mode",
+        "note",
+    }
+    missing_columns = sorted(required - set(config.columns))
+    if missing_columns:
+        raise ValueError(f"Composite-locality table is missing columns: {', '.join(missing_columns)}")
+    if config["composite_locality_id"].duplicated().any():
+        duplicates = sorted(
+            config.loc[
+                config["composite_locality_id"].duplicated(), "composite_locality_id"
+            ].unique()
+        )
+        raise ValueError(f"Duplicate composite locality IDs: {', '.join(duplicates)}")
+
+    features: list[dict[str, Any]] = []
+    available_codes = {str(int(code)) for code in localities["locality_code"] if pd.notna(code)}
+    for row in config.to_dict("records"):
+        component_codes = split_pipe_values(row["component_locality_codes"])
+        if not component_codes:
+            raise ValueError(f"{row['composite_locality_id']} has no component locality codes")
+        if row["display_mode"] not in {"polygon", "marker"}:
+            raise ValueError(
+                f"{row['composite_locality_id']} has invalid display mode: {row['display_mode']}"
+            )
+        missing_codes = sorted(set(component_codes) - available_codes)
+        if missing_codes:
+            raise ValueError(
+                f"{row['composite_locality_id']} references missing 2022 locality codes: {', '.join(missing_codes)}"
+            )
+        components = localities[
+            localities["locality_code"]
+            .map(lambda value: str(int(value)) if pd.notna(value) else "")
+            .isin(component_codes)
+        ]
+        features.append(
+            {
+                **row,
+                "component_locality_codes": "|".join(component_codes),
+                "component_locality_ids": "|".join(f"loc:{code}" for code in component_codes),
+                "geometry": union_all(components.geometry.to_numpy()),
+            }
+        )
+
+    composites = gpd.GeoDataFrame(features, geometry="geometry", crs=localities.crs)
+    composites["geometry"] = composites.geometry.make_valid()
+    return composites
+
+
 def locality_metadata(localities_4326: gpd.GeoDataFrame) -> list[dict[str, Any]]:
     bounds = localities_4326.bounds
     rows: list[dict[str, Any]] = []
@@ -185,6 +253,23 @@ def locality_metadata(localities_4326: gpd.GeoDataFrame) -> list[dict[str, Any]]
                 "yishuv_stat_2022_values": row["yishuv_stat_2022"],
                 "cod_tifkud_values": row["COD_TIFKUD"],
                 "has_function_code": row["has_function_code"],
+                "min_lon": row_bounds["minx"],
+                "min_lat": row_bounds["miny"],
+                "max_lon": row_bounds["maxx"],
+                "max_lat": row_bounds["maxy"],
+            }
+        )
+    return rows
+
+
+def composite_locality_metadata(composites_4326: gpd.GeoDataFrame) -> list[dict[str, Any]]:
+    bounds = composites_4326.bounds
+    rows: list[dict[str, Any]] = []
+    for index, row in composites_4326.drop(columns="geometry").iterrows():
+        row_bounds = bounds.loc[index]
+        rows.append(
+            {
+                **row.to_dict(),
                 "min_lon": row_bounds["minx"],
                 "min_lat": row_bounds["miny"],
                 "max_lon": row_bounds["maxx"],
@@ -221,11 +306,14 @@ def main() -> None:
 
     stats = read_statistical_areas()
     stats_4326 = stats.to_crs("EPSG:4326")
-    localities = build_localities(stats).to_crs("EPSG:4326")
+    localities_source_crs = build_localities(stats)
+    localities = localities_source_crs.to_crs("EPSG:4326")
+    composites = build_composite_localities(localities_source_crs).to_crs("EPSG:4326")
     custom = custom_geographies()
 
     write_geojson(stats_4326, OUT_DIR / "statistical_areas_2022.geojson")
     write_geojson(localities, OUT_DIR / "localities_2022_dissolved.geojson")
+    write_geojson(composites, OUT_DIR / "composite_localities.geojson")
     write_geojson(custom, OUT_DIR / "custom_geographies.geojson")
 
     if args.simplify_tolerance > 0:
@@ -237,9 +325,14 @@ def main() -> None:
             simplify(localities, args.simplify_tolerance),
             OUT_DIR / "localities_2022_dissolved.simplified.geojson",
         )
+        write_geojson(
+            simplify(composites, args.simplify_tolerance),
+            OUT_DIR / "composite_localities.simplified.geojson",
+        )
 
     stat_rows = metadata_from_stats(stats_4326)
     locality_rows = locality_metadata(localities)
+    composite_rows = composite_locality_metadata(composites)
     write_csv(
         OUT_DIR / "statistical_areas_2022.metadata.csv",
         stat_rows,
@@ -249,6 +342,11 @@ def main() -> None:
         OUT_DIR / "localities_2022.metadata.csv",
         locality_rows,
         list(locality_rows[0].keys()),
+    )
+    write_csv(
+        OUT_DIR / "composite_localities.metadata.csv",
+        composite_rows,
+        list(composite_rows[0].keys()),
     )
 
     summary = {
@@ -261,6 +359,7 @@ def main() -> None:
         "locality_features": int(len(localities)),
         "single_stat_localities": int(localities["single_stat_area"].sum()),
         "multi_stat_localities": int((~localities["single_stat_area"]).sum()),
+        "composite_localities": int(len(composites)),
         "custom_geographies": int(len(custom)),
         "simplify_tolerance": args.simplify_tolerance,
         "bounds_wgs84": {
@@ -276,6 +375,7 @@ def main() -> None:
     print(f"locality_features={summary['locality_features']}")
     print(f"single_stat_localities={summary['single_stat_localities']}")
     print(f"multi_stat_localities={summary['multi_stat_localities']}")
+    print(f"composite_localities={summary['composite_localities']}")
     print(f"custom_geographies={summary['custom_geographies']}")
     print(f"out_dir={OUT_DIR.relative_to(PROCESSED_DIR.parent)}")
 

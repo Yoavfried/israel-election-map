@@ -4,6 +4,7 @@ import argparse
 import csv
 import sys
 from collections import Counter
+from functools import cache
 from pathlib import Path
 from typing import Any
 
@@ -20,7 +21,14 @@ except ModuleNotFoundError as error:
         raise
     gpd = None
 
-from pipeline_common import PROCESSED_DIR, int_value, write_csv, write_json
+from pipeline_common import (
+    MANUAL_DIR,
+    PROCESSED_DIR,
+    int_value,
+    normalize_spaces,
+    write_csv,
+    write_json,
+)
 
 
 ASSIGNMENT_PLAN = PROCESSED_DIR / "assignments" / "ballot_assignment_plan.csv"
@@ -29,6 +37,7 @@ GEOCODING_WORK_UNIT_ROWS = PROCESSED_DIR / "geocoding" / "geocoding_work_unit_ro
 STAT_AREAS = PROCESSED_DIR / "geographies" / "statistical_areas_2022.geojson"
 STAT_AREA_METADATA = PROCESSED_DIR / "geographies" / "statistical_areas_2022.metadata.csv"
 OUT_DIR = PROCESSED_DIR / "assignments"
+COMPOSITE_LOCALITIES = MANUAL_DIR / "composite_localities.csv"
 
 
 
@@ -54,6 +63,98 @@ def split_locality_codes(value: Any) -> list[str]:
         if code and code not in codes:
             codes.append(code)
     return codes
+
+
+@cache
+def load_composite_locality_index() -> dict[tuple[str, str], dict[str, str]]:
+    rows = read_csv(COMPOSITE_LOCALITIES)
+    if not rows:
+        raise FileNotFoundError(
+            f"Missing or empty reviewed composite-locality table: {COMPOSITE_LOCALITIES}"
+        )
+
+    index: dict[tuple[str, str], dict[str, str]] = {}
+    for row in rows:
+        composite_id = row.get("composite_locality_id", "").strip()
+        source_name = normalize_spaces(row.get("source_locality_name", ""))
+        elections = [
+            value.strip()
+            for value in row.get("elections", "").split("|")
+            if value.strip()
+        ]
+        if not composite_id or not source_name or not elections:
+            raise ValueError(f"Invalid composite-locality row: {row}")
+        for election in elections:
+            key = (election, source_name)
+            if key in index:
+                raise ValueError(f"Duplicate composite-locality matcher: {election} / {source_name}")
+            index[key] = row
+    return index
+
+
+def locality_assignment(row: dict[str, str]) -> dict[str, Any]:
+    method = row.get("assignment_method", "")
+    if method == "official_envelope":
+        return {
+            "locality_assignment_status": "official_envelope",
+            "locality_geography_type": "envelope",
+            "locality_geography_id": "envelope:official",
+            "locality_result_code": "",
+            "locality_result_name": "מעטפות חיצוניות",
+            "is_locality_mapped": False,
+        }
+    if method == "special_non_geographic":
+        return {
+            "locality_assignment_status": "special_non_geographic",
+            "locality_geography_type": "non_geographic",
+            "locality_geography_id": "",
+            "locality_result_code": "",
+            "locality_result_name": row.get("target_locality_name", ""),
+            "is_locality_mapped": False,
+        }
+    if method == "custom_point_size_polygon":
+        return {
+            "locality_assignment_status": "custom_geography_assigned",
+            "locality_geography_type": "custom_geography",
+            "locality_geography_id": row.get("custom_geography_id", ""),
+            "locality_result_code": "",
+            "locality_result_name": row.get("target_locality_name", ""),
+            "is_locality_mapped": True,
+        }
+
+    composite = load_composite_locality_index().get(
+        (row.get("election", ""), normalize_spaces(row.get("source_locality_name", "")))
+    )
+    if composite:
+        return {
+            "locality_assignment_status": "composite_locality_assigned",
+            "locality_geography_type": "composite_locality",
+            "locality_geography_id": composite["composite_locality_id"],
+            "locality_result_code": row.get("source_locality_code", ""),
+            "locality_result_name": composite["name_he"],
+            "is_locality_mapped": True,
+        }
+
+    target_codes = split_locality_codes(row.get("target_locality_code", ""))
+    if len(target_codes) == 1:
+        target_code = target_codes[0]
+        return {
+            "locality_assignment_status": "current_locality_assigned",
+            "locality_geography_type": "locality",
+            "locality_geography_id": f"loc:{target_code}",
+            "locality_result_code": target_code,
+            "locality_result_name": row.get("target_locality_name", ""),
+            "is_locality_mapped": True,
+        }
+
+    return {
+        "locality_assignment_status": "unresolved",
+        "locality_geography_type": "unmapped",
+        "locality_geography_id": "",
+        "locality_result_code": "",
+        "locality_result_name": row.get("target_locality_name", ""),
+        "is_locality_mapped": False,
+    }
 
 
 def point_matches_expected_locality(row: dict[str, str], point: dict[str, Any]) -> bool:
@@ -280,6 +381,7 @@ def base_output(row: dict[str, str]) -> dict[str, Any]:
         "actual_voters": row["actual_voters"],
         "assignment_method": row["assignment_method"],
         "assignment_source": row["assignment_source"],
+        **locality_assignment(row),
     }
 
 
@@ -465,6 +567,12 @@ def main() -> None:
         "locality_id",
         "locality_code",
         "locality_name",
+        "locality_assignment_status",
+        "locality_geography_type",
+        "locality_geography_id",
+        "locality_result_code",
+        "locality_result_name",
+        "is_locality_mapped",
         "custom_geography_id",
         "is_mapped",
         "is_geographic",
@@ -509,6 +617,7 @@ def main() -> None:
         rows = [row for row in output if row["election"] == election]
         statuses = Counter(row["geography_assignment_status"] for row in rows)
         mapped_rows = [row for row in rows if normalize_bool(row["is_mapped"])]
+        locality_mapped_rows = [row for row in rows if normalize_bool(row["is_locality_mapped"])]
         missing_rows = [
             row for row in rows
             if row["geography_assignment_status"].startswith("missing_geocode")
@@ -525,6 +634,10 @@ def main() -> None:
                 "mapped_actual_voters": sum(int_value(row["actual_voters"]) for row in mapped_rows),
                 "stat_area_rows": sum(1 for row in mapped_rows if row["geography_type"] == "statistical_area"),
                 "custom_geography_rows": sum(1 for row in mapped_rows if row["geography_type"] == "custom_geography"),
+                "locality_mapped_rows": len(locality_mapped_rows),
+                "locality_mapped_actual_voters": sum(
+                    int_value(row["actual_voters"]) for row in locality_mapped_rows
+                ),
                 "pending_or_missing_geocode_rows": len(missing_rows),
                 "pending_or_missing_geocode_actual_voters": sum(int_value(row["actual_voters"]) for row in missing_rows),
                 "envelope_rows": statuses["official_envelope"],
@@ -542,7 +655,8 @@ def main() -> None:
     for row in summary:
         print(
             f"{row['election']}: mapped={row['mapped_rows']} stat={row['stat_area_rows']} "
-            f"custom={row['custom_geography_rows']} pending_geocode={row['pending_or_missing_geocode_rows']}"
+            f"custom={row['custom_geography_rows']} locality={row['locality_mapped_rows']} "
+            f"pending_geocode={row['pending_or_missing_geocode_rows']}"
         )
 
 

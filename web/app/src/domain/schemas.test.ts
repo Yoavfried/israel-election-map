@@ -16,7 +16,7 @@ const coverage = {
 describe('web data contracts', () => {
   it('accepts a versioned catalog', () => {
     const catalog = AppCatalogSchema.parse({
-      schemaVersion: 1,
+      schemaVersion: 2,
       buildId: '12345678abcdef00',
       generatedAt: '2026-07-14T10:00:00.000Z',
       source: {
@@ -54,7 +54,10 @@ describe('web data contracts', () => {
           number: 25,
           dateLabel: '2022',
           label: { en: 'Knesset 25', he: 'הכנסת ה־25' },
-          coverage,
+          coverageByMode: {
+            'statistical-area': coverage,
+            locality: { ...coverage, mappedActualVoterShare: 1 },
+          },
           resultUrls: {
             'statistical-area': 'results/k25/statistical-areas.json',
             locality: 'results/k25/localities.json',
@@ -69,12 +72,14 @@ describe('web data contracts', () => {
 
   it('rejects coverage values above 100 percent', () => {
     const result = ElectionResultsSchema.safeParse({
-      schemaVersion: 1,
+      schemaVersion: 2,
       electionId: 'K25',
       geographyMode: 'locality',
       coverage: { ...coverage, mappedActualVoterShare: 1.01 },
       parties: [],
       records: [],
+      envelope: null,
+      hiddenGeographyIds: [],
     })
 
     expect(result.success).toBe(false)

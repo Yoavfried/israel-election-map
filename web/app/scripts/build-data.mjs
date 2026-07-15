@@ -3,8 +3,10 @@ import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises'
 import { dirname, isAbsolute, relative, resolve } from 'node:path'
 import {
   buildCoverage,
+  buildCompositeMetadataIndex,
   buildCustomMetadataIndex,
   buildDisplayMarkers,
+  buildHiddenLocalityIds,
   buildMetadataIndex,
   buildResultPayload,
   parseCsv,
@@ -14,7 +16,7 @@ import {
 const APP_ROOT = resolve(import.meta.dirname, '..')
 const REPOSITORY_ROOT = resolve(APP_ROOT, '..', '..')
 const DEFAULT_SOURCE_ROOT = resolve(REPOSITORY_ROOT, 'data', 'processed')
-const DEFAULT_OUTPUT_ROOT = resolve(APP_ROOT, 'public', 'data', 'v1')
+const DEFAULT_OUTPUT_ROOT = resolve(APP_ROOT, 'public', 'data', 'v2')
 
 async function main() {
   const options = parseArguments(process.argv.slice(2))
@@ -36,6 +38,7 @@ async function main() {
       localityMetadataRows,
       statisticalAreas,
       localities,
+      compositeLocalities,
       customGeographies,
     ] = await Promise.all([
       readJson(resolve(APP_ROOT, 'config', 'elections.json')),
@@ -46,6 +49,7 @@ async function main() {
       readCsv(resolve(sourceRoot, 'geographies', 'localities_2022.metadata.csv')),
       readJson(resolve(sourceRoot, 'geographies', 'statistical_areas_2022.simplified.geojson')),
       readJson(resolve(sourceRoot, 'geographies', 'localities_2022_dissolved.simplified.geojson')),
+      readJson(resolve(sourceRoot, 'geographies', 'composite_localities.simplified.geojson')),
       readJson(resolve(sourceRoot, 'geographies', 'custom_geographies.geojson')),
     ])
 
@@ -53,10 +57,19 @@ async function main() {
 
     const summaryByElection = new Map(summaryRows.map((row) => [row.election, row]))
     const statisticalMetadata = buildMetadataIndex(statisticalMetadataRows, 'statistical-area')
-    const localityMetadata = buildMetadataIndex(localityMetadataRows, 'locality')
+    const localityMetadata = new Map([
+      ...buildMetadataIndex(localityMetadataRows, 'locality'),
+      ...buildCompositeMetadataIndex(compositeLocalities),
+    ])
     const customMetadata = buildCustomMetadataIndex(customGeographies)
     const coverageByElection = new Map(
-      electionConfig.map((election) => [election.id, buildCoverage(summaryByElection.get(election.id))]),
+      electionConfig.map((election) => [
+        election.id,
+        {
+          'statistical-area': buildCoverage(summaryByElection.get(election.id), 'statistical-area'),
+          locality: buildCoverage(summaryByElection.get(election.id), 'locality'),
+        },
+      ]),
     )
 
     const prunedStatisticalAreas = pruneGeography(
@@ -64,7 +77,12 @@ async function main() {
       'statistical-area',
       customGeographies,
     )
-    const prunedLocalities = pruneGeography(localities, 'locality', customGeographies)
+    const prunedLocalities = pruneGeography(
+      localities,
+      'locality',
+      customGeographies,
+      compositeLocalities,
+    )
     const statisticalMarkers = buildDisplayMarkers(prunedStatisticalAreas)
     const localityMarkers = buildDisplayMarkers(prunedLocalities)
 
@@ -88,12 +106,14 @@ async function main() {
     const catalogElections = []
     for (const election of electionConfig) {
       const electionSlug = election.id.toLowerCase()
-      const [statisticalRows, localityRows, customRows] = await Promise.all([
+      const [statisticalRows, localityRows, customRows, envelopeRows] = await Promise.all([
         readCsv(resolve(sourceRoot, 'public', 'statistical_area_results', `${electionSlug}.csv`)),
         readCsv(resolve(sourceRoot, 'public', 'locality_results', `${electionSlug}.csv`)),
         readCsv(resolve(sourceRoot, 'public', 'custom_geography_results', `${electionSlug}.csv`)),
+        readCsv(resolve(sourceRoot, 'public', 'envelope_results', `${electionSlug}.csv`)),
       ])
-      const coverage = coverageByElection.get(election.id)
+      const coverageByMode = coverageByElection.get(election.id)
+      const hiddenLocalityIds = buildHiddenLocalityIds(prunedLocalities, election.id)
       const overrides = partyOverrideConfig.elections[election.id] ?? {}
       const excludedPartyColumns = Object.keys(
         partyOverrideConfig.ignoredResultColumns[election.id] ?? {},
@@ -103,9 +123,10 @@ async function main() {
         mode: 'statistical-area',
         primaryRows: statisticalRows,
         customRows,
+        envelopeRows,
         metadataById: statisticalMetadata,
         customMetadataById: customMetadata,
-        coverage,
+        coverage: coverageByMode['statistical-area'],
         partyOverrides: overrides,
         excludedPartyColumns,
       })
@@ -114,9 +135,11 @@ async function main() {
         mode: 'locality',
         primaryRows: localityRows,
         customRows,
+        envelopeRows,
         metadataById: localityMetadata,
         customMetadataById: customMetadata,
-        coverage,
+        coverage: coverageByMode.locality,
+        hiddenGeographyIds: hiddenLocalityIds,
         partyOverrides: overrides,
         excludedPartyColumns,
       })
@@ -132,7 +155,7 @@ async function main() {
 
       catalogElections.push({
         ...election,
-        coverage,
+        coverageByMode,
         resultUrls,
       })
     }
@@ -144,13 +167,13 @@ async function main() {
     }
     const buildId = buildHash.digest('hex').slice(0, 16)
     const catalog = {
-      schemaVersion: 1,
+      schemaVersion: 2,
       buildId,
       generatedAt: new Date().toISOString(),
       source: {
         geographyVintage: 2022,
         electionRange: { first: 'K17', last: 'K25' },
-        assignmentStatus: 'partial-until-reviewed-geocodes-are-promoted',
+        assignmentStatus: 'locality-complete-statistical-areas-partial',
         resultColumnExclusions: Object.entries(partyOverrideConfig.ignoredResultColumns).flatMap(
           ([electionId, columns]) =>
             Object.entries(columns).map(([column, reason]) => ({ electionId, column, reason })),

@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
 import { ControlPanel } from './components/ControlPanel'
 import { CoverageNotice } from './components/CoverageNotice'
 import { DetailsPanel } from './components/DetailsPanel'
+import { EnvelopeSummary } from './components/EnvelopeSummary'
 import { LoadingState } from './components/LoadingState'
 import { loadCatalog, loadElectionResults, resolveDataUrl } from './data/client'
 import type {
@@ -104,7 +105,12 @@ export default function App() {
       ? resultsState.data
       : null
   const resultsById = useMemo(
-    () => new Map(results?.records.map((record) => [record.id, record]) ?? []),
+    () =>
+      new Map(
+        [...(results?.records ?? []), ...(results?.envelope ? [results.envelope] : [])].map(
+          (record) => [record.id, record],
+        ),
+      ),
     [results],
   )
   const selectedRecord = selectedId ? resultsById.get(selectedId) ?? null : null
@@ -163,6 +169,7 @@ export default function App() {
               bounds={catalog.bounds}
               records={results.records}
               parties={results.parties}
+              hiddenGeographyIds={results.hiddenGeographyIds}
               selectedId={selectedId}
               onSelect={setSelectedId}
             />
@@ -186,7 +193,17 @@ export default function App() {
             onElectionChange={handleElectionChange}
             onGeographyModeChange={handleGeographyChange}
           />
-          <CoverageNotice coverage={selectedElection.coverage} language={language} />
+          <CoverageNotice
+            coverage={results?.coverage ?? selectedElection.coverageByMode[geographyMode]}
+            language={language}
+          />
+          <EnvelopeSummary
+            language={language}
+            record={results?.envelope ?? null}
+            parties={results?.parties ?? []}
+            selected={selectedId === results?.envelope?.id}
+            onSelect={() => setSelectedId(results?.envelope?.id ?? null)}
+          />
           <p className="color-policy">{translate(language, 'provisionalColors')}</p>
           <DetailsPanel
             language={language}

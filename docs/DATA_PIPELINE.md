@@ -20,25 +20,28 @@ The pipeline writes generated files under `data/processed/`, which is intentiona
 ## Current Stages
 
 1. Fetch K17-K25 official ballot rows from data.gov.il CKAN datastore.
-2. Build 2022 statistical-area, dissolved-locality, and custom-geometry outputs.
+2. Build 2022 statistical-area, dissolved-locality, reviewed composite-locality, and custom-geometry outputs.
 3. Normalize ballot rows and per-election wide vote files.
 4. Normalize available polling-place address sources.
 5. Build the row-level assignment plan.
 6. Build the geocoding input table.
 7. Deduplicate geocoding input into unique geocoding work units.
 8. Audit normalized address usability and source fidelity.
-9. Build final row-level geography assignments from reviewed geocodes when available.
-10. Build public/download-oriented aggregate CSV outputs.
+9. Build independent row-level locality assignments and statistical-area assignments from reviewed geocodes when available.
+10. Build public/download-oriented statistical-area, locality, custom, and envelope aggregate CSV outputs.
 
 Reviewed row-level non-geographic exceptions are stored in `data/manual/polling_place_assignment_overrides.csv`. The current override marks Dimona kalpi 91 at `מחנה עדי` in K22-K25 as envelope votes, so those rows do not enter address geocoding.
 
 Direct K17 polling-place scan transcriptions are stored in `data/manual/manual_k17_scanned_place_names.csv`. Reviewed OSM address/stat-area exceptions are stored in `data/manual/manual_osm_address_stat_reviews.csv`; the address lookup validates each record's expected prior status before applying it.
+
+Reviewed election-specific composite municipalities are stored in `data/manual/composite_localities.csv`.
 
 ## Current Outputs
 
 - `data/processed/manifest/election_result_resources.csv`
 - `data/processed/geographies/statistical_areas_2022.simplified.geojson`
 - `data/processed/geographies/localities_2022_dissolved.simplified.geojson`
+- `data/processed/geographies/composite_localities.simplified.geojson`
 - `data/processed/geographies/custom_geographies.geojson`
 - `data/processed/normalized/ballot_rows.csv`
 - `data/processed/addresses/polling_place_addresses.csv`
@@ -79,6 +82,7 @@ Direct K17 polling-place scan transcriptions are stored in `data/manual/manual_k
 - `data/processed/public/statistical_area_results/*.csv`
 - `data/processed/public/locality_results/*.csv`
 - `data/processed/public/custom_geography_results/*.csv`
+- `data/processed/public/envelope_results/*.csv`
 - `data/processed/public/ballot_contributions/*.csv`
 - `data/processed/public/unmapped_rows/*.csv`
 
@@ -94,6 +98,7 @@ Geography:
 | Dissolved locality features | 1,329 |
 | Single-stat localities | 1,184 |
 | Multi-stat localities | 145 |
+| Reviewed composite localities | 4 |
 | Custom geographies | 4 |
 
 Assignment plan:
@@ -109,6 +114,8 @@ Assignment plan:
 | K19 | 1,517 | 8,313 | 45 | 6 | 228 | 0 |
 | K18 | 1,444 | 7,774 | 41 | 4 | 1 | 0 |
 | K17 | 1,250 | 6,986 | 38 | 3 | 149 | 0 |
+
+Locality-mode assignment is independent from the geocode-needed column above. All 92,945 geographic-scope rows, representing 34,783,363 actual voters, are assigned in locality mode. This includes 460 reviewed custom-geography rows and the election-specific composite municipalities. The 3,525 official envelope rows are aggregated separately by election. See `docs/LOCALITY_MODE.md` for the per-election and composite breakdown.
 
 Geocoding input readiness:
 

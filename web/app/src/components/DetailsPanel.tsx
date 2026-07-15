@@ -25,6 +25,7 @@ export function DetailsPanel({ language, record, parties }: DetailsPanelProps) {
   }
 
   const winner = partyById.get(record.winner.partyId)
+  const isEnvelope = record.geographyType === 'envelope'
   const orderedParties = Object.entries(record.partyVotes)
     .filter(([, votes]) => votes > 0)
     .toSorted((left, right) => right[1] - left[1])
@@ -36,7 +37,9 @@ export function DetailsPanel({ language, record, parties }: DetailsPanelProps) {
       <div className="details-heading">
         <div>
           <p className="eyebrow">
-            {translate(language, 'geographyCode')} {record.code}
+            {isEnvelope
+              ? translate(language, 'nonGeographicResult')
+              : `${translate(language, 'geographyCode')} ${record.code}`}
           </p>
           <h2>{record.names[language]}</h2>
         </div>
@@ -56,10 +59,17 @@ export function DetailsPanel({ language, record, parties }: DetailsPanelProps) {
       </div>
 
       <dl className="metric-grid">
-        <div>
-          <dt>{translate(language, 'turnout')}</dt>
-          <dd>{formatPercent(record.totals.turnout, language)}</dd>
-        </div>
+        {isEnvelope ? (
+          <div>
+            <dt>{translate(language, 'invalidVotes')}</dt>
+            <dd>{formatNumber(record.totals.invalidVotes, language)}</dd>
+          </div>
+        ) : (
+          <div>
+            <dt>{translate(language, 'turnout')}</dt>
+            <dd>{formatPercent(record.totals.turnout, language)}</dd>
+          </div>
+        )}
         <div>
           <dt>{translate(language, 'actualVoters')}</dt>
           <dd>{formatNumber(record.totals.actualVoters, language)}</dd>

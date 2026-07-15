@@ -36,7 +36,9 @@ Confirmed current-scope coverage:
 Locality-mode decision:
 
 - Do not use official locality-level aggregates as product input.
-- Build locality totals from the same row-level pipeline used for statistical areas: ballot row -> address/place source -> coordinate or reviewed shortcut -> 2022 statistical area -> dissolved 2022 locality.
+- Build locality totals directly from normalized ballot rows and the reviewed locality crosswalk. Address placement is not required when the target locality identity is already known.
+- Preserve reviewed election-time composite municipalities by unioning their 2022 component locality polygons only in the elections where the composite exists.
+- Aggregate official envelope results separately and never duplicate them across locality polygons.
 - Keep official locality-level resources as QA/reference metadata only.
 - Keep K16 and pre-2003 locality availability as later research items; current product scope starts at K17 / 2006.
 
@@ -50,6 +52,7 @@ Canonical raw polygon source:
 - 1,329 dissolved locality features.
 - 1,184 dissolved localities have exactly one statistical-area feature.
 - 145 dissolved localities have multiple statistical-area features.
+- 4 reviewed composite-locality features are built from unions of the dissolved 2022 localities.
 
 Decision:
 
@@ -59,6 +62,7 @@ Locality geometry decision:
 
 - Derive locality geometries by dissolving/unioning the 2022 statistical-area polygons by 2022 locality code/name.
 - In locality mode, internal statistical-area boundaries must not be visible; the dissolved locality should render as one visual polygon or multipolygon.
+- For באקה-ג'ת, עיר כרמל, שגור, and שער שומרון, use the reviewed election-specific component unions in `data/manual/composite_localities.csv` and hide the component features while that composite is active.
 - Do not introduce a separate official locality polygon layer for the current implementation unless later QA shows the dissolved 2022 statistical-area layer is insufficient.
 
 Detailed audit:
@@ -125,9 +129,9 @@ Interpretation:
 - K17 has 456 place-only rows recovered directly from the scanned polling-place lists, including all 344 rows formerly described as locality-only/no-place.
 - K16 has no usable polling-place address source and is deferred from current scope.
 
-## Reviewed Assignment Coverage
+## Reviewed Statistical-Area Assignment Coverage
 
-After applying the reviewed locality crosswalk, custom buckets, and the FileGDB-derived single-stat locality shortcut, every K17-K25 row has a handling rule. Before geocoding, only single-stat rows and custom geographies are mapped:
+After applying the reviewed locality crosswalk, custom buckets, and the FileGDB-derived single-stat locality shortcut, every K17-K25 row has a handling rule. Before geocoding, only single-stat rows and custom geographies are mapped in statistical-area mode:
 
 | Election | Mapped rows now | Mapped actual voters now | Pending/missing geocode rows | Pending/missing geocode actual voters |
 |---|---:|---:|---:|---:|
@@ -149,9 +153,12 @@ Full coverage artifacts:
 - `docs/STATISTICAL_AREA_ASSIGNMENT_COVERAGE.csv`
 - `docs/ADDRESSLESS_ROWS_AFTER_REVIEWED_ASSIGNMENT.csv`
 
+Locality mode is separate and complete: all 92,945 geographic-scope rows are assigned to a current locality, an election-specific composite locality, or a reviewed custom geography. See `docs/LOCALITY_MODE.md`.
+
 Implementation decisions:
 
 - Store assignment method for each row: single-stat locality, direct address geocode needed, address-geocode-to-current-polygons, custom point-size polygon, special non-geographic, official envelope, or unresolved.
+- Store locality assignment independently through `locality_geography_id`, `locality_geography_type`, `locality_assignment_status`, and `is_locality_mapped`.
 - Do not silently drop actual votes from rows that cannot be placed on a map.
 - Use the reviewed locality resolution plan before deciding whether a row needs address geocoding.
 - Expose mapped/unmapped coverage in the UI.
@@ -183,17 +190,17 @@ Do not use source AGS as a hard accept/reject gate. Keep `outside_expected_local
 
 1. Load official ballot results for K17-K25.
 2. Normalize locality codes, locality names, and kalpi identifiers.
-3. Load the 2022 statistical-area FileGDB and generate a web-friendly polygon layer plus locality/stat metadata.
+3. Load the 2022 statistical-area FileGDB and generate statistical-area, dissolved-locality, reviewed composite-locality, and custom geometries.
 4. Apply the reviewed locality resolution plan for exact matches, aliases, merges, splits, custom buckets, and non-geographic buckets.
-5. Assign by locality first when the mapped 2022 locality has exactly one statistical area.
-6. Assign reviewed custom point-size polygon rows without geocoding.
-7. Keep official envelope and reviewed special non-geographic rows outside geographic polygon assignment.
+5. Assign every geographic row directly to its reviewed locality, composite locality, or custom geography for locality mode.
+6. Aggregate official envelope rows as a separate national result and keep reviewed special non-geographic rows outside polygon assignment.
+7. For statistical-area mode, assign by locality when the mapped 2022 locality has exactly one statistical area.
 8. Load election-specific polling-place addresses where available.
 9. Geocode polling-place addresses for rows in multi-stat localities and reviewed address-target sets that still need address-level assignment.
 10. Run point-in-polygon against the 2022 statistical-area polygons.
-11. Join ballot results to assigned statistical areas, custom geographies, or non-geographic buckets.
+11. Join ballot results to the appropriate mode-specific geography.
 12. Aggregate per geography and keep per-kalpi/source-row contribution details.
-13. Store unresolved rows and their vote totals separately.
+13. Store unresolved statistical-area rows and their vote totals separately.
 14. Persist assignment provenance: source, match rule, geocoder, confidence, and failure reason.
 
 Geocoding provider decision status:
@@ -233,7 +240,7 @@ Minimum crosswalk fields:
 - whether the target can use the single-stat locality shortcut
 - notes/source for the decision
 
-Reviewed split localities and Sha'ar Shomron are modeled as address-target sets. Their rows should be assigned by polling-place geocoding into the correct current polygon. Do not join current polygons, and do not split votes heuristically.
+For statistical-area mode, reviewed split localities and Sha'ar Shomron remain address-target sets whose rows require polling-place placement into the correct component. Locality mode instead preserves the reviewed election-time municipality for באקה-ג'ת, עיר כרמל, שגור, and שער שומרון by using the component unions in `data/manual/composite_localities.csv`. These are distinct mode-specific rules, not heuristic vote splitting.
 
 ## Aggregation Model
 
@@ -246,9 +253,10 @@ For each statistical area:
 
 For localities:
 
-- Aggregate statistical-area results into 2022 locality results.
-- Preserve the contributing statistical areas and source ballot rows for drill-down.
+- Aggregate normalized ballot rows directly by reviewed locality or election-specific composite-locality identity.
+- Preserve source ballot-row and kalpi contributions for drill-down without waiting for statistical-area assignment.
 - Keep official locality resources as QA/reference metadata, not as product totals.
+- Keep official envelope results as one separate national aggregate per election.
 
 ## Frontend Direction
 
@@ -260,6 +268,8 @@ Implemented map-first foundation under `web/app/`:
 - Area details with totals, winner/margin, party distribution, and contributing kalpis.
 - English/Hebrew switching with document-level LTR/RTL.
 - Explicit mapped/pending voter coverage for every election.
+- Complete locality coverage with election-specific composite municipalities.
+- Selectable national envelope results with a full ballot breakdown.
 - Build-time CSV/GeoJSON compiler with Zod-validated browser assets.
 
 Implemented stack:

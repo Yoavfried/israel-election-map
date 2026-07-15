@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import {
+  buildCompositeMetadataIndex,
   buildDisplayMarkers,
+  buildHiddenLocalityIds,
   buildResultPayload,
   isPointLikeGeometry,
   isWestBankSettlementCode,
@@ -99,6 +101,61 @@ describe('web data compiler', () => {
     ).toBe(false)
   })
 
+  it('adds reviewed composite localities and hides their components only in active elections', () => {
+    const localities = {
+      type: 'FeatureCollection',
+      features: ['1', '2'].map((code) => ({
+        type: 'Feature',
+        properties: {
+          locality_id: `loc:${code}`,
+          locality_code: code,
+          locality_name_he: code,
+          locality_name_en: code,
+        },
+        geometry: {
+          type: 'Polygon',
+          coordinates: [[[35, 32], [35.1, 32], [35.1, 32.1], [35, 32]]],
+        },
+      })),
+    }
+    const composites = {
+      type: 'FeatureCollection',
+      features: [
+        {
+          type: 'Feature',
+          properties: {
+            composite_locality_id: 'composite:test',
+            elections: 'K17|K18',
+            component_locality_codes: '3720|3778',
+            component_locality_ids: 'loc:1|loc:2',
+            name_he: 'בדיקה',
+            name_en: 'Test composite',
+          },
+          geometry: {
+            type: 'Polygon',
+            coordinates: [[[35, 32], [35.2, 32], [35.2, 32.2], [35, 32]]],
+          },
+        },
+      ],
+    }
+    const empty = { type: 'FeatureCollection', features: [] }
+    const output = pruneGeography(localities, 'locality', empty, composites)
+
+    expect(output.features.map((feature) => feature.id)).toEqual([
+      'loc:1',
+      'loc:2',
+      'composite:test',
+    ])
+    expect(buildHiddenLocalityIds(output, 'K17')).toEqual(['loc:1', 'loc:2'])
+    expect(buildHiddenLocalityIds(output, 'K25')).toEqual(['composite:test'])
+    expect(output.features.find((feature) => feature.id === 'composite:test')?.properties.displayMode).toBe(
+      'marker',
+    )
+    expect(buildCompositeMetadataIndex(composites).get('composite:test')?.nameEn).toBe(
+      'Test composite',
+    )
+  })
+
   it('compiles dynamic ballot-letter columns into typed records', () => {
     const row = {
       election: 'K25',
@@ -139,11 +196,33 @@ describe('web data compiler', () => {
       metadataById: metadata,
       customMetadataById: new Map(),
       coverage,
+      envelopeRows: [
+        {
+          election: row.election,
+          envelope_id: 'envelope:official',
+          envelope_name_he: 'מעטפות חיצוניות',
+          envelope_name_en: 'Envelope votes',
+          contributing_rows: row.contributing_rows,
+          contributing_kalpis: row.contributing_kalpis,
+          eligible_voters: row.eligible_voters,
+          actual_voters: row.actual_voters,
+          valid_votes: row.valid_votes,
+          invalid_votes: row.invalid_votes,
+          winning_ballot_letter: row.winning_ballot_letter,
+          winning_votes: row.winning_votes,
+          runner_up_votes: row.runner_up_votes,
+          margin_votes: row.margin_votes,
+          winning_vote_share: row.winning_vote_share,
+          אמת: row.אמת,
+          מחל: row.מחל,
+        },
+      ],
     })
 
     expect(payload.records[0].partyVotes).toEqual({ אמת: 50, מחל: 29 })
     expect(payload.records[0].totals.turnout).toBe(0.8)
     expect(payload.parties).toHaveLength(2)
+    expect(payload.envelope?.geographyType).toBe('envelope')
   })
 
   it('keeps fallback party colors deterministic', () => {

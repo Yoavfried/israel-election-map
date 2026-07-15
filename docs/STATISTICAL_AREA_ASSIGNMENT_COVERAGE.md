@@ -19,6 +19,8 @@ Two different states matter:
 
 Current product scope is K17-K25. K16 / 2003 is deferred.
 
+This document is intentionally limited to statistical-area placement. Locality mode does not inherit these pending-geocode counts: it maps the full geographic scope directly and shows official envelope aggregates separately. See `docs/LOCALITY_MODE.md`.
+
 ## Generated Tables
 
 Current generated outputs live under `data/processed/`:
@@ -64,7 +66,7 @@ This table covers only rows that require address-level geocoding.
 | K18 | 7,739 | 35 | 0 | 0 |
 | K17 | 6,530 | 456 | 0 | 0 |
 
-## Current Pre-Geocode Map Output
+## Current Pre-Geocode Statistical-Area Output
 
 Because `data/processed/geocoding/geocoded_points.csv` does not exist yet, the final assignment stage currently maps only single-stat locality rows and custom geographies. Address-level rows remain pending.
 

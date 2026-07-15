@@ -10,12 +10,16 @@ The repository contains both the reproducible election/geography pipeline and a 
 - Every row has a handling rule: 2022 statistical area, reviewed custom geography, address placement required, envelope, or reviewed non-geographic exception.
 - OSM is the first address-placement layer. Photon is reserved for unresolved fallback work.
 - The current OSM audit leaves 4,893 unique unresolved location signatures covering 52,437 non-envelope ballot rows.
-- The public assignment builder does not yet promote OSM candidates. The web app therefore shows only reviewed assignments already present in `ballot_geography_assignments.csv`, with roughly 12-13% of actual voters mapped per election.
+- Locality mode maps all 92,945 geographic-scope rows for K17-K25. Reviewed composite municipalities preserve the election-time locality geometry where the 2022 layer has separate component localities.
+- Statistical-area mode does not yet promote OSM candidates; its current geographic-scope voter coverage ranges from 12.65% to 14.38% by election.
+- Official envelope votes are aggregated as a separate national result for every election and are not placed on locality polygons.
 - K17 scan recovery and the completed K18 visual-review corrections are part of the normalized source pipeline.
 
-The current methodology, counts, unmatched categories, and promotion boundary are documented in `docs/GEOGRAPHIC_ASSIGNMENT_STATUS.md`.
+Locality behavior is documented in `docs/LOCALITY_MODE.md`. The statistical-area methodology, unmatched categories, and promotion boundary are documented in `docs/GEOGRAPHIC_ASSIGNMENT_STATUS.md`.
 
 ## Assignment Strategy
+
+Locality mode assigns rows directly through the reviewed locality crosswalk. It does not wait for address geocoding. Statistical-area mode uses the following narrower process:
 
 1. Exclude official envelope and reviewed non-geographic rows.
 2. Assign a locality directly when it has exactly one 2022 statistical area.
@@ -47,11 +51,12 @@ npm install
 npm run dev
 ```
 
-Vite serves the app at `http://localhost:4173`. The frontend compiler reads `data/processed/` and writes disposable, validated assets under `web/app/public/data/v1/`.
+Vite serves the app at `http://localhost:4173`. The frontend compiler reads `data/processed/` and writes disposable, validated assets under `web/app/public/data/v2/`.
 
 ## Documentation
 
 - `docs/GEOGRAPHIC_ASSIGNMENT_STATUS.md` - current end-to-end assignment and unmatched inventory.
+- `docs/LOCALITY_MODE.md` - complete locality coverage, composite municipalities, and envelope presentation.
 - `docs/POLLING_PLACE_ADDRESS_QUALITY_AUDIT.md` - source fidelity, OCR/manual review, and OSM address QA.
 - `docs/DATA_PIPELINE.md` - stages, outputs, commands, and verified run counts.
 - `docs/POLLING_PLACE_ADDRESSES.md` - election-specific address sources.

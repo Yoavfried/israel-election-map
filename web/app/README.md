@@ -1,6 +1,6 @@
 # Israel Election Map Web App
 
-Local-first React/TypeScript map client for the K17–K25 pipeline. The app does not read the working CSV files at runtime. A build-time compiler validates them and writes disposable web assets under `public/data/v1/`.
+Local-first React/TypeScript map client for the K17–K25 pipeline. The app does not read the working CSV files at runtime. A build-time compiler validates them and writes disposable web assets under `public/data/v2/`.
 
 ## Run locally
 
@@ -35,11 +35,13 @@ npm run data:build -- --source C:\path\to\data\processed
 
 - `scripts/build-data.mjs` only reads `data/processed/`.
 - Generated web assets are ignored by Git.
-- The compiler writes to a staging directory and replaces only `web/app/public/data/v1/` after a successful build.
+- The compiler writes to a staging directory and replaces only `web/app/public/data/v2/` after a successful build.
 - No existing pipeline script or in-progress review file is modified by this app.
 
 ## Coverage boundary
 
-The compiler reads the promoted public assignment outputs. It does not treat analytical OSM candidates as final assignments. Until OSM matches are promoted by the Python assignment stage, the map intentionally shows only the current reviewed subset and displays pending-voter coverage prominently.
+The compiler reads the promoted public assignment outputs. Locality mode is complete for the K17-K25 geographic scope and includes reviewed election-specific composite municipalities. Official envelope results appear as a separate selectable national aggregate.
+
+The compiler does not treat analytical OSM candidates as final statistical-area assignments. Until those matches are promoted by the Python assignment stage, statistical-area mode intentionally shows only the current reviewed subset and displays pending-voter coverage prominently.
 
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the data contract and phased implementation plan.

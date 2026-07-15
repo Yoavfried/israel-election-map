@@ -1,6 +1,6 @@
 # Locality Crosswalk Resolution Plan
 
-Last updated: 2026-07-06
+Last updated: 2026-07-15
 
 Scope note: this file was created during the earlier K16-K25 investigation. Current product scope is K17-K25; K16-only rows are retained as historical review/future-reactivation context.
 
@@ -18,14 +18,14 @@ Derived full-resolution CSV:
 
 | review | rows | solution |
 | --- | --- | --- |
-| TRUE | 88 | Use approved locality match; historical split rows with multiple possible matches require address geocoding into current polygons. |
+| TRUE | 88 | Use approved locality match; multi-target rows require component placement only for statistical-area mode. |
 | TRIBE | 35 | Custom tribal/dispersed-settlement point-size polygon. |
 | GAZA | 13 | Custom Gaza evacuated-localities point-size polygon. |
 | ENVELOPE | 12 | Special non-geographic bucket, handled like envelope votes. |
 | N.S. | 3 | Custom Northern Samaria evacuated-localities point-size polygon. |
 | HEBRON | 2 | Custom Hebron point-size polygon. |
 | (blank) | 1 | One row: Ma'ale Shomron maps to Karnei Shomron based on note. |
-| SH | 1 | Use polling-place addresses to assign Sha'ar Shomron rows to current polygons. |
+| SH | 1 | Use polling-place addresses for statistical-area placement; use the reviewed Sha'ar Shomron composite in K25 locality mode. |
 
 ## Solution Counts
 
@@ -48,10 +48,11 @@ Derived full-resolution CSV:
 ## Implementation Decisions
 
 - Accepted single-locality matches use the reviewed 2022 locality name.
-- Accepted historical split rows with multiple possible current matches must be assigned by polling-place address/geocode into current polygons. Do not join polygons and do not split votes heuristically.
+- Statistical-area mode assigns accepted historical split rows with multiple possible current matches by polling-place address/geocode into component polygons; it does not split votes heuristically.
+- Locality mode preserves the reviewed election-time municipality for באקה-ג'ת, עיר כרמל, שגור, and שער שומרון by using the component unions declared in `data/manual/composite_localities.csv`.
 - `TRIBE`, `GAZA`, `N.S.`, and `HEBRON` become custom point-size polygon buckets. The visual design can be decided later, but the data model treats each bucket as a synthetic geography with preserved source-row contributions.
 - `ENVELOPE` rows are non-geographic and should be handled like envelope/special votes: included in totals and details, not assigned to map polygons.
-- `SH` represents `שער שומרון`; use polling-place addresses to assign each row to the relevant current polygon, usually `עץ אפרים` or `שערי תקווה`.
+- `SH` represents `שער שומרון`; use polling-place addresses to assign each row to the relevant component in statistical-area mode, and use the reviewed composite municipality in K25 locality mode.
 - The blank reviewed row with note `שכונה בקרני שומרון` is resolved to `קרני שומרון`.
 
 ## Full Resolution Table
@@ -73,19 +74,19 @@ Derived full-resolution CSV:
 | יהוד-נווה אפרים | TRUE | יהוד | accepted_locality_match | יהוד |  | Use the reviewed 2022 locality match. |  |
 | אבו רוקייק )שבט( [961] | TRIBE |  | custom_point_size_polygon | custom:tribal_negev | custom:tribal_negev | Aggregate all TRIBE rows per election into a single tribal/dispersed-settlement custom area and preserve source-row contributions. | add to tribal point polygon |
 | אעצם )שבט( [963] | TRIBE |  | custom_point_size_polygon | custom:tribal_negev | custom:tribal_negev | Aggregate all TRIBE rows per election into a single tribal/dispersed-settlement custom area and preserve source-row contributions. | add to tribal point polygon |
-| שגור | TRUE | בענה \| דייר אל-אסד \| מג'ד אל-כרום | address_geocode_to_current_polygons | בענה \| דייר אל-אסד \| מג'ד אל-כרום |  | Use each ballot row's polling-place address and point-in-polygon result to assign votes to the correct current 2022 polygon. Do not join polygons and do not split votes heuristically. |  |
+| שגור | TRUE | בענה \| דייר אל-אסד \| מג'ד אל-כרום | address_geocode_to_current_polygons | בענה \| דייר אל-אסד \| מג'ד אל-כרום |  | Statistical-area mode uses each polling-place address to choose a component polygon; locality mode uses the reviewed שגור composite. |  |
 | קרית שמונה | TRUE | קריית שמונה | accepted_locality_match | קריית שמונה |  | Use the reviewed 2022 locality match. |  |
 | אבו רובייעה )שבט( [966] | TRIBE |  | custom_point_size_polygon | custom:tribal_negev | custom:tribal_negev | Aggregate all TRIBE rows per election into a single tribal/dispersed-settlement custom area and preserve source-row contributions. | add to tribal point polygon |
 | קרית מלאכי | TRUE | קריית מלאכי | accepted_locality_match | קריית מלאכי |  | Use the reviewed 2022 locality match. |  |
 | אבו קורינאת )שבט( [968] | TRUE | אבו קורינאת (יישוב) | accepted_locality_match | אבו קורינאת (יישוב) |  | Use the reviewed 2022 locality match. |  |
-| באקה-ג'ת | TRUE | באקה אל-גרביה \| ג'ת | address_geocode_to_current_polygons | באקה אל-גרביה \| ג'ת |  | Use each ballot row's polling-place address and point-in-polygon result to assign votes to the correct current 2022 polygon. Do not join polygons and do not split votes heuristically. |  |
+| באקה-ג'ת | TRUE | באקה אל-גרביה \| ג'ת | address_geocode_to_current_polygons | באקה אל-גרביה \| ג'ת |  | Statistical-area mode uses each polling-place address to choose a component polygon; locality mode uses the reviewed באקה-ג'ת composite. |  |
 | קרית טבעון | TRUE | קריית טבעון | accepted_locality_match | קריית טבעון |  | Use the reviewed 2022 locality match. |  |
-| עיר כרמל | TRUE | דאלית אל-כרמל \| עספיא | address_geocode_to_current_polygons | דאלית אל-כרמל \| עספיא |  | Use each ballot row's polling-place address and point-in-polygon result to assign votes to the correct current 2022 polygon. Do not join polygons and do not split votes heuristically. |  |
+| עיר כרמל | TRUE | דאלית אל-כרמל \| עספיא | address_geocode_to_current_polygons | דאלית אל-כרמל \| עספיא |  | Statistical-area mode uses each polling-place address to choose a component polygon; locality mode uses the reviewed עיר כרמל composite. |  |
 | צורן-קדימה | TRUE | קדימה-צורן | accepted_locality_match | קדימה-צורן |  | Use the reviewed 2022 locality match. |  |
 | בנימינה-גבעת עדה | TRUE | בנימינה-גבעת עדה* | accepted_locality_match | בנימינה-גבעת עדה* |  | Use the reviewed 2022 locality match. |  |
 | מכבים-רעות [1273] | TRUE | מודיעין-מכבים-רעות* | accepted_locality_match | מודיעין-מכבים-רעות* |  | Use the reviewed 2022 locality match. |  |
 | הוואשלה )שבט( [1169] | TRIBE |  | custom_point_size_polygon | custom:tribal_negev | custom:tribal_negev | Aggregate all TRIBE rows per election into a single tribal/dispersed-settlement custom area and preserve source-row contributions. | add to tribal point polygon |
-| שער שומרון [3826] | SH |  | address_geocode_to_current_polygons | עץ אפרים \| שערי תקווה |  | Use each Sha'ar Shomron ballot row's polling-place address and point-in-polygon result to assign it to the relevant current polygon, usually Etz Efraim or Sha'arei Tikva. | עץ אפרים and שערי תקווה united in to שער שומרון |
+| שער שומרון [3826] | SH |  | address_geocode_to_current_polygons | עץ אפרים \| שערי תקווה |  | Statistical-area mode uses each polling-place address to choose a component; K25 locality mode uses the reviewed שער שומרון composite. | עץ אפרים and שערי תקווה united in to שער שומרון |
 | קרית עקרון | TRUE | קריית עקרון | accepted_locality_match | קריית עקרון |  | Use the reviewed 2022 locality match. |  |
 | אטרש )שבט( [965] | TRIBE |  | custom_point_size_polygon | custom:tribal_negev | custom:tribal_negev | Aggregate all TRIBE rows per election into a single tribal/dispersed-settlement custom area and preserve source-row contributions. | add to tribal point polygon |
 | אבו ג'ווייעד (שבט) [967] | TRIBE |  | custom_point_size_polygon | custom:tribal_negev | custom:tribal_negev | Aggregate all TRIBE rows per election into a single tribal/dispersed-settlement custom area and preserve source-row contributions. | add to tribal point polygon |

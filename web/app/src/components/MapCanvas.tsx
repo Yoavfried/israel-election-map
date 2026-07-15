@@ -3,6 +3,7 @@ import maplibregl from 'maplibre-gl'
 import type {
   CircleLayerSpecification,
   FillLayerSpecification,
+  FilterSpecification,
   LineLayerSpecification,
   Map as MapLibreMap,
 } from 'maplibre-gl'
@@ -27,6 +28,7 @@ interface MapCanvasProps {
   bounds: [[number, number], [number, number]]
   records: ResultRecord[]
   parties: Party[]
+  hiddenGeographyIds: string[]
   selectedId: string | null
   onSelect: (id: string | null) => void
 }
@@ -50,6 +52,7 @@ export default function MapCanvas({
   bounds,
   records,
   parties,
+  hiddenGeographyIds,
   selectedId,
   onSelect,
 }: MapCanvasProps) {
@@ -133,15 +136,18 @@ export default function MapCanvas({
       promoteId: 'id',
     })
 
+    const polygonVisibilityFilter: FilterSpecification = [
+      'all',
+      ['!=', ['get', 'displayMode'], 'marker'],
+      ['!=', ['get', 'id'], KINNERET_GEOGRAPHY_ID],
+      ['!', ['in', ['get', 'id'], ['literal', hiddenGeographyIds]]],
+    ]
+
     const fillLayer: FillLayerSpecification = {
       id: FILL_LAYER_ID,
       source: SOURCE_ID,
       type: 'fill',
-      filter: [
-        'all',
-        ['!=', ['get', 'displayMode'], 'marker'],
-        ['!=', ['get', 'id'], KINNERET_GEOGRAPHY_ID],
-      ],
+      filter: polygonVisibilityFilter,
       paint: {
         'fill-color': [
           'case',
@@ -161,11 +167,7 @@ export default function MapCanvas({
       id: LINE_LAYER_ID,
       source: SOURCE_ID,
       type: 'line',
-      filter: [
-        'all',
-        ['!=', ['get', 'displayMode'], 'marker'],
-        ['!=', ['get', 'id'], KINNERET_GEOGRAPHY_ID],
-      ],
+      filter: polygonVisibilityFilter,
       paint: {
         'line-color': [
           'case',
@@ -258,7 +260,7 @@ export default function MapCanvas({
       map.off('mouseleave', FILL_LAYER_ID, hidePointer)
       map.off('mouseleave', MARKER_LAYER_ID, hidePointer)
     }
-  }, [bounds, geometryUrl, mapReady, markerGeometryUrl])
+  }, [bounds, geometryUrl, hiddenGeographyIds, mapReady, markerGeometryUrl])
 
   useEffect(() => {
     const map = mapRef.current

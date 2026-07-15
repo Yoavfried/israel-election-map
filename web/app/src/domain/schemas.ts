@@ -40,7 +40,10 @@ const ElectionCatalogSchema = z.object({
   number: z.number().int().positive(),
   dateLabel: z.string().min(1),
   label: LocalizedTextSchema,
-  coverage: CoverageSchema,
+  coverageByMode: z.object({
+    'statistical-area': CoverageSchema,
+    locality: CoverageSchema,
+  }),
   resultUrls: z.object({
     'statistical-area': z.string().min(1),
     locality: z.string().min(1),
@@ -48,7 +51,7 @@ const ElectionCatalogSchema = z.object({
 })
 
 export const AppCatalogSchema = z.object({
-  schemaVersion: z.literal(1),
+  schemaVersion: z.literal(2),
   buildId: z.string().min(8),
   generatedAt: z.string().datetime(),
   source: z.object({
@@ -86,7 +89,7 @@ const PartySchema = z.object({
 
 const ResultRecordSchema = z.object({
   id: z.string().min(1),
-  geographyType: z.enum(['statistical-area', 'locality', 'custom']),
+  geographyType: z.enum(['statistical-area', 'locality', 'custom', 'envelope']),
   names: LocalizedTextSchema,
   code: z.string().min(1),
   localityId: z.string().nullable(),
@@ -110,12 +113,14 @@ const ResultRecordSchema = z.object({
 })
 
 export const ElectionResultsSchema = z.object({
-  schemaVersion: z.literal(1),
+  schemaVersion: z.literal(2),
   electionId: z.string().regex(/^K\d+$/),
   geographyMode: GeographyModeSchema,
   coverage: CoverageSchema,
   parties: z.array(PartySchema),
   records: z.array(ResultRecordSchema),
+  envelope: ResultRecordSchema.nullable(),
+  hiddenGeographyIds: z.array(z.string().min(1)),
 })
 
 export type Language = z.infer<typeof LanguageSchema>

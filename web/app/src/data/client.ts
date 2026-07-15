@@ -1,7 +1,7 @@
 import { AppCatalogSchema, ElectionResultsSchema } from '../domain/schemas'
 import type { AppCatalog, ElectionResults, GeographyMode } from '../domain/schemas'
 
-const DATA_ROOT = `${import.meta.env.BASE_URL}data/v1/`
+const DATA_ROOT = `${import.meta.env.BASE_URL}data/v2/`
 const catalogUrl = `${DATA_ROOT}catalog.json`
 
 let catalogRequest: Promise<AppCatalog> | undefined

@@ -6,9 +6,9 @@ Last updated: 2026-07-15
 
 The statistical-area map needs an approximate kalpi-to-statistical-area assignment. Official ballot-result rows include votes and kalpi identifiers, but no kalpi polygons or coordinates.
 
-The project approach is:
+The statistical-area approach is:
 
-> poll result row -> polling-place address/place source -> geocoded point -> 2022 statistical area -> dissolved 2022 locality
+> poll result row -> polling-place address/place source -> geocoded point -> 2022 statistical area
 
 There is also a shortcut:
 
@@ -16,7 +16,7 @@ There is also a shortcut:
 
 This is intentionally approximate. It maps the polling-place building, not each voter's residential statistical area.
 
-Both statistical-area and locality product totals should be generated from this row-level assignment pipeline. Official locality aggregate files are useful as QA/reference material, but they are not product input totals.
+Locality totals use the same normalized ballot rows but join directly through the reviewed locality crosswalk; they do not wait for address geocoding. Official locality aggregate files are useful as QA/reference material, but they are not product input totals.
 
 Current product scope is K17-K25. K16 / 2003 is deferred until a usable election-specific polling-place address source is recovered.
 
@@ -315,7 +315,8 @@ Rules:
 
 - Exact current locality-code matches can be automated.
 - Historical aliases, spelling changes, merges, and splits must be reviewed and recorded.
-- Reviewed split localities and Sha'ar Shomron are address-target sets: use each ballot row's address/geocoded point to assign it to the correct current polygon. Do not join current polygons, and do not split votes heuristically.
+- In statistical-area mode, reviewed split localities and Sha'ar Shomron are address-target sets: use each ballot row's address/geocoded point to assign it to the correct component polygon.
+- In locality mode, באקה-ג'ת, עיר כרמל, שגור, and שער שומרון use reviewed election-specific unions of their component locality polygons. This preserves the election-time municipality without heuristically splitting votes.
 - Reviewed custom buckets (`TRIBE`, `GAZA`, `N.S.`, `HEBRON`) are assigned to synthetic point-size polygon geographies and preserve source-row contributions.
 - A merge can use the single-stat shortcut only if the merged 2022 target has exactly one statistical area, or if a reviewed rule assigns the old locality unambiguously.
 

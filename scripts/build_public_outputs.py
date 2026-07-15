@@ -131,6 +131,12 @@ def main() -> None:
         "locality_id",
         "locality_code",
         "locality_name",
+        "locality_assignment_status",
+        "locality_geography_type",
+        "locality_geography_id",
+        "locality_result_code",
+        "locality_result_name",
+        "is_locality_mapped",
         "custom_geography_id",
         "is_mapped",
         "is_geographic",
@@ -151,10 +157,36 @@ def main() -> None:
         merged = wide.merge(assignments[assignment_columns], on="source_row_uid", how="left")
         merged = numeric(merged, NUMERIC_CORE + parties)
         mapped = bool_series(merged["is_mapped"])
+        locality_mapped = bool_series(merged["is_locality_mapped"])
         stat_rows = merged[mapped & (merged["geography_type"] == "statistical_area")].copy()
         custom_rows = merged[mapped & (merged["geography_type"] == "custom_geography")].copy()
         geographic_rows = merged[mapped & bool_series(merged["is_geographic"])].copy()
         unmapped_rows = merged[~mapped].copy()
+        geographic_scope_mask = ~merged["locality_geography_type"].isin(
+            ["envelope", "non_geographic"]
+        )
+        geographic_scope = merged[geographic_scope_mask].copy()
+        locality_rows = merged[
+            locality_mapped
+            & merged["locality_geography_type"].isin(["locality", "composite_locality"])
+        ].copy()
+        locality_rows["locality_id"] = locality_rows["locality_geography_id"]
+        locality_rows["locality_code"] = locality_rows["locality_result_code"]
+        locality_rows["locality_name"] = locality_rows["locality_result_name"]
+        locality_geographic_rows = merged[locality_mapped].copy()
+        locality_unmapped_rows = merged[geographic_scope_mask & ~locality_mapped].copy()
+        envelope_rows = merged[merged["locality_geography_type"] == "envelope"].copy()
+        envelope_rows["envelope_id"] = "envelope:official"
+        envelope_rows["envelope_name_he"] = "מעטפות חיצוניות"
+        envelope_rows["envelope_name_en"] = "Envelope votes"
+
+        if not locality_unmapped_rows.empty:
+            unresolved = ", ".join(
+                sorted(locality_unmapped_rows["source_row_uid"].astype(str).head(10).tolist())
+            )
+            raise ValueError(
+                f"{election} has {len(locality_unmapped_rows)} geographic rows without a locality assignment: {unresolved}"
+            )
 
         stat_agg = aggregate(
             stat_rows,
@@ -170,13 +202,18 @@ def main() -> None:
             parties,
         )
         locality_agg = aggregate(
-            stat_rows,
+            locality_rows,
             ["election", "locality_id", "locality_code", "locality_name"],
             parties,
         )
         custom_agg = aggregate(
             custom_rows,
             ["election", "custom_geography_id", "geography_id", "locality_name"],
+            parties,
+        )
+        envelope_agg = aggregate(
+            envelope_rows,
+            ["election", "envelope_id", "envelope_name_he", "envelope_name_en"],
             parties,
         )
 
@@ -208,17 +245,22 @@ def main() -> None:
             "statistical_area_results": OUT_DIR / "statistical_area_results" / f"{election.lower()}.csv",
             "locality_results": OUT_DIR / "locality_results" / f"{election.lower()}.csv",
             "custom_geography_results": OUT_DIR / "custom_geography_results" / f"{election.lower()}.csv",
+            "envelope_results": OUT_DIR / "envelope_results" / f"{election.lower()}.csv",
             "ballot_contributions": OUT_DIR / "ballot_contributions" / f"{election.lower()}.csv",
             "unmapped_rows": OUT_DIR / "unmapped_rows" / f"{election.lower()}.csv",
         }
         write_df(stat_agg, outputs["statistical_area_results"])
         write_df(locality_agg, outputs["locality_results"])
         write_df(custom_agg, outputs["custom_geography_results"])
+        write_df(envelope_agg, outputs["envelope_results"])
         write_df(geographic_rows[contribution_columns], outputs["ballot_contributions"])
         write_df(unmapped_rows[unmapped_columns], outputs["unmapped_rows"])
 
         total_actual = int(merged["actual_voters"].sum())
         mapped_actual = int(geographic_rows["actual_voters"].sum())
+        geographic_scope_actual = int(geographic_scope["actual_voters"].sum())
+        locality_mapped_actual = int(locality_geographic_rows["actual_voters"].sum())
+        statistical_pending = merged[geographic_scope_mask & ~mapped]
         pending = merged[
             merged["geography_assignment_status"].str.startswith("missing_geocode")
             | merged["geography_assignment_status"].str.startswith("geocoding_input_not_ready")
@@ -229,9 +271,33 @@ def main() -> None:
                 "election": election,
                 "rows": len(merged),
                 "total_actual_voters": total_actual,
+                "geographic_scope_rows": len(geographic_scope),
+                "geographic_scope_actual_voters": geographic_scope_actual,
                 "mapped_geographic_rows": len(geographic_rows),
                 "mapped_geographic_actual_voters": mapped_actual,
                 "mapped_actual_voter_share": round(mapped_actual / total_actual, 6) if total_actual else 0,
+                "statistical_mode_mapped_rows": len(geographic_rows),
+                "statistical_mode_mapped_actual_voters": mapped_actual,
+                "statistical_mode_mapped_actual_voter_share": round(
+                    mapped_actual / geographic_scope_actual, 6
+                )
+                if geographic_scope_actual
+                else 0,
+                "statistical_mode_pending_rows": len(statistical_pending),
+                "statistical_mode_pending_actual_voters": int(
+                    statistical_pending["actual_voters"].sum()
+                ),
+                "locality_mode_mapped_rows": len(locality_geographic_rows),
+                "locality_mode_mapped_actual_voters": locality_mapped_actual,
+                "locality_mode_mapped_actual_voter_share": round(
+                    locality_mapped_actual / geographic_scope_actual, 6
+                )
+                if geographic_scope_actual
+                else 0,
+                "locality_mode_pending_rows": len(locality_unmapped_rows),
+                "locality_mode_pending_actual_voters": int(
+                    locality_unmapped_rows["actual_voters"].sum()
+                ),
                 "statistical_area_rows": len(stat_rows),
                 "statistical_area_actual_voters": int(stat_rows["actual_voters"].sum()),
                 "custom_geography_rows": len(custom_rows),
@@ -240,6 +306,16 @@ def main() -> None:
                 "pending_or_missing_geocode_actual_voters": int(pending["actual_voters"].sum()),
                 "unmapped_rows": len(unmapped_rows),
                 "unmapped_actual_voters": int(unmapped_rows["actual_voters"].sum()),
+                "envelope_rows": len(envelope_rows),
+                "envelope_actual_voters": int(envelope_rows["actual_voters"].sum()),
+                "special_non_geographic_rows": int(
+                    (merged["locality_geography_type"] == "non_geographic").sum()
+                ),
+                "special_non_geographic_actual_voters": int(
+                    merged.loc[
+                        merged["locality_geography_type"] == "non_geographic", "actual_voters"
+                    ].sum()
+                ),
             }
         )
         manifest["elections"].append(election)
@@ -254,7 +330,8 @@ def main() -> None:
         print(
             f"{row['election']}: mapped_rows={row['mapped_geographic_rows']} "
             f"pending_geocode={row['pending_or_missing_geocode_rows']} "
-            f"mapped_share={row['mapped_actual_voter_share']:.2%}"
+            f"stat_share={row['statistical_mode_mapped_actual_voter_share']:.2%} "
+            f"locality_share={row['locality_mode_mapped_actual_voter_share']:.2%}"
         )
 
 
