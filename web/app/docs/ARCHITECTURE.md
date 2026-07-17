@@ -2,7 +2,9 @@
 
 ## Product boundary
 
-The first product is a static, local-first web application. It reads versioned assets generated from the existing Python pipeline and does not own election ingestion, geocoding, assignment, or aggregation.
+The first product is a static, local-first web application. It reads versioned
+assets generated from the existing Python pipeline and does not own election
+ingestion, assignment, or aggregation.
 
 The web app supports:
 
@@ -122,7 +124,9 @@ Move to tiles before public launch if any of these remain true after compression
 - A polygon without mapped results remains visible but muted.
 - The UI never interprets an absent polygon result as zero votes.
 - Mapped coverage is shown for every election and is prominent while it remains partial.
-- Coverage is mode-specific: locality coverage is complete; historical statistical coverage ranges from 92.37% to 94.65% by election. The partial-presence locality audit remains open.
+- Coverage is mode-specific: locality result-row coverage is complete;
+  historical statistical coverage ranges from 92.37% to 99.30% by election.
+  The partial-presence locality audit remains open.
 - Envelope votes are excluded from polygon coverage and remain visible through the separate national result control.
 - Active composite localities hide their 2022 component features; inactive composites are hidden. A joined-register union replaces exactly one published host result and is rejected if another union claims that host or an attached component has a standalone result. Its visible title/code remain the host's, and attached polygon names are exposed separately through the details-panel info tooltip. Other hidden-result conflicts remain fatal.
 - `data/manual/locality_display_overrides.csv` can preserve an election-time name on 2022 geometry or hide a reviewed feature that has no standalone result. The geometry remains canonical and the same hidden-result rejection applies.
@@ -139,7 +143,7 @@ track completion or roadmap state. The repository's sole completion tracker is
 
 ## Architectural Non-goals
 
-- No browser-side election ingestion, geocoding, or assignment logic.
+- No browser-side election ingestion or assignment logic.
 - No server database or API.
 - No claim that derivative ArcGIS display footprints are complete official CBS boundaries.
 - No public basemap dependency or API key.

@@ -28,10 +28,12 @@ CORE_COLUMNS = {
     "actual_voters",
     "valid_votes",
     "invalid_votes",
-    "source_address",
     "is_envelope",
 }
 NUMERIC_CORE = ["eligible_voters", "actual_voters", "valid_votes", "invalid_votes"]
+K17_GUSH_KATIF_ELIGIBLE_REGISTER = 3_569
+K17_ORDINARY_ELIGIBLE_REGISTER = 5_011_053
+K17_NATIONAL_ELIGIBLE_REGISTER = 5_014_622
 
 
 def bool_series(series: pd.Series) -> pd.Series:
@@ -145,8 +147,6 @@ def main() -> None:
         "is_geographic",
         "final_assignment_method",
         "final_assignment_source",
-        "address_match_status",
-        "address_query",
         "unresolved_reason",
     ]
 
@@ -247,7 +247,29 @@ def main() -> None:
             parties,
         )
         if not envelope_agg.empty:
-            envelope_agg["eligible_voters"] = 0
+            source_non_geographic_eligible = int(envelope_agg["eligible_voters"].sum())
+            envelope_agg["eligible_voters"] = (
+                source_non_geographic_eligible + K17_GUSH_KATIF_ELIGIBLE_REGISTER
+                if election == "K17"
+                else 0
+            )
+        if election == "K17":
+            ordinary_eligible = int(
+                merged.loc[
+                    ~bool_series(merged["is_envelope"]), "eligible_voters"
+                ].sum()
+            )
+            if ordinary_eligible != K17_ORDINARY_ELIGIBLE_REGISTER:
+                raise ValueError(
+                    f"K17 ordinary eligible register is {ordinary_eligible}, "
+                    f"expected {K17_ORDINARY_ELIGIBLE_REGISTER}"
+                )
+            envelope_eligible = int(envelope_agg["eligible_voters"].sum())
+            geographic_eligible = int(geographic_scope["eligible_voters"].sum())
+            if ordinary_eligible + K17_GUSH_KATIF_ELIGIBLE_REGISTER != K17_NATIONAL_ELIGIBLE_REGISTER:
+                raise ValueError("K17 ordinary plus Gush Katif reconciliation failed")
+            if geographic_eligible + envelope_eligible != K17_NATIONAL_ELIGIBLE_REGISTER:
+                raise ValueError("K17 national eligible-register reconciliation failed")
 
         contribution_columns = [
             "source_row_uid",
@@ -274,7 +296,7 @@ def main() -> None:
             "valid_votes",
             "invalid_votes",
         ] + parties
-        unmapped_columns = contribution_columns + ["address_match_status", "address_query", "unresolved_reason"]
+        unmapped_columns = contribution_columns + ["unresolved_reason"]
 
         outputs = {
             "statistical_area_results": OUT_DIR / "statistical_area_results" / f"{election.lower()}.csv",
@@ -296,11 +318,6 @@ def main() -> None:
         geographic_scope_actual = int(geographic_scope["actual_voters"].sum())
         locality_mapped_actual = int(locality_geographic_rows["actual_voters"].sum())
         statistical_pending = merged[geographic_scope_mask & ~mapped]
-        pending = merged[
-            merged["geography_assignment_status"].str.startswith("missing_geocode")
-            | merged["geography_assignment_status"].str.startswith("geocoding_input_not_ready")
-            | (merged["geography_assignment_status"] == "geocoded_point_outside_stat_area")
-        ]
         summary_rows.append(
             {
                 "election": election,

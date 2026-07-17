@@ -53,6 +53,10 @@ describe('DetailsPanel', () => {
     expect(html.match(/<dt>/g)).toHaveLength(3)
     expect(html).toContain('List 10')
     expect(html).toContain('<span class="party-votes">0</span>')
+    expect(html).toContain('<h3>Vote breakdown</h3>')
+    expect(html).toContain('1 Polling stations')
+    expect(html).toContain('<span class="party-share">20.0%</span>')
+    expect(html).toContain('<span class="party-share">0.0%</span>')
     expect(html).not.toContain('<dt>Lead</dt>')
   })
 
@@ -105,6 +109,7 @@ describe('DetailsPanel', () => {
     )
 
     expect(html.match(/<dt>/g)).toHaveLength(2)
+    expect(html).toContain('class="metric-grid metric-grid--envelope"')
     expect(html).not.toContain('Invalid votes')
     expect(html).not.toContain('Turnout')
     expect(html).not.toContain('3,094')

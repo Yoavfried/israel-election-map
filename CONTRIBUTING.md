@@ -15,7 +15,9 @@ Contributions should preserve source provenance and avoid inventing geographic p
 - Do not edit generated files in `data/processed/` or `web/app/public/data/` by hand.
 - Do not edit `public-data/v1` by hand. Change the source pipeline or release
   builder, regenerate it, and review the manifest and validation report.
-- Do not infer voter geography from a polling-place address.
+- Do not infer voter geography without election-specific assignment evidence.
+- Label every approved inferred link with a distinct row-level method/source;
+  never present it as an official crosswalk assignment.
 - Do not replace official totals with derivative ArcGIS values.
 - Keep assignment geometry and display-only geometry provenance separate.
 
@@ -37,5 +39,6 @@ Contributions should preserve source provenance and avoid inventing geographic p
 - User-facing map changes should be checked in Hebrew and English and at desktop and mobile widths.
 - Update `docs/PROJECT_STATUS.md` only when a workstream's actual completion state changes.
 
-The repository does not yet have a selected license. External contributions
-should wait until contribution and licensing terms are explicitly established.
+By contributing, you agree that your contribution may be distributed under the
+repository's MIT License. Official and third-party data remain subject to the
+source terms described in `THIRD_PARTY_NOTICES.md`.

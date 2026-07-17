@@ -20,6 +20,9 @@ ASSIGNMENTS = PROCESSED_DIR / "assignments" / "ballot_geography_assignments.csv"
 PUBLIC_DIR = PROCESSED_DIR / "public"
 GEOGRAPHY_DIR = PROCESSED_DIR / "geographies"
 PARTY_REGISTRY = MANUAL_DIR / "party_registry.csv"
+ARCGIS_RECONSTRUCTION_REVIEWS = (
+    MANUAL_DIR / "arcgis_assignment_reconstruction_reviews.csv"
+)
 
 ELECTION_VINTAGES = {
     "K17": 1995,
@@ -46,7 +49,6 @@ CORE_COLUMNS = [
     "actual_voters",
     "valid_votes",
     "invalid_votes",
-    "source_address",
     "is_envelope",
 ]
 
@@ -326,6 +328,12 @@ def build_ballot_exports(
     if assignments["source_row_uid"].duplicated().any():
         raise ValueError("Final assignments contain duplicate source_row_uid values")
     assignment_columns = ["source_row_uid", *ASSIGNMENT_COLUMNS]
+    reconstruction_reviews = pd.read_csv(
+        ARCGIS_RECONSTRUCTION_REVIEWS, dtype=str, encoding="utf-8-sig"
+    ).fillna("")
+    reconstruction_reviews = reconstruction_reviews[
+        reconstruction_reviews["decision"] == "approved"
+    ].copy()
     validation_rows: list[dict[str, Any]] = []
     total_rows = 0
 
@@ -352,6 +360,37 @@ def build_ballot_exports(
         )
         if selected["geography_assignment_status"].eq("").any():
             raise ValueError(f"{election} contains rows without final assignment metadata")
+
+        reconstructed = selected[
+            selected["final_assignment_method"]
+            == "arcgis_residual_partition_tier_a"
+        ]
+        election_reviews = reconstruction_reviews[
+            reconstruction_reviews["election"] == election
+        ]
+        expected_reconstructed_rows = int(
+            pd.to_numeric(
+                election_reviews["candidate_rows"], errors="raise"
+            ).sum()
+        )
+        expected_reconstructed_voters = int(
+            pd.to_numeric(
+                election_reviews["candidate_actual_voters"], errors="raise"
+            ).sum()
+        )
+        reconstructed_voters = int(
+            pd.to_numeric(
+                reconstructed["actual_voters"], errors="raise"
+            ).sum()
+        )
+        if (
+            len(reconstructed) != expected_reconstructed_rows
+            or reconstructed_voters != expected_reconstructed_voters
+        ):
+            raise ValueError(
+                f"{election} reconstructed assignment totals do not match "
+                "the reviewed Tier A decisions"
+            )
 
         party_sum = (
             selected[parties]
@@ -417,6 +456,8 @@ def build_ballot_exports(
                 "party_columns": len(parties),
                 "stat_area_vintage": vintage,
                 "statistically_mapped_rows": len(stat_rows),
+                "reconstructed_stat_assignment_rows": len(reconstructed),
+                "reconstructed_stat_assignment_actual_voters": reconstructed_voters,
                 "locality_mapped_rows": len(locality_rows),
                 "missing_stat_geometry_ids": len(missing_stat_ids),
                 "missing_locality_geometry_ids": len(missing_locality_ids),
@@ -651,6 +692,13 @@ def main() -> None:
         party_registry,
         set(geography_metadata["geography_id"].astype(str)),
         manifest,
+    )
+    copy_table(
+        ARCGIS_RECONSTRUCTION_REVIEWS,
+        OUT_ROOT / "metadata" / "arcgis_reconstruction_reviews.csv",
+        manifest,
+        "assignment-provenance",
+        "Reviewed locality-election decisions for inferred ArcGIS residual assignments.",
     )
     write_manifests(manifest, validation_rows, total_rows, aggregate_validation)
 

@@ -152,6 +152,37 @@ describe('web data compiler', () => {
     expect(buildDisplayMarkers(output).features).toHaveLength(0)
   })
 
+  it('honors an explicit marker override for a non-exclusive historical area', () => {
+    const source = {
+      type: 'FeatureCollection',
+      features: [
+        {
+          type: 'Feature',
+          properties: {
+            stat_area_id: 'stat1995:9400008',
+            locality_id: 'loc:9400',
+            locality_code: 9400,
+            locality_name_he: '9400',
+            locality_name_en: 'YEHUD-NEWE EFRAYIM',
+            stat_area_number: 8,
+            stat_area_vintage: 1995,
+            display_mode: 'marker',
+          },
+          geometry: {
+            type: 'Polygon',
+            coordinates: [[[34.87, 32.02], [34.89, 32.02], [34.89, 32.04], [34.87, 32.02]]],
+          },
+        },
+      ],
+    }
+    const empty = { type: 'FeatureCollection', features: [] }
+
+    const output = pruneGeography(source, 'statistical-area', empty)
+
+    expect(output.features[0].properties.displayMode).toBe('marker')
+    expect(buildDisplayMarkers(output).features[0].geometry.type).toBe('Point')
+  })
+
   it('adds reviewed composite localities and hides their components only in active elections', () => {
     const localities = {
       type: 'FeatureCollection',
@@ -339,6 +370,7 @@ describe('web data compiler', () => {
       colorStatus: 'reviewed',
     })
     expect(payload.envelope?.geographyType).toBe('envelope')
+    expect(payload.envelope?.totals.turnout).toBeNull()
   })
 
   it('keeps fallback party colors deterministic by ballot letter', () => {

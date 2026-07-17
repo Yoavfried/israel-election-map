@@ -13,12 +13,9 @@ STAGES = [
     ["scripts/build_geographies.py"],
     ["scripts/build_historical_geographies.py"],
     ["scripts/normalize_election_results.py"],
-    ["scripts/normalize_polling_places.py"],
     ["scripts/build_assignment_plan.py"],
     ["scripts/build_historical_ballot_assignments.py"],
-    ["scripts/build_geocoding_input.py"],
-    ["scripts/build_geocoding_work_units.py"],
-    ["scripts/audit_polling_place_address_quality.py"],
+    ["scripts/audit_arcgis_assignment_reconstruction.py"],
     ["scripts/build_final_geography_assignments.py"],
     ["scripts/build_public_outputs.py"],
     ["scripts/build_public_data_release.py"],
@@ -46,16 +43,6 @@ GEOGRAPHY_OUTPUTS = [
 ]
 
 
-def require_k18_resolved() -> None:
-    path = PROCESSED_DIR / "k18_polling_places_resolved.csv"
-    if path.exists():
-        return
-    raise SystemExit(
-        "Missing data/processed/k18_polling_places_resolved.csv. "
-        "Run: python scripts/extract_k18_polling_places.py --validate"
-    )
-
-
 def require_existing_geographies() -> None:
     missing = [path for path in GEOGRAPHY_OUTPUTS if not path.exists()]
     if not missing:
@@ -76,7 +63,6 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    require_k18_resolved()
     if args.skip_geographies:
         require_existing_geographies()
     for stage in STAGES:

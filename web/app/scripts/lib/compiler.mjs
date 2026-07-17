@@ -206,12 +206,16 @@ export function pruneGeography(
     const hasDetailedDisplayGeometry = String(
       properties.display_geometry_source ?? '',
     ).startsWith('arcgis_')
-    const displayMode =
-      isPointProxyLocalityCode(properties.locality_code) &&
+    const requestedDisplayMode = String(properties.display_mode ?? '').trim()
+    if (requestedDisplayMode && !['polygon', 'marker'].includes(requestedDisplayMode)) {
+      throw new Error(`${id} has invalid display mode: ${requestedDisplayMode}`)
+    }
+    const displayMode = requestedDisplayMode ||
+      (isPointProxyLocalityCode(properties.locality_code) &&
       !hasDetailedDisplayGeometry &&
       isPointLikeGeometry(feature.geometry)
         ? 'marker'
-        : 'polygon'
+        : 'polygon')
     return {
       type: 'Feature',
       id,
@@ -608,7 +612,12 @@ function buildResultRecord(row, id, geographyType, metadata, partyColumns) {
       actualVoters,
       validVotes,
       invalidVotes: numberValue(row.invalid_votes, `${id}.invalid_votes`),
-      turnout: eligibleVoters > 0 ? actualVoters / eligibleVoters : null,
+      turnout:
+        geographyType === 'envelope'
+          ? null
+          : eligibleVoters > 0
+            ? actualVoters / eligibleVoters
+            : null,
     },
     winner: {
       partyId: winningPartyId,

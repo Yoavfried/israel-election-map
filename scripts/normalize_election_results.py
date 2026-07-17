@@ -22,10 +22,11 @@ ELIGIBLE_FIELDS = ["בזב", "בז''ב"]
 ACTUAL_FIELDS = ["מצביעים"]
 VALID_FIELDS = ["כשרים"]
 INVALID_FIELDS = ["פסולים"]
-ADDRESS_FIELDS = ["כתובת"]
+NON_RESULT_FIELDS = ["\u05db\u05ea\u05d5\u05d1\u05ea"]
 
 ADMIN_FIELDS = {
     "_id",
+    "\u05ea. \u05e2\u05d3\u05db\u05d5\u05df",
     "סמל ועדה",
     "ברזל",
     "ריכוז",
@@ -39,7 +40,7 @@ CORE_FIELD_NAMES = set(
     + ACTUAL_FIELDS
     + VALID_FIELDS
     + INVALID_FIELDS
-    + ADDRESS_FIELDS
+    + NON_RESULT_FIELDS
 ) | ADMIN_FIELDS
 
 
@@ -86,7 +87,6 @@ def normalize_resource(
         invalid = int_value(first_value(source_row, INVALID_FIELDS))
         if invalid == 0 and actual and valid and actual >= valid:
             invalid = actual - valid
-        source_address = normalize_spaces(first_value(source_row, ADDRESS_FIELDS))
         source_row_uid = f"{election}:{source_row_id}"
         envelope = is_envelope(locality_code, locality_name)
         if election == "K17" and not envelope:
@@ -116,7 +116,6 @@ def normalize_resource(
             "actual_voters": actual,
             "valid_votes": valid,
             "invalid_votes": invalid,
-            "source_address": source_address,
             "is_envelope": envelope,
         }
         row_index.append(core)
@@ -186,7 +185,6 @@ def main() -> None:
         "actual_voters",
         "valid_votes",
         "invalid_votes",
-        "source_address",
         "is_envelope",
     ]
     party_fields = ["election", "election_number", "ballot_letter", "source_column", "total_votes"]

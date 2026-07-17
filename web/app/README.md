@@ -42,7 +42,10 @@ npm run data:build -- --source C:\path\to\data\processed
 
 The compiler reads promoted public assignment outputs. Locality mode covers the complete K17-K25 geographic scope and includes reviewed election-specific composite municipalities and joined-register unions. Official envelope results appear as a separate selectable national aggregate.
 
-Statistical mode uses official ballot-to-area crosswalks and election-specific historical geometry: 1995 for K17, 2008 for K18, and 2011 for K19-K25. Address-geocoding candidates are not eligible assignment inputs. Result payloads disclose mapped-voter coverage and preserve pending rows instead of inferring their polygons.
+Statistical mode uses official ballot-to-area crosswalks and election-specific
+historical geometry: 1995 for K17, 2008 for K18, and 2011 for K19-K25. Result
+payloads disclose mapped-voter coverage and preserve pending rows instead of
+inferring their polygons.
 
 Party/list metadata and presentation configuration are compiled into the map
 separately from the downloadable public-data release.

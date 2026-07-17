@@ -50,13 +50,43 @@ ARCGIS_2011_SUPPLEMENT_IDS = {
     34000001,
     36370001,
     37970001,
+    27100001,
+    14110001,
+    14120001,
+    14130001,
+    14140001,
+    14150001,
+    14160001,
+    14180001,
 }
+ARCGIS_2011_SUPPLEMENT_SOURCES = [
+    {
+        "path": "elections2015_statistical_areas.geojson",
+        "area_id": "YeshuvStat",
+        "locality_code": "SemelYeshuv",
+        "stat_area_number": "StatZone",
+        "locality_name_he": "ShemYeshuv",
+        "locality_name_en": "ShemYeshuvEng",
+        "source": "arcgis_systematics_elections2015_exact_id_supplement",
+    },
+    {
+        "path": "elections2019_statistical_areas.geojson",
+        "area_id": "CityStat11",
+        "locality_code": "CityCode",
+        "stat_area_number": "StatZone11",
+        "locality_name_he": "CityNameHeb",
+        "locality_name_en": "CityNameEng",
+        "source": "arcgis_systematics_elections2019_exact_id_supplement",
+    },
+]
 TRANSITION_1995_TARGETS = {
     (9400, 8): {
         "locality_name_he": "\u05d9\u05d4\u05d5\u05d3-\u05e0\u05d5\u05d5\u05d4 \u05d0\u05e4\u05e8\u05d9\u05dd",
         "locality_name_en": "YEHUD-NEWE EFRAYIM",
     }
 }
+NON_EXCLUSIVE_DISPLAY_MARKERS = {1995: {"stat1995:9400008"}}
+UNSIMPLIFIED_DISPLAY_VINTAGES = {1995, 2008}
 
 VINTAGES = {
     1995: {
@@ -325,13 +355,40 @@ def add_1995_transition_unions(
 def add_2011_arcgis_exact_id_supplements(
     stats: gpd.GeoDataFrame,
 ) -> tuple[gpd.GeoDataFrame, list[dict[str, Any]]]:
-    path = ARCGIS_DIR / "elections2015_statistical_areas.geojson"
-    if not path.exists():
-        raise FileNotFoundError(f"Missing audited ArcGIS 2015 layer: {path}")
-    source = gpd.read_file(path, engine="pyogrio")
-    source["yishuv_stat"] = integer_series(source["YeshuvStat"])
-    source = source[source["yishuv_stat"].isin(ARCGIS_2011_SUPPLEMENT_IDS)].copy()
-    source = source.to_crs(stats.crs)
+    source_frames: list[gpd.GeoDataFrame] = []
+    for config in ARCGIS_2011_SUPPLEMENT_SOURCES:
+        path = ARCGIS_DIR / str(config["path"])
+        if not path.exists():
+            raise FileNotFoundError(f"Missing audited ArcGIS layer: {path}")
+        source = gpd.read_file(path, engine="pyogrio")
+        source = source.rename(
+            columns={
+                str(config["area_id"]): "yishuv_stat",
+                str(config["locality_code"]): "locality_code",
+                str(config["stat_area_number"]): "stat_area_number",
+                str(config["locality_name_he"]): "locality_name_he",
+                str(config["locality_name_en"]): "locality_name_en",
+            }
+        )
+        source["yishuv_stat"] = integer_series(source["yishuv_stat"])
+        source = source[source["yishuv_stat"].isin(ARCGIS_2011_SUPPLEMENT_IDS)].copy()
+        source["supplement_source"] = str(config["source"])
+        source_frames.append(
+            source[
+                [
+                    "yishuv_stat",
+                    "locality_code",
+                    "stat_area_number",
+                    "locality_name_he",
+                    "locality_name_en",
+                    "supplement_source",
+                    "geometry",
+                ]
+            ].to_crs(stats.crs)
+        )
+    source = gpd.GeoDataFrame(
+        pd.concat(source_frames, ignore_index=True), geometry="geometry", crs=stats.crs
+    )
 
     additions: list[gpd.GeoDataFrame] = []
     aliases: list[dict[str, Any]] = []
@@ -340,28 +397,30 @@ def add_2011_arcgis_exact_id_supplements(
         if yishuv_stat in existing_ids:
             continue
         matches = source[source["yishuv_stat"] == yishuv_stat]
-        if len(matches) != 1:
+        if matches.empty:
             raise ValueError(
-                f"ArcGIS 2015 supplement {yishuv_stat} has {len(matches)} matching features"
+                f"ArcGIS supplement {yishuv_stat} has no matching feature"
             )
         match = matches.iloc[0]
-        locality_code = int(match["SemelYeshuv"])
-        stat_area_number = int(match["StatZone"])
+        locality_code = int(match["locality_code"])
+        stat_area_number = int(match["stat_area_number"])
         record = {
             "locality_code": locality_code,
-            "locality_name_he": preferred_text(pd.Series([match["ShemYeshuv"]])),
-            "locality_name_en": preferred_text(pd.Series([match["ShemYeshuvEng"]])),
+            "locality_name_he": preferred_text(pd.Series([match["locality_name_he"]])),
+            "locality_name_en": preferred_text(pd.Series([match["locality_name_en"]])),
             "stat_area_number": stat_area_number,
             "yishuv_stat": yishuv_stat,
             "stat_area_vintage": 2011,
             "locality_id": f"loc:{locality_code}",
             "stat_area_id": f"stat2011:{yishuv_stat}",
-            "geometry_source": "arcgis_systematics_elections2015_exact_id_supplement",
+            "geometry_source": match["supplement_source"],
             "geometry": valid_geometry(match.geometry, stats.crs),
         }
         addition = gpd.GeoDataFrame([record], geometry="geometry", crs=stats.crs)
         additions.append(addition)
-        aliases.append(identity_alias(2011, addition.iloc[0], "arcgis_exact_id_supplement"))
+        aliases.append(
+            identity_alias(2011, addition.iloc[0], "arcgis_exact_id_supplement")
+        )
     if additions:
         stats = gpd.GeoDataFrame(
             pd.concat([stats, *additions], ignore_index=True),
@@ -408,6 +467,7 @@ def public_columns(stats: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
         "stat_area_number",
         "geometry_source",
         "display_geometry_source",
+        "display_mode",
         "geometry",
     ]
     output = stats.copy()
@@ -415,6 +475,8 @@ def public_columns(stats: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
         output["display_geometry_source"] = output.get(
             "geometry_source", "official_cbs"
         )
+    if "display_mode" not in output:
+        output["display_mode"] = ""
     return output[columns]
 
 
@@ -424,6 +486,35 @@ def simplify(stats: gpd.GeoDataFrame, tolerance: float) -> gpd.GeoDataFrame:
         tolerance, preserve_topology=True
     ).make_valid()
     return output
+
+
+def validate_no_material_display_overlaps(
+    stats: gpd.GeoDataFrame, vintage: int, minimum_area_m2: float = 1.0
+) -> None:
+    polygons = stats[stats["display_mode"].fillna("") != "marker"].to_crs(
+        "EPSG:2039"
+    )
+    failures: list[tuple[str, str, float]] = []
+    for left_position, right_position in zip(
+        *polygons.sindex.query(polygons.geometry, predicate="intersects")
+    ):
+        if left_position >= right_position:
+            continue
+        left = polygons.iloc[left_position]
+        right = polygons.iloc[right_position]
+        overlap_area = left.geometry.intersection(right.geometry).area
+        if overlap_area > minimum_area_m2:
+            failures.append(
+                (
+                    str(left["stat_area_id"]),
+                    str(right["stat_area_id"]),
+                    round(overlap_area, 3),
+                )
+            )
+    if failures:
+        raise ValueError(
+            f"{vintage} display geometry has material polygon overlaps: {failures[:10]}"
+        )
 
 
 def write_geojson(stats: gpd.GeoDataFrame, path: Path) -> None:
@@ -482,6 +573,9 @@ def main() -> None:
         display, replacements, rejected_codes = apply_detailed_display_geometries(
             official, detailed_by_locality, "official_cbs"
         )
+        display["display_mode"] = ""
+        marker_ids = NON_EXCLUSIVE_DISPLAY_MARKERS.get(vintage, set())
+        display.loc[display["stat_area_id"].isin(marker_ids), "display_mode"] = "marker"
         official_public = public_columns(official_wgs84)
         display_public = public_columns(display)
 
@@ -489,8 +583,15 @@ def main() -> None:
             official_public,
             OUT_DIR / f"statistical_areas_{vintage}.geojson",
         )
+        display_output = (
+            display_public
+            if vintage in UNSIMPLIFIED_DISPLAY_VINTAGES
+            else simplify(display_public, args.simplify_tolerance)
+        )
+        if vintage in UNSIMPLIFIED_DISPLAY_VINTAGES:
+            validate_no_material_display_overlaps(display_output, vintage)
         write_geojson(
-            simplify(display_public, args.simplify_tolerance),
+            display_output,
             OUT_DIR / f"statistical_areas_{vintage}.display.simplified.geojson",
         )
         rows = metadata_rows(official)
@@ -511,6 +612,8 @@ def main() -> None:
             "assignment_geometry_supplements": len(supplements),
             "display_geometry_replacements": replacements,
             "display_geometry_rejected_codes": sorted(set(rejected_codes)),
+            "non_exclusive_display_markers": sorted(marker_ids),
+            "display_geometry_simplified": vintage not in UNSIMPLIFIED_DISPLAY_VINTAGES,
             "bounds_wgs84": {
                 "min_lon": float(official_wgs84.total_bounds[0]),
                 "min_lat": float(official_wgs84.total_bounds[1]),

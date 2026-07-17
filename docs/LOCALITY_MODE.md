@@ -4,7 +4,11 @@ Last updated: 2026-07-15
 
 ## Coverage And Scope
 
-Locality result-row assignment and aggregation are complete for the current K17-K25 geographic scope. They do not wait for polling-place address geocoding. The 36 features with no standalone K17-K25 result now have evidence-level explanations. Source-backed host/component unions are implemented for K19, K20, and five K25 cases; the remaining partial-presence elections and most other visibility decisions are not yet reviewed.
+Locality result-row assignment and aggregation are complete for the current
+K17-K25 geographic scope. The 36 features with no standalone K17-K25 result
+have evidence-level explanations. Source-backed host/component unions are
+implemented for K19, K20, and five K25 cases; the remaining partial-presence
+elections and most other visibility decisions are not yet reviewed.
 
 Current display geometry replaces 115 tiny West Bank proxies with audited ArcGIS footprints. Rotem, Maskiyot, Avnat, and Mavo'ot Yeriho remain fixed markers. Sha'ar Shomron uses its component-polygon union; the K25 Yitav/Mavo'ot joined result uses two marker points.
 
@@ -48,7 +52,9 @@ The following source municipalities represent more than one locality in the 2022
 | שגור | K18 | 483, 490, 516 | 27 | 12,834 |
 | שער שומרון | K25 | 3720, 3778 | 10 | 4,173 |
 
-The locality rule applies to every row from the composite source municipality, including rows whose polling-place evidence already points to one component. That evidence remains useful for statistical-area mode, but it must not split an election-time municipality in locality mode.
+The locality rule applies to every row from the composite source municipality,
+including rows whose source evidence identifies one component. It must not
+split an election-time municipality in locality mode.
 
 The reviewed source of truth is `data/manual/composite_localities.csv`. `scripts/build_geographies.py` writes the unioned features to `data/processed/geographies/composite_localities*.geojson`.
 
@@ -61,7 +67,7 @@ When an election source establishes that one or more 2022 localities were counte
 | Election | Combined host features | Attached 2022 polygons | Evidence |
 |---|---:|---:|---|
 | K19 | 46 | 53 | Exact polling-register arithmetic at host level |
-| K20 | 45 | 50 | Official polling-place rows explicitly name the host |
+| K20 | 45 | 50 | Official ballot-register rows explicitly name the host |
 | K25 | 5 | 6 | Reviewed under-100 host-delta inference |
 
 The reviewed source of truth is `data/manual/joined_locality_composites.csv`. K17, K18, and K21-K24 currently have no joined-polygon rules because the available sources do not establish the host strongly enough. Historical attached registers that have no 2022 polygon remain part of the evidence and arithmetic but cannot add geometry or a name component.
@@ -93,9 +99,11 @@ The web app shows that aggregate as a selectable national result beside the map.
 Locality and statistical-area assignment are independent products:
 
 - Locality mode uses the reviewed locality identity directly and has complete result-row coverage; the partial-presence history and final visibility audit remain open.
-- Statistical-area mode is independent of polling-place building location and uses the election-specific CBS ballot crosswalk.
-- A historical composite or joined-register result can therefore be complete in locality mode while remaining statistically unresolved only when the official historical crosswalk has no row for it.
-- OSM and Photon work is separate polling-place-location research; it affects neither locality totals nor historical statistical-area assignment.
+- Statistical-area mode uses the election-specific CBS ballot crosswalk plus
+  explicitly labeled reviewed reconstruction where available.
+- A historical composite or joined-register result can therefore be complete
+  in locality mode while remaining statistically unresolved when no supported
+  ballot-to-area evidence exists for it.
 
 The final assignment table exposes this distinction through `locality_assignment_status`, `locality_geography_type`, `locality_geography_id`, `locality_result_code`, `locality_result_name`, and `is_locality_mapped` alongside the existing statistical-area assignment fields.
 

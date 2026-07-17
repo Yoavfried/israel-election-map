@@ -10,6 +10,7 @@ import pandas as pd
 POINT_PROXY_MAX_AREA_M2 = 50_000
 POINT_PROXY_MAX_COORDINATES = 12
 DISPLAY_DETAIL_MAX_DISTANCE_M = 5_000
+DISPLAY_DETAIL_MIN_RETAINED_AREA_SHARE = 0.5
 WEST_BANK_DETAIL_CODES = {3488, *range(3500, 4000)}
 
 
@@ -111,6 +112,26 @@ def apply_detailed_display_geometries(
         if row.geometry.centroid.distance(candidate) > DISPLAY_DETAIL_MAX_DISTANCE_M:
             rejected_codes.append(code)
             continue
+
+        # ArcGIS detail comes from a newer statistical-area layer. Preserve the
+        # historical layer's neighboring areas whenever the two vintages differ.
+        candidate_area = candidate.area
+        feature_position = projected.index.get_loc(index)
+        blocker_indices = [
+            blocker_index
+            for blocker_index in projected.sindex.query(
+                candidate, predicate="intersects"
+            )
+            if blocker_index != feature_position
+        ]
+        if blocker_indices:
+            blockers = projected.iloc[blocker_indices].geometry.union_all()
+            candidate = candidate.difference(blockers).buffer(0)
+        retained_share = candidate.area / candidate_area if candidate_area else 0
+        if candidate.is_empty or retained_share < DISPLAY_DETAIL_MIN_RETAINED_AREA_SHARE:
+            rejected_codes.append(code)
+            continue
+
         projected.at[index, "geometry"] = candidate
         projected.at[index, "display_geometry_source"] = source_name
         replacements += 1

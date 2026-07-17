@@ -13,8 +13,8 @@ from pipeline_common import MANUAL_DIR, PROCESSED_DIR, ROOT, int_value, normaliz
 
 BALLOT_ROWS = PROCESSED_DIR / "normalized" / "ballot_rows.csv"
 LOCALITIES = PROCESSED_DIR / "geographies" / "localities_2022.metadata.csv"
-CROSSWALK = ROOT / "docs" / "LOCALITY_CROSSWALK_RESOLUTION_PLAN.csv"
-ROW_OVERRIDES = MANUAL_DIR / "polling_place_assignment_overrides.csv"
+CROSSWALK = MANUAL_DIR / "locality_crosswalk.csv"
+ROW_OVERRIDES = MANUAL_DIR / "ballot_geography_overrides.csv"
 OUT_DIR = PROCESSED_DIR / "assignments"
 
 
@@ -71,9 +71,9 @@ def row_override_index(rows: list[dict[str, str]]) -> dict[tuple[str, str, str],
     for row in rows:
         key = row_override_key(row)
         if not key[0] or not key[1]:
-            raise ValueError(f"Invalid polling-place assignment override key: {row}")
+            raise ValueError(f"Invalid ballot geography override key: {row}")
         if key in index:
-            raise ValueError(f"Duplicate polling-place assignment override key: {key}")
+            raise ValueError(f"Duplicate ballot geography override key: {key}")
         index[key] = row
     return index
 
@@ -83,13 +83,12 @@ def assignment_from_row_override(row: dict[str, str]) -> dict[str, Any]:
     if method == "special_non_geographic":
         return {
             "assignment_method": "special_non_geographic",
-            "assignment_source": "reviewed_polling_place_override",
+            "assignment_source": "reviewed_ballot_geography_override",
             "target_geography_type": row["target_geography_type"] or "special_non_geographic",
             "target_locality_code": "",
             "target_locality_name": row["target_locality_name"],
             "target_stat_area_id": "",
             "custom_geography_id": row["custom_geography_id"] or "special:envelope_votes",
-            "needs_geocoding": False,
             "unresolved_reason": "",
         }
     if method == "single_stat_locality":
@@ -99,37 +98,35 @@ def assignment_from_row_override(row: dict[str, str]) -> dict[str, Any]:
             row.get("target_stat_area_id", ""),
         ]
         if not all(normalize_spaces(value) for value in required):
-            raise ValueError(f"Incomplete single-stat polling-place override: {row}")
+            raise ValueError(f"Incomplete single-area ballot override: {row}")
         return {
             "assignment_method": "single_stat_locality",
-            "assignment_source": "reviewed_polling_place_stat_override",
+            "assignment_source": "reviewed_ballot_stat_override",
             "target_geography_type": "statistical_area",
             "target_locality_code": normalize_code(row["target_locality_code"]),
             "target_locality_name": row["target_locality_name"],
             "target_stat_area_id": row["target_stat_area_id"],
             "custom_geography_id": "",
-            "needs_geocoding": False,
             "unresolved_reason": "",
         }
-    if method == "direct_address_geocode_needed":
+    if method == "historical_stat_area_pending":
         required = [
             row.get("target_locality_code", ""),
             row.get("target_locality_name", ""),
         ]
         if not all(normalize_spaces(value) for value in required):
-            raise ValueError(f"Incomplete direct-geocode polling-place override: {row}")
+            raise ValueError(f"Incomplete historical-area ballot override: {row}")
         return {
-            "assignment_method": "direct_address_geocode_needed",
+            "assignment_method": "historical_stat_area_pending",
             "assignment_source": "reviewed_component_locality_override",
-            "target_geography_type": "statistical_area_pending_geocode",
+            "target_geography_type": "statistical_area_pending",
             "target_locality_code": normalize_code(row["target_locality_code"]),
             "target_locality_name": row["target_locality_name"],
             "target_stat_area_id": "",
             "custom_geography_id": "",
-            "needs_geocoding": True,
             "unresolved_reason": "",
         }
-    raise ValueError(f"Unsupported polling-place override assignment method: {method}")
+    raise ValueError(f"Unsupported ballot geography override assignment method: {method}")
 
 
 def locality_indexes(rows: list[dict[str, str]]) -> tuple[dict[str, dict], dict[str, list[dict]]]:
@@ -154,7 +151,7 @@ def prefer_real_locality(candidates: list[dict]) -> list[dict]:
 def crosswalk_index(rows: list[dict[str, str]]) -> dict[tuple[str, str], dict]:
     index: dict[tuple[str, str], dict] = {}
     for row in rows:
-        source_name, source_code = split_source_identity(row["unique locality unmatched"])
+        source_name, source_code = split_source_identity(row["source_identity"])
         source_norm = norm_name(source_name)
         if source_code:
             index[(source_code, source_norm)] = row
@@ -189,18 +186,16 @@ def assignment_from_locality(target: dict, method_source: str) -> dict[str, Any]
             "target_locality_name": target["locality_name_he"],
             "target_stat_area_id": target["stat_area_ids"],
             "custom_geography_id": "",
-            "needs_geocoding": False,
             "unresolved_reason": "",
         }
     return {
-        "assignment_method": "direct_address_geocode_needed",
+        "assignment_method": "historical_stat_area_pending",
         "assignment_source": method_source,
-        "target_geography_type": "statistical_area_pending_geocode",
+        "target_geography_type": "statistical_area_pending",
         "target_locality_code": target["locality_code"],
         "target_locality_name": target["locality_name_he"],
         "target_stat_area_id": "",
         "custom_geography_id": "",
-        "needs_geocoding": True,
         "unresolved_reason": "",
     }
 
@@ -211,8 +206,8 @@ def assignment_from_crosswalk(
     by_name: dict[str, list[dict]],
 ) -> dict[str, Any]:
     solution = crosswalk_row["solution"]
-    geometry_target = crosswalk_row["geometry target"]
-    custom_id = crosswalk_row["custom geometry id"] or geometry_target
+    geometry_target = crosswalk_row["geometry_target"]
+    custom_id = crosswalk_row["custom_geography_id"] or geometry_target
 
     if solution == "accepted_locality_match":
         target, reason = find_target_by_name(geometry_target, by_name)
@@ -220,16 +215,15 @@ def assignment_from_crosswalk(
             return unresolved("reviewed_locality_target_missing", reason)
         return assignment_from_locality(target, "reviewed_locality_crosswalk")
 
-    if solution == "address_geocode_to_current_polygons":
+    if solution == "historical_stat_area_pending":
         return {
-            "assignment_method": "direct_address_geocode_needed",
-            "assignment_source": "reviewed_address_target_set",
-            "target_geography_type": "statistical_area_pending_geocode",
+            "assignment_method": "historical_stat_area_pending",
+            "assignment_source": "reviewed_historical_target_set",
+            "target_geography_type": "statistical_area_pending",
             "target_locality_code": "",
             "target_locality_name": geometry_target,
             "target_stat_area_id": "",
             "custom_geography_id": "",
-            "needs_geocoding": True,
             "unresolved_reason": "",
         }
 
@@ -242,7 +236,6 @@ def assignment_from_crosswalk(
             "target_locality_name": geometry_target,
             "target_stat_area_id": "",
             "custom_geography_id": custom_id,
-            "needs_geocoding": False,
             "unresolved_reason": "",
         }
 
@@ -255,7 +248,6 @@ def assignment_from_crosswalk(
             "target_locality_name": geometry_target,
             "target_stat_area_id": "",
             "custom_geography_id": custom_id,
-            "needs_geocoding": False,
             "unresolved_reason": "",
         }
 
@@ -271,7 +263,6 @@ def unresolved(reason: str, detail: str = "") -> dict[str, Any]:
         "target_locality_name": "",
         "target_stat_area_id": "",
         "custom_geography_id": "",
-        "needs_geocoding": False,
         "unresolved_reason": f"{reason}: {detail}" if detail else reason,
     }
 
@@ -292,7 +283,6 @@ def assign_row(
             "target_locality_name": "",
             "target_stat_area_id": "",
             "custom_geography_id": "special:envelope_votes",
-            "needs_geocoding": False,
             "unresolved_reason": "",
         }
 
@@ -335,7 +325,7 @@ def main() -> None:
     }
     missing_override_keys = set(row_overrides) - ballot_override_keys
     if missing_override_keys:
-        raise ValueError(f"Polling-place assignment overrides did not match ballot rows: {sorted(missing_override_keys)}")
+        raise ValueError(f"Ballot geography overrides did not match ballot rows: {sorted(missing_override_keys)}")
 
     output: list[dict[str, Any]] = []
     for row in ballot_rows:
@@ -372,7 +362,6 @@ def main() -> None:
         "target_locality_name",
         "target_stat_area_id",
         "custom_geography_id",
-        "needs_geocoding",
         "unresolved_reason",
     ]
     write_csv(OUT_DIR / "ballot_assignment_plan.csv", output, fields)
@@ -387,7 +376,7 @@ def main() -> None:
                 "rows": len(election_rows),
                 "actual_voters": sum(int_value(row["actual_voters"]) for row in election_rows),
                 "single_stat_rows": by_method["single_stat_locality"],
-                "geocode_needed_rows": by_method["direct_address_geocode_needed"],
+                "historical_pending_rows": by_method["historical_stat_area_pending"],
                 "custom_rows": by_method["custom_point_size_polygon"],
                 "special_non_geographic_rows": by_method["special_non_geographic"],
                 "envelope_rows": by_method["official_envelope"],
@@ -407,7 +396,7 @@ def main() -> None:
             "rows",
             "actual_voters",
             "single_stat_rows",
-            "geocode_needed_rows",
+            "historical_pending_rows",
             "custom_rows",
             "special_non_geographic_rows",
             "envelope_rows",
@@ -417,18 +406,25 @@ def main() -> None:
     )
     write_json(OUT_DIR / "assignment_plan_summary.json", summary_rows)
 
-    geocode_worklist = [row for row in output if row["assignment_method"] == "direct_address_geocode_needed"]
-    write_csv(OUT_DIR / "geocoding_worklist.csv", geocode_worklist, fields)
+    historical_pending = [
+        row for row in output
+        if row["assignment_method"] == "historical_stat_area_pending"
+    ]
+    write_csv(
+        OUT_DIR / "historical_stat_area_pending_rows.csv",
+        historical_pending,
+        fields,
+    )
 
     unresolved_rows = [row for row in output if row["assignment_method"] == "unresolved"]
     write_csv(OUT_DIR / "unresolved_assignment_rows.csv", unresolved_rows, fields)
 
     print(f"assignment_rows={len(output)}")
-    print(f"geocode_worklist_rows={len(geocode_worklist)}")
+    print(f"historical_stat_area_pending_rows={len(historical_pending)}")
     print(f"unresolved_rows={len(unresolved_rows)}")
     for row in summary_rows:
         print(
-            f"{row['election']}: single={row['single_stat_rows']} geocode={row['geocode_needed_rows']} "
+            f"{row['election']}: single={row['single_stat_rows']} pending={row['historical_pending_rows']} "
             f"custom={row['custom_rows']} special={row['special_non_geographic_rows']} "
             f"envelope={row['envelope_rows']} unresolved={row['unresolved_rows']}"
         )

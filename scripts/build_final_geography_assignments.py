@@ -2,24 +2,12 @@ from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
 import sys
 from collections import Counter
 from functools import cache
 from pathlib import Path
 from typing import Any
-
-LOCAL_PYTHON = Path(__file__).resolve().parents[1] / ".local" / "python-geo"
-if LOCAL_PYTHON.exists():
-    sys.path.insert(0, str(LOCAL_PYTHON))
-
-import pandas as pd
-
-try:
-    import geopandas as gpd
-except ModuleNotFoundError as error:
-    if error.name != "geopandas":
-        raise
-    gpd = None
 
 from pipeline_common import (
     MANUAL_DIR,
@@ -32,11 +20,24 @@ from pipeline_common import (
 
 
 ASSIGNMENT_PLAN = PROCESSED_DIR / "assignments" / "ballot_assignment_plan.csv"
-HISTORICAL_ASSIGNMENTS = PROCESSED_DIR / "assignments" / "historical_ballot_assignments.csv"
-GEOCODING_INPUT = PROCESSED_DIR / "geocoding" / "geocoding_input.csv"
-GEOCODING_WORK_UNIT_ROWS = PROCESSED_DIR / "geocoding" / "geocoding_work_unit_rows.csv"
-STAT_AREAS = PROCESSED_DIR / "geographies" / "statistical_areas_2022.geojson"
-STAT_AREA_METADATA = PROCESSED_DIR / "geographies" / "statistical_areas_2022.metadata.csv"
+HISTORICAL_ASSIGNMENTS = (
+    PROCESSED_DIR / "assignments" / "historical_ballot_assignments.csv"
+)
+STAT_AREA_METADATA = (
+    PROCESSED_DIR / "geographies" / "statistical_areas_2022.metadata.csv"
+)
+HISTORICAL_STAT_AREA_METADATA = (
+    PROCESSED_DIR / "geographies" / "statistical_areas_2011.metadata.csv"
+)
+ARCGIS_RECONSTRUCTION_CANDIDATES = (
+    PROCESSED_DIR / "audits" / "arcgis_assignment_reconstruction_candidates.csv"
+)
+ARCGIS_RECONSTRUCTION_LOCALITIES = (
+    PROCESSED_DIR / "audits" / "arcgis_assignment_reconstruction_localities.csv"
+)
+ARCGIS_RECONSTRUCTION_REVIEWS = (
+    MANUAL_DIR / "arcgis_assignment_reconstruction_reviews.csv"
+)
 OUT_DIR = PROCESSED_DIR / "assignments"
 COMPOSITE_LOCALITIES = MANUAL_DIR / "composite_localities.csv"
 HISTORICAL_PENDING_STATUSES = {
@@ -44,6 +45,24 @@ HISTORICAL_PENDING_STATUSES = {
     "crosswalk_area_missing_geometry",
 }
 
+
+def read_csv(path: Path) -> list[dict[str, str]]:
+    if not path.exists():
+        return []
+    with path.open(encoding="utf-8-sig", newline="") as handle:
+        return list(csv.DictReader(handle))
+
+
+def normalize_bool(value: Any) -> bool:
+    return str(value).strip().lower() in {"true", "1", "yes"}
+
+
+def reconstruction_fingerprint(rows: list[dict[str, str]]) -> str:
+    payload = "\n".join(
+        f"{row['source_row_uid']}|{row['candidate_stat_area_id']}"
+        for row in sorted(rows, key=lambda item: item["source_row_uid"])
+    )
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
 def normalize_locality_code(value: Any) -> str:
@@ -92,7 +111,9 @@ def load_composite_locality_index() -> dict[tuple[str, str], dict[str, str]]:
         for election in elections:
             key = (election, source_name)
             if key in index:
-                raise ValueError(f"Duplicate composite-locality matcher: {election} / {source_name}")
+                raise ValueError(
+                    f"Duplicate composite-locality matcher: {election} / {source_name}"
+                )
             index[key] = row
     return index
 
@@ -105,7 +126,7 @@ def locality_assignment(row: dict[str, str]) -> dict[str, Any]:
             "locality_geography_type": "envelope",
             "locality_geography_id": "envelope:official",
             "locality_result_code": "",
-            "locality_result_name": "מעטפות חיצוניות",
+            "locality_result_name": "\u05de\u05e2\u05d8\u05e4\u05d5\u05ea \u05d7\u05d9\u05e6\u05d5\u05e0\u05d9\u05d5\u05ea",
             "is_locality_mapped": False,
         }
     if method == "special_non_geographic":
@@ -128,7 +149,10 @@ def locality_assignment(row: dict[str, str]) -> dict[str, Any]:
         }
 
     composite = load_composite_locality_index().get(
-        (row.get("election", ""), normalize_spaces(row.get("source_locality_name", "")))
+        (
+            row.get("election", ""),
+            normalize_spaces(row.get("source_locality_name", "")),
+        )
     )
     if composite:
         return {
@@ -162,235 +186,6 @@ def locality_assignment(row: dict[str, str]) -> dict[str, Any]:
     }
 
 
-def point_matches_expected_locality(row: dict[str, str], point: dict[str, Any]) -> bool:
-    expected = split_locality_codes(row.get("target_locality_code", ""))
-    if not expected:
-        return True
-    return normalize_locality_code(point.get("locality_code", "")) in expected
-
-
-def read_csv(path: Path) -> list[dict[str, str]]:
-    if not path.exists():
-        return []
-    with path.open(encoding="utf-8-sig", newline="") as handle:
-        return list(csv.DictReader(handle))
-
-
-def first_existing(columns: set[str], candidates: list[str]) -> str:
-    for candidate in candidates:
-        if candidate in columns:
-            return candidate
-    return ""
-
-
-def normalize_bool(value: Any) -> bool:
-    return str(value).strip().lower() in {"true", "1", "yes"}
-
-
-def normalize_status(value: Any) -> str:
-    return str(value or "").strip().lower().replace(" ", "_")
-
-
-def load_stat_metadata() -> dict[str, dict[str, str]]:
-    return {row["stat_area_id"]: row for row in read_csv(STAT_AREA_METADATA)}
-
-
-def load_geocoding_input() -> dict[str, dict[str, str]]:
-    return {row["source_row_uid"]: row for row in read_csv(GEOCODING_INPUT)}
-
-
-def load_geocoding_unit_index() -> dict[str, str]:
-    rows = read_csv(GEOCODING_WORK_UNIT_ROWS)
-    return {row["source_row_uid"]: row["geocoding_unit_id"] for row in rows if row.get("geocoding_unit_id")}
-
-
-def load_historical_assignments() -> dict[str, dict[str, str]]:
-    rows = read_csv(HISTORICAL_ASSIGNMENTS)
-    if not rows:
-        raise FileNotFoundError(
-            f"Missing direct historical assignments; run build_historical_ballot_assignments.py: {HISTORICAL_ASSIGNMENTS}"
-        )
-    output: dict[str, dict[str, str]] = {}
-    for row in rows:
-        uid = row.get("source_row_uid", "")
-        if not uid or uid in output:
-            raise ValueError(f"Missing or duplicate historical assignment UID: {uid or '(blank)'}")
-        output[uid] = row
-    return output
-
-
-def geocode_is_usable(row: pd.Series) -> bool:
-    rejected_values = {
-        "reject",
-        "rejected",
-        "false",
-        "failed",
-        "failure",
-        "no_match",
-        "not_found",
-        "ambiguous",
-        "needs_review",
-        "needs_manual_review",
-        "pending",
-        "unreviewed",
-    }
-    for column in ["review_status", "geocode_status", "status"]:
-        if column in row.index and normalize_status(row[column]) in rejected_values:
-            return False
-    return True
-
-
-def empty_geocoded_points() -> pd.DataFrame:
-    return pd.DataFrame(columns=["geocode_key", "geometry"])
-
-
-def require_geopandas() -> Any:
-    if gpd is None:
-        raise ModuleNotFoundError(
-            "GeoPandas is required only when a reviewed geocoded-points cache contains usable coordinates"
-        )
-    return gpd
-
-
-def load_geocoded_points(path: Path) -> tuple[Any, set[str]]:
-    if not path.exists():
-        return empty_geocoded_points(), set()
-
-    raw = pd.read_csv(path, dtype=str, encoding="utf-8-sig").fillna("")
-    if raw.empty:
-        return empty_geocoded_points(), set()
-
-    columns = set(raw.columns)
-    key_col = first_existing(columns, ["geocode_key", "source_row_uid", "address_uid"])
-    if not key_col:
-        raise ValueError(f"{path} must include geocode_key or source_row_uid")
-
-    lon_col = first_existing(columns, ["longitude", "lon", "lng", "x_wgs84", "wgs84_lon"])
-    lat_col = first_existing(columns, ["latitude", "lat", "y_wgs84", "wgs84_lat"])
-    x_col = first_existing(columns, ["x_2039", "itm_x", "israel_tm_x", "x"])
-    y_col = first_existing(columns, ["y_2039", "itm_y", "israel_tm_y", "y"])
-
-    usable = raw[raw.apply(geocode_is_usable, axis=1)].copy()
-    if lon_col and lat_col:
-        usable["_x"] = pd.to_numeric(usable[lon_col], errors="coerce")
-        usable["_y"] = pd.to_numeric(usable[lat_col], errors="coerce")
-        crs = "EPSG:4326"
-    elif x_col and y_col:
-        usable["_x"] = pd.to_numeric(usable[x_col], errors="coerce")
-        usable["_y"] = pd.to_numeric(usable[y_col], errors="coerce")
-        crs_values = sorted({value for value in usable.get("coordinate_crs", pd.Series(dtype=str)).astype(str) if value})
-        crs = crs_values[0] if len(crs_values) == 1 else "EPSG:2039"
-    else:
-        raise ValueError(f"{path} must include WGS84 lon/lat columns or projected x/y columns")
-
-    usable = usable.dropna(subset=["_x", "_y"]).copy()
-    usable["geocode_key"] = usable[key_col]
-    geocode_keys = set(usable["geocode_key"])
-    if usable.empty:
-        return empty_geocoded_points(), geocode_keys
-
-    geo = require_geopandas()
-    points = geo.GeoDataFrame(
-        usable,
-        geometry=geo.points_from_xy(usable["_x"], usable["_y"]),
-        crs=crs,
-    )
-    if str(points.crs).upper() not in {"EPSG:4326", "OGC:CRS84"}:
-        points = points.to_crs("EPSG:4326")
-    return points, geocode_keys
-
-
-def load_stat_areas() -> Any:
-    stats = require_geopandas().read_file(STAT_AREAS)
-    if stats.crs is None:
-        stats = stats.set_crs("EPSG:4326")
-    elif str(stats.crs).upper() not in {"EPSG:4326", "OGC:CRS84"}:
-        stats = stats.to_crs("EPSG:4326")
-    return stats[
-        [
-            "stat_area_id",
-            "yishuv_stat_2022",
-            "locality_id",
-            "locality_code",
-            "locality_name_he",
-            "stat_2022",
-            "geometry",
-        ]
-    ].copy()
-
-
-def spatially_assign_points(points: Any, stats: Any) -> tuple[dict[str, dict], set[str]]:
-    if points.empty:
-        return {}, set()
-
-    geo = require_geopandas()
-    joined = geo.sjoin(points, stats, how="left", predicate="within")
-    missing_mask = joined["stat_area_id"].isna()
-    if missing_mask.any():
-        missing_points = points[points["geocode_key"].isin(joined.loc[missing_mask, "geocode_key"])]
-        fallback = geo.sjoin(missing_points, stats, how="left", predicate="intersects")
-        joined = pd.concat([joined.loc[~missing_mask], fallback], ignore_index=True)
-
-    assigned: dict[str, dict] = {}
-    outside: set[str] = set()
-    for _, row in joined.iterrows():
-        key = str(row["geocode_key"])
-        if key in assigned:
-            continue
-        if pd.isna(row.get("stat_area_id")):
-            outside.add(key)
-            continue
-        assigned[key] = {
-            "geocode_key": key,
-            "geocode_lon": float(row.geometry.x),
-            "geocode_lat": float(row.geometry.y),
-            "stat_area_id": row["stat_area_id"],
-            "yishuv_stat_2022": row["yishuv_stat_2022"],
-            "stat_2022": row["stat_2022"],
-            "locality_id": row["locality_id"],
-            "locality_code": row["locality_code"],
-            "locality_name_he": row["locality_name_he"],
-            "geocoder": row.get("geocoder", ""),
-            "geocode_status": row.get("geocode_status", row.get("status", "")),
-            "geocode_confidence": row.get("geocode_confidence", row.get("confidence", "")),
-            "review_status": row.get("review_status", ""),
-        }
-    outside.update(set(points["geocode_key"]) - set(assigned))
-    return assigned, outside
-
-
-def stat_assignment(row: dict[str, str], stat: dict[str, str], status: str, method: str) -> dict[str, Any]:
-    return {
-        **base_output(row),
-        "geography_assignment_status": status,
-        "geography_type": "statistical_area",
-        "geography_id": stat["stat_area_id"],
-        "stat_area_id": stat["stat_area_id"],
-        "stat_area_vintage": 2022,
-        "stat_area_yishuv_stat": stat["yishuv_stat_2022"],
-        "stat_area_number": stat["stat_2022"],
-        "stat_area_yishuv_stat_2022": stat["yishuv_stat_2022"],
-        "stat_area_stat_2022": stat["stat_2022"],
-        "locality_id": stat["locality_id"],
-        "locality_code": stat["locality_code"],
-        "locality_name": stat["locality_name_he"],
-        "custom_geography_id": "",
-        "is_mapped": True,
-        "is_geographic": True,
-        "final_assignment_method": method,
-        "final_assignment_source": row["assignment_source"],
-        "geocode_key": "",
-        "geocode_lon": "",
-        "geocode_lat": "",
-        "geocoder": "",
-        "geocode_status": "",
-        "geocode_confidence": "",
-        "address_match_status": "",
-        "address_query": "",
-        "unresolved_reason": "",
-    }
-
-
 def base_output(row: dict[str, str]) -> dict[str, Any]:
     return {
         "source_row_uid": row["source_row_uid"],
@@ -408,47 +203,122 @@ def base_output(row: dict[str, str]) -> dict[str, Any]:
     }
 
 
-def historical_stat_assignment(
-    row: dict[str, str], historical: dict[str, str]
+def mapped_assignment(
+    row: dict[str, str],
+    stat_area_id: str,
+    vintage: int,
+    yishuv_stat: Any,
+    stat_area_number: Any,
+    locality_code: Any,
+    locality_name: str,
+    status: str,
+    method: str,
+    source: str,
 ) -> dict[str, Any]:
-    vintage = int_value(historical["stat_area_vintage"])
     return {
         **base_output(row),
-        "geography_assignment_status": historical["historical_assignment_status"],
+        "geography_assignment_status": status,
         "geography_type": "statistical_area",
-        "geography_id": historical["stat_area_id"],
-        "stat_area_id": historical["stat_area_id"],
+        "geography_id": stat_area_id,
+        "stat_area_id": stat_area_id,
         "stat_area_vintage": vintage,
-        "stat_area_yishuv_stat": historical["yishuv_stat"],
-        "stat_area_number": historical["stat_area_number"],
-        "stat_area_yishuv_stat_2022": (
-            historical["yishuv_stat"] if vintage == 2022 else ""
-        ),
-        "stat_area_stat_2022": (
-            historical["stat_area_number"] if vintage == 2022 else ""
-        ),
-        "locality_id": f"loc:{historical['historical_locality_code']}",
-        "locality_code": historical["historical_locality_code"],
-        "locality_name": historical["historical_locality_name"],
+        "stat_area_yishuv_stat": yishuv_stat,
+        "stat_area_number": stat_area_number,
+        "stat_area_yishuv_stat_2022": yishuv_stat if vintage == 2022 else "",
+        "stat_area_stat_2022": stat_area_number if vintage == 2022 else "",
+        "locality_id": f"loc:{locality_code}",
+        "locality_code": locality_code,
+        "locality_name": locality_name,
         "custom_geography_id": "",
         "is_mapped": True,
         "is_geographic": True,
-        "final_assignment_method": historical["historical_assignment_method"],
-        "final_assignment_source": historical["historical_assignment_source"],
-        "geocode_key": "",
-        "geocode_lon": "",
-        "geocode_lat": "",
-        "geocoder": "",
-        "geocode_status": "",
-        "geocode_confidence": "",
-        "address_match_status": "",
-        "address_query": "",
+        "final_assignment_method": method,
+        "final_assignment_source": source,
         "unresolved_reason": "",
     }
 
 
-def unmapped(row: dict[str, str], status: str, reason: str, geocoding_row: dict[str, str] | None = None) -> dict[str, Any]:
-    geocoding_row = geocoding_row or {}
+def historical_stat_assignment(
+    row: dict[str, str], historical: dict[str, str]
+) -> dict[str, Any]:
+    return mapped_assignment(
+        row=row,
+        stat_area_id=historical["stat_area_id"],
+        vintage=int_value(historical["stat_area_vintage"]),
+        yishuv_stat=historical["yishuv_stat"],
+        stat_area_number=historical["stat_area_number"],
+        locality_code=historical["historical_locality_code"],
+        locality_name=historical["historical_locality_name"],
+        status=historical["historical_assignment_status"],
+        method=historical["historical_assignment_method"],
+        source=historical["historical_assignment_source"],
+    )
+
+
+def arcgis_reconstructed_assignment(
+    row: dict[str, str],
+    candidate: dict[str, str],
+    stat: dict[str, str],
+) -> dict[str, Any]:
+    return mapped_assignment(
+        row=row,
+        stat_area_id=stat["stat_area_id"],
+        vintage=int_value(stat["stat_area_vintage"]),
+        yishuv_stat=stat["yishuv_stat"],
+        stat_area_number=stat["stat_area_number"],
+        locality_code=stat["locality_code"],
+        locality_name=stat["locality_name_he"],
+        status="arcgis_reconstructed_exact_assigned",
+        method="arcgis_residual_partition_tier_a",
+        source=(
+            f"{candidate['source']};review="
+            "data/manual/arcgis_assignment_reconstruction_reviews.csv"
+        ),
+    )
+
+
+def current_stat_assignment(
+    row: dict[str, str], stat: dict[str, str]
+) -> dict[str, Any]:
+    return mapped_assignment(
+        row=row,
+        stat_area_id=stat["stat_area_id"],
+        vintage=2022,
+        yishuv_stat=stat["yishuv_stat_2022"],
+        stat_area_number=stat["stat_2022"],
+        locality_code=stat["locality_code"],
+        locality_name=stat["locality_name_he"],
+        status="single_stat_assigned",
+        method="single_stat_locality",
+        source=row["assignment_source"],
+    )
+
+
+def custom_assignment(row: dict[str, str]) -> dict[str, Any]:
+    return {
+        **base_output(row),
+        "geography_assignment_status": "custom_geography_assigned",
+        "geography_type": "custom_geography",
+        "geography_id": row["custom_geography_id"],
+        "stat_area_id": "",
+        "stat_area_vintage": "",
+        "stat_area_yishuv_stat": "",
+        "stat_area_number": "",
+        "stat_area_yishuv_stat_2022": "",
+        "stat_area_stat_2022": "",
+        "locality_id": "",
+        "locality_code": "",
+        "locality_name": row["target_locality_name"],
+        "custom_geography_id": row["custom_geography_id"],
+        "is_mapped": True,
+        "is_geographic": True,
+        "final_assignment_method": "custom_point_size_polygon",
+        "final_assignment_source": row["assignment_source"],
+        "unresolved_reason": "",
+    }
+
+
+def unresolved(row: dict[str, str], status: str, reason: str) -> dict[str, Any]:
     return {
         **base_output(row),
         "geography_assignment_status": status,
@@ -468,54 +338,161 @@ def unmapped(row: dict[str, str], status: str, reason: str, geocoding_row: dict[
         "is_geographic": False,
         "final_assignment_method": row["assignment_method"],
         "final_assignment_source": row["assignment_source"],
-        "geocode_key": row["source_row_uid"],
-        "geocode_lon": "",
-        "geocode_lat": "",
-        "geocoder": "",
-        "geocode_status": status,
-        "geocode_confidence": "",
-        "address_match_status": geocoding_row.get("address_match_status", ""),
-        "address_query": geocoding_row.get("address_query", ""),
         "unresolved_reason": reason,
     }
+
+
+def load_historical_assignments() -> dict[str, dict[str, str]]:
+    rows = read_csv(HISTORICAL_ASSIGNMENTS)
+    if not rows:
+        raise FileNotFoundError(
+            "Missing direct historical assignments; run "
+            f"build_historical_ballot_assignments.py: {HISTORICAL_ASSIGNMENTS}"
+        )
+    output: dict[str, dict[str, str]] = {}
+    for row in rows:
+        uid = row.get("source_row_uid", "")
+        if not uid or uid in output:
+            raise ValueError(
+                f"Missing or duplicate historical assignment UID: {uid or '(blank)'}"
+            )
+        output[uid] = row
+    return output
+
+
+def load_approved_arcgis_reconstructions() -> dict[str, dict[str, str]]:
+    reviews = read_csv(ARCGIS_RECONSTRUCTION_REVIEWS)
+    candidates = read_csv(ARCGIS_RECONSTRUCTION_CANDIDATES)
+    reports = read_csv(ARCGIS_RECONSTRUCTION_LOCALITIES)
+    if not reviews or not candidates or not reports:
+        raise FileNotFoundError(
+            "ArcGIS reconstruction approvals require the reviewed table and "
+            "fresh audit outputs"
+        )
+
+    def locality_key(row: dict[str, str]) -> tuple[str, str]:
+        return (
+            normalize_spaces(row.get("election", "")),
+            normalize_locality_code(row.get("source_locality_code", "")),
+        )
+
+    report_index: dict[tuple[str, str], dict[str, str]] = {}
+    for report in reports:
+        key = locality_key(report)
+        if key in report_index:
+            raise ValueError(f"Duplicate ArcGIS reconstruction report: {key}")
+        report_index[key] = report
+
+    candidates_by_locality: dict[tuple[str, str], list[dict[str, str]]] = {}
+    for candidate in candidates:
+        candidates_by_locality.setdefault(locality_key(candidate), []).append(candidate)
+
+    reviewed_keys: set[tuple[str, str]] = set()
+    approved: dict[str, dict[str, str]] = {}
+    for review in reviews:
+        key = locality_key(review)
+        if key in reviewed_keys:
+            raise ValueError(f"Duplicate ArcGIS reconstruction review: {key}")
+        reviewed_keys.add(key)
+        decision = normalize_spaces(review.get("decision", "")).lower()
+        if decision not in {"approved", "deferred", "rejected"}:
+            raise ValueError(f"Unsupported ArcGIS reconstruction decision: {review}")
+        if decision != "approved":
+            continue
+
+        report = report_index.get(key)
+        locality_candidates = candidates_by_locality.get(key, [])
+        if not report or not locality_candidates:
+            raise ValueError(f"Approved ArcGIS reconstruction is absent from audit: {key}")
+        if (
+            review.get("evidence_tier") != "A"
+            or report.get("status") != "unique_exact_partition"
+            or report.get("evidence_tier") != "A"
+            or int_value(report.get("secondary_area_mismatch_count")) != 0
+        ):
+            raise ValueError(f"Approved ArcGIS reconstruction is not current Tier A: {key}")
+        if (
+            int_value(review.get("candidate_rows")) != len(locality_candidates)
+            or int_value(review.get("candidate_rows"))
+            != int_value(report.get("candidate_rows"))
+            or int_value(review.get("candidate_actual_voters"))
+            != sum(int_value(row.get("actual_voters")) for row in locality_candidates)
+            or int_value(review.get("candidate_actual_voters"))
+            != int_value(report.get("pending_actual_voters"))
+        ):
+            raise ValueError(f"Approved ArcGIS reconstruction totals changed: {key}")
+        if reconstruction_fingerprint(locality_candidates) != review.get(
+            "candidate_assignment_sha256"
+        ):
+            raise ValueError(f"Approved ArcGIS reconstruction mapping changed: {key}")
+
+        for candidate in locality_candidates:
+            if candidate.get("evidence_tier") != "A":
+                raise ValueError(f"Approved ArcGIS candidate is not Tier A: {key}")
+            uid = candidate.get("source_row_uid", "")
+            if not uid or uid in approved:
+                raise ValueError(f"Missing or duplicate approved ArcGIS row: {uid}")
+            approved[uid] = candidate
+    return approved
 
 
 def main() -> None:
     sys.stdout.reconfigure(encoding="utf-8")
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--geocoded-points",
-        type=Path,
-        default=PROCESSED_DIR / "geocoding" / "geocoded_points.csv",
-        help="Reviewed geocode cache CSV. Optional; pipeline remains partial when absent.",
-    )
-    args = parser.parse_args()
+    parser.parse_args()
 
     assignment_rows = read_csv(ASSIGNMENT_PLAN)
     historical_assignments = load_historical_assignments()
-    stat_metadata = load_stat_metadata()
-    geocoding_input = load_geocoding_input()
-    geocoding_units = load_geocoding_unit_index()
-    geocoded_points, geocode_keys = load_geocoded_points(args.geocoded_points)
-    stats = load_stat_areas() if not geocoded_points.empty else pd.DataFrame()
-    geocoded_assignments, geocoded_outside = spatially_assign_points(geocoded_points, stats)
+    arcgis_reconstructions = load_approved_arcgis_reconstructions()
+    stat_metadata = {
+        row["stat_area_id"]: row for row in read_csv(STAT_AREA_METADATA)
+    }
+    historical_stat_metadata = {
+        row["stat_area_id"]: row for row in read_csv(HISTORICAL_STAT_AREA_METADATA)
+    }
+    if not assignment_rows:
+        raise FileNotFoundError(
+            f"Missing assignment plan; run build_assignment_plan.py: {ASSIGNMENT_PLAN}"
+        )
 
     output: list[dict[str, Any]] = []
-    point_output: list[dict[str, Any]] = []
-    for key, point in geocoded_assignments.items():
-        point_output.append(point)
-
     for row in assignment_rows:
         method = row["assignment_method"]
-        uid = row["source_row_uid"]
-        historical = historical_assignments.get(uid)
+        historical = historical_assignments.get(row["source_row_uid"])
 
-        if historical and normalize_bool(historical.get("is_historical_stat_mapped", "")):
+        if historical and normalize_bool(
+            historical.get("is_historical_stat_mapped", "")
+        ):
             output.append(historical_stat_assignment(row, historical))
             continue
-        if historical and historical.get("historical_assignment_status") != "not_applicable_non_geographic":
+        reconstruction = arcgis_reconstructions.get(row["source_row_uid"])
+        if reconstruction:
+            if (
+                not historical
+                or historical.get("historical_assignment_status")
+                != "no_direct_historical_assignment"
+            ):
+                raise ValueError(
+                    "ArcGIS reconstruction may only replace a missing direct "
+                    f"historical assignment: {row['source_row_uid']}"
+                )
+            stat = historical_stat_metadata.get(
+                reconstruction["candidate_stat_area_id"]
+            )
+            if not stat:
+                raise ValueError(
+                    "ArcGIS reconstruction target lacks 2011 metadata: "
+                    f"{reconstruction['candidate_stat_area_id']}"
+                )
+            output.append(arcgis_reconstructed_assignment(row, reconstruction, stat))
+            continue
+        if (
+            historical
+            and historical.get("historical_assignment_status")
+            != "not_applicable_non_geographic"
+        ):
             output.append(
-                unmapped(
+                unresolved(
                     row,
                     historical.get(
                         "historical_assignment_status",
@@ -523,120 +500,44 @@ def main() -> None:
                     ),
                     historical.get(
                         "unresolved_reason",
-                        "no direct historical ballot assignment is available",
+                        "No direct historical ballot assignment is available",
                     ),
                 )
             )
             continue
-
         if method == "single_stat_locality":
             stat_id = row["target_stat_area_id"].split("|", 1)[0]
             stat = stat_metadata.get(stat_id)
             if stat:
-                output.append(stat_assignment(row, stat, "single_stat_assigned", "single_stat_locality"))
+                output.append(current_stat_assignment(row, stat))
             else:
-                output.append(unmapped(row, "missing_stat_area_metadata", f"stat area not found: {stat_id}"))
-            continue
-
-        if method == "direct_address_geocode_needed":
-            geocoding_row = geocoding_input.get(uid, {})
-            geocode_lookup_key = geocoding_units.get(uid, uid)
-            geocode_match_key = geocode_lookup_key if geocode_lookup_key in geocoded_assignments else uid
-            if geocode_match_key in geocoded_assignments:
-                point = geocoded_assignments[geocode_match_key]
-                if not point_matches_expected_locality(row, point):
-                    expected_codes = "|".join(split_locality_codes(row.get("target_locality_code", "")))
-                    point_code = normalize_locality_code(point.get("locality_code", ""))
-                    output.append(
-                        unmapped(
-                            row,
-                            "geocoded_point_outside_expected_locality",
-                            f"geocoded point fell in locality {point_code}, expected {expected_codes}",
-                            geocoding_row,
-                        )
-                    )
-                    continue
                 output.append(
-                    {
-                        **base_output(row),
-                        "geography_assignment_status": "geocoded_stat_area_assigned",
-                        "geography_type": "statistical_area",
-                        "geography_id": point["stat_area_id"],
-                        "stat_area_id": point["stat_area_id"],
-                        "stat_area_vintage": 2022,
-                        "stat_area_yishuv_stat": point["yishuv_stat_2022"],
-                        "stat_area_number": point["stat_2022"],
-                        "stat_area_yishuv_stat_2022": point["yishuv_stat_2022"],
-                        "stat_area_stat_2022": point["stat_2022"],
-                        "locality_id": point["locality_id"],
-                        "locality_code": point["locality_code"],
-                        "locality_name": point["locality_name_he"],
-                        "custom_geography_id": "",
-                        "is_mapped": True,
-                        "is_geographic": True,
-                        "final_assignment_method": "geocoded_point_in_polygon",
-                        "final_assignment_source": "reviewed_geocode_cache",
-                        "geocode_key": geocode_match_key,
-                        "geocode_lon": point["geocode_lon"],
-                        "geocode_lat": point["geocode_lat"],
-                        "geocoder": point["geocoder"],
-                        "geocode_status": point["geocode_status"],
-                        "geocode_confidence": point["geocode_confidence"],
-                        "address_match_status": geocoding_row.get("address_match_status", ""),
-                        "address_query": geocoding_row.get("address_query", ""),
-                        "unresolved_reason": "",
-                    }
+                    unresolved(
+                        row,
+                        "missing_stat_area_metadata",
+                        f"Statistical area not found: {stat_id}",
+                    )
                 )
-            elif geocode_lookup_key in geocoded_outside or uid in geocoded_outside:
-                output.append(unmapped(row, "geocoded_point_outside_stat_area", "geocoded point did not fall inside a 2022 statistical area", geocoding_row))
-            elif geocode_lookup_key in geocode_keys or uid in geocode_keys:
-                output.append(unmapped(row, "geocode_rejected_or_invalid", "geocode cache row was rejected or had invalid coordinates", geocoding_row))
-            elif geocoding_row and geocoding_row.get("address_match_status") != "ready":
-                status = f"geocoding_input_not_ready:{geocoding_row.get('address_match_status', 'unknown')}"
-                output.append(unmapped(row, status, "address source is not ready for geocoding", geocoding_row))
-            else:
-                output.append(unmapped(row, "missing_geocode", "row needs geocoding and no reviewed geocode cache row exists", geocoding_row))
             continue
-
         if method == "custom_point_size_polygon":
+            output.append(custom_assignment(row))
+            continue
+        if method in {"special_non_geographic", "official_envelope"}:
             output.append(
-                {
-                    **base_output(row),
-                    "geography_assignment_status": "custom_geography_assigned",
-                    "geography_type": "custom_geography",
-                    "geography_id": row["custom_geography_id"],
-                    "stat_area_id": "",
-                    "stat_area_vintage": "",
-                    "stat_area_yishuv_stat": "",
-                    "stat_area_number": "",
-                    "stat_area_yishuv_stat_2022": "",
-                    "stat_area_stat_2022": "",
-                    "locality_id": "",
-                    "locality_code": "",
-                    "locality_name": row["target_locality_name"],
-                    "custom_geography_id": row["custom_geography_id"],
-                    "is_mapped": True,
-                    "is_geographic": True,
-                    "final_assignment_method": "custom_point_size_polygon",
-                    "final_assignment_source": row["assignment_source"],
-                    "geocode_key": "",
-                    "geocode_lon": "",
-                    "geocode_lat": "",
-                    "geocoder": "",
-                    "geocode_status": "",
-                    "geocode_confidence": "",
-                    "address_match_status": "",
-                    "address_query": "",
-                    "unresolved_reason": "",
-                }
+                unresolved(
+                    row,
+                    method,
+                    "Non-geographic row is counted but not mapped",
+                )
             )
             continue
-
-        if method in {"special_non_geographic", "official_envelope"}:
-            output.append(unmapped(row, method, "non-geographic row is counted but not mapped"))
-            continue
-
-        output.append(unmapped(row, "unresolved", row.get("unresolved_reason", "unresolved assignment")))
+        output.append(
+            unresolved(
+                row,
+                "unresolved",
+                row.get("unresolved_reason", "Unresolved assignment"),
+            )
+        )
 
     fields = [
         "source_row_uid",
@@ -673,67 +574,35 @@ def main() -> None:
         "is_geographic",
         "final_assignment_method",
         "final_assignment_source",
-        "geocode_key",
-        "geocode_lon",
-        "geocode_lat",
-        "geocoder",
-        "geocode_status",
-        "geocode_confidence",
-        "address_match_status",
-        "address_query",
         "unresolved_reason",
     ]
     write_csv(OUT_DIR / "ballot_geography_assignments.csv", output, fields)
-    write_csv(
-        OUT_DIR / "geocode_point_stat_area_assignments.csv",
-        point_output,
-        [
-            "geocode_key",
-            "geocode_lon",
-            "geocode_lat",
-            "stat_area_id",
-            "yishuv_stat_2022",
-            "stat_2022",
-            "locality_id",
-            "locality_code",
-            "locality_name_he",
-            "geocoder",
-            "geocode_status",
-            "geocode_confidence",
-            "review_status",
-        ],
-    )
 
     missing = [
         row
         for row in output
-        if row["geography_assignment_status"].startswith("missing_geocode")
-        or row["geography_assignment_status"].startswith("geocoding_input_not_ready")
-        or row["geography_assignment_status"] == "geocoded_point_outside_stat_area"
-        or row["geography_assignment_status"] == "geocoded_point_outside_expected_locality"
-        or row["geography_assignment_status"] in HISTORICAL_PENDING_STATUSES
+        if row["geography_assignment_status"] in HISTORICAL_PENDING_STATUSES
+        or row["geography_assignment_status"] == "unresolved"
     ]
     write_csv(
         OUT_DIR / "unresolved_statistical_area_assignment_rows.csv",
         missing,
         fields,
     )
-    # Retain the old generated filename for downstream compatibility.
-    write_csv(OUT_DIR / "missing_geography_assignment_rows.csv", missing, fields)
 
     summary: list[dict[str, Any]] = []
     for election in sorted({row["election"] for row in output}, reverse=True):
         rows = [row for row in output if row["election"] == election]
         statuses = Counter(row["geography_assignment_status"] for row in rows)
         mapped_rows = [row for row in rows if normalize_bool(row["is_mapped"])]
-        locality_mapped_rows = [row for row in rows if normalize_bool(row["is_locality_mapped"])]
+        locality_mapped_rows = [
+            row for row in rows if normalize_bool(row["is_locality_mapped"])
+        ]
         missing_rows = [
-            row for row in rows
-            if row["geography_assignment_status"].startswith("missing_geocode")
-            or row["geography_assignment_status"].startswith("geocoding_input_not_ready")
-            or row["geography_assignment_status"] == "geocoded_point_outside_stat_area"
-            or row["geography_assignment_status"] == "geocoded_point_outside_expected_locality"
-            or row["geography_assignment_status"] in HISTORICAL_PENDING_STATUSES
+            row
+            for row in rows
+            if row["geography_assignment_status"] in HISTORICAL_PENDING_STATUSES
+            or row["geography_assignment_status"] == "unresolved"
         ]
         summary.append(
             {
@@ -741,36 +610,61 @@ def main() -> None:
                 "rows": len(rows),
                 "actual_voters": sum(int_value(row["actual_voters"]) for row in rows),
                 "mapped_rows": len(mapped_rows),
-                "mapped_actual_voters": sum(int_value(row["actual_voters"]) for row in mapped_rows),
-                "stat_area_rows": sum(1 for row in mapped_rows if row["geography_type"] == "statistical_area"),
-                "custom_geography_rows": sum(1 for row in mapped_rows if row["geography_type"] == "custom_geography"),
+                "mapped_actual_voters": sum(
+                    int_value(row["actual_voters"]) for row in mapped_rows
+                ),
+                "stat_area_rows": sum(
+                    row["geography_type"] == "statistical_area"
+                    for row in mapped_rows
+                ),
+                "custom_geography_rows": sum(
+                    row["geography_type"] == "custom_geography"
+                    for row in mapped_rows
+                ),
+                "arcgis_reconstructed_rows": sum(
+                    row["final_assignment_method"]
+                    == "arcgis_residual_partition_tier_a"
+                    for row in mapped_rows
+                ),
+                "arcgis_reconstructed_actual_voters": sum(
+                    int_value(row["actual_voters"])
+                    for row in mapped_rows
+                    if row["final_assignment_method"]
+                    == "arcgis_residual_partition_tier_a"
+                ),
                 "locality_mapped_rows": len(locality_mapped_rows),
                 "locality_mapped_actual_voters": sum(
-                    int_value(row["actual_voters"]) for row in locality_mapped_rows
+                    int_value(row["actual_voters"])
+                    for row in locality_mapped_rows
                 ),
                 "statistical_area_pending_rows": len(missing_rows),
                 "statistical_area_pending_actual_voters": sum(
                     int_value(row["actual_voters"]) for row in missing_rows
                 ),
                 "envelope_rows": statuses["official_envelope"],
-                "special_non_geographic_rows": statuses["special_non_geographic"],
+                "special_non_geographic_rows": statuses[
+                    "special_non_geographic"
+                ],
                 "unresolved_rows": statuses["unresolved"],
                 "historical_unresolved_rows": sum(
                     statuses[status] for status in HISTORICAL_PENDING_STATUSES
                 ),
             }
         )
-    write_csv(OUT_DIR / "final_assignment_summary.csv", summary, list(summary[0].keys()) if summary else [])
+    write_csv(
+        OUT_DIR / "final_assignment_summary.csv",
+        summary,
+        list(summary[0].keys()) if summary else [],
+    )
     write_json(OUT_DIR / "final_assignment_summary.json", summary)
 
     print(f"final_assignment_rows={len(output)}")
-    print(f"geocoded_points_loaded={len(geocoded_points)}")
-    print(f"geocoded_points_assigned={len(point_output)}")
     print(f"statistical_area_pending_rows={len(missing)}")
     for row in summary:
         print(
-            f"{row['election']}: mapped={row['mapped_rows']} stat={row['stat_area_rows']} "
-            f"custom={row['custom_geography_rows']} locality={row['locality_mapped_rows']} "
+            f"{row['election']}: mapped={row['mapped_rows']} "
+            f"stat={row['stat_area_rows']} custom={row['custom_geography_rows']} "
+            f"locality={row['locality_mapped_rows']} "
             f"stat_pending={row['statistical_area_pending_rows']}"
         )
 

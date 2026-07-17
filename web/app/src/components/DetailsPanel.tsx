@@ -74,7 +74,7 @@ export function DetailsPanel({ language, record, parties }: DetailsPanelProps) {
         </span>
       </div>
 
-      <dl className="metric-grid">
+      <dl className={`metric-grid${isEnvelope ? ' metric-grid--envelope' : ''}`}>
         {!isEnvelope ? (
           <div>
             <dt>{translate(language, 'turnout')}</dt>
@@ -124,6 +124,12 @@ export function DetailsPanel({ language, record, parties }: DetailsPanelProps) {
                       backgroundColor: party?.color ?? '#68706a',
                     }}
                   />
+                </span>
+                <span className="party-share">
+                  {formatPercent(
+                    record.totals.validVotes > 0 ? votes / record.totals.validVotes : 0,
+                    language,
+                  )}
                 </span>
               </li>
             )

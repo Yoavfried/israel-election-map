@@ -7,9 +7,8 @@ This dictionary describes schema version 1 under [`public-data/v1`](v1/).
 Files: `v1/ballots/k17.csv` through `v1/ballots/k25.csv`.
 
 The grain is one official election-result source row, sometimes called a ballot
-subdivision in the source. `source_row_uid` is the unique row key. Do not assume
-that an address identifies the voters' statistical area or that a displayed
-polling-station number is globally unique.
+subdivision in the source. `source_row_uid` is the unique row key. A displayed
+ballot number is not globally unique; use the repository row key.
 
 ### Source And Vote Columns
 
@@ -23,7 +22,6 @@ polling-station number is globally unique.
 | `eligible_voters` | Registered eligible voters where the source provides a usable denominator. |
 | `actual_voters` | Ballots cast. |
 | `valid_votes`, `invalid_votes` | Valid and invalid ballots. |
-| `source_address` | Retained polling-place address text; not an area-assignment input. |
 | `is_envelope` | Whether the source row is an official envelope result. |
 
 The columns between `is_envelope` and `geography_assignment_status` are party
@@ -44,13 +42,34 @@ Party columns sum exactly to `valid_votes` on every published row.
 | `stat_area_yishuv_stat` | Historical locality-area compound code from the source crosswalk. |
 | `stat_area_number` | Area number within the historical locality. |
 | `is_mapped` | Whether statistical mode has a supported mapped target. |
-| `final_assignment_method`, `final_assignment_source` | Assignment provenance. |
+| `final_assignment_method` | Machine-readable assignment method. Official crosswalk methods begin with `official_cbs_ballot_crosswalk`; reviewed inferred rows use `arcgis_residual_partition_tier_a`. |
+| `final_assignment_source` | Source file used for the link. Tier A inferred rows also name the reviewed decision table. |
 | `unresolved_reason` | Why no defensible statistical polygon was assigned. |
 
 For ordinary statistical assignments, join `stat_area_id` to
 `properties.geography_id` in the package named for `stat_area_vintage`.
 `geography_id` may instead point to a reviewed custom geography, so use that
 generic field when reproducing the exact statistical-mode display.
+
+#### Inferred K20/K21 Assignments
+
+Rows with
+`geography_assignment_status=arcgis_reconstructed_exact_assigned` and
+`final_assignment_method=arcgis_residual_partition_tier_a` have an inferred
+ballot-to-area relationship. Their ballot identity, eligible voters, actual
+voters, valid/invalid totals, and party votes remain unchanged official source
+values.
+
+Tier A means that, after official-crosswalk rows are subtracted from the ArcGIS
+area aggregates, exactly one partition of the remaining ballot rows matches
+every residual area's ballot count, eligible voters, and actual voters. The
+chosen partition also matches valid and invalid votes in every residual area.
+The release contains 573 such K20 rows and 178 K21 rows.
+
+[`metadata/arcgis_reconstruction_reviews.csv`](v1/metadata/arcgis_reconstruction_reviews.csv?raw=1)
+contains the 44 locality-election approvals, evidence label, expected row and
+voter totals, exact row-to-area SHA-256 fingerprint, review date, and review
+basis. Tier B candidates are not assigned or included in that approval table.
 
 ### Locality Assignment
 
@@ -86,6 +105,11 @@ Geographic aggregate tables expose `geography_id` and `geography_type` as their
 first join columns. Vote totals and party columns are additive. Do not split a
 published aggregate among component polygons unless another source supports the
 split.
+
+The K17 envelope/non-geographic row stores an eligible-voter value of 4,087 as
+a technical national-denominator bucket: 518 from three source camp rows plus
+the separate 3,569-person Gush Katif register. It is not a geographic split and
+must not be used to calculate envelope turnout.
 
 ## Geography Tables And Archives
 
@@ -136,4 +160,6 @@ QGIS:
 - Statistical and locality coverage are different because they answer different
   geographic questions.
 - `validation.json` verifies row counts, party-vote reconciliation, and that all
-  nonblank published join IDs exist in the supplied geometry.
+  nonblank published join IDs exist in the supplied geometry. It separately
+  reports reconstructed assignment rows and voters for each election and checks
+  them against the reviewed decisions.
