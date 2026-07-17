@@ -1,0 +1,109 @@
+{
+  "schema_version": 1,
+  "total_ballot_rows": 96529,
+  "aggregate_joins": {
+    "geographic_aggregate_rows": 33960,
+    "missing_aggregate_geometry_ids": 0
+  },
+  "elections": [
+    {
+      "election": "K17",
+      "rows": 8426,
+      "party_columns": 31,
+      "stat_area_vintage": 1995,
+      "statistically_mapped_rows": 7815,
+      "locality_mapped_rows": 8274,
+      "missing_stat_geometry_ids": 0,
+      "missing_locality_geometry_ids": 0,
+      "party_vote_mismatch_rows": 0
+    },
+    {
+      "election": "K18",
+      "rows": 9264,
+      "party_columns": 34,
+      "stat_area_vintage": 2008,
+      "statistically_mapped_rows": 8699,
+      "locality_mapped_rows": 9259,
+      "missing_stat_geometry_ids": 0,
+      "missing_locality_geometry_ids": 0,
+      "party_vote_mismatch_rows": 0
+    },
+    {
+      "election": "K19",
+      "rows": 10109,
+      "party_columns": 34,
+      "stat_area_vintage": 2011,
+      "statistically_mapped_rows": 9309,
+      "locality_mapped_rows": 9875,
+      "missing_stat_geometry_ids": 0,
+      "missing_locality_geometry_ids": 0,
+      "party_vote_mismatch_rows": 0
+    },
+    {
+      "election": "K20",
+      "rows": 10414,
+      "party_columns": 26,
+      "stat_area_vintage": 2011,
+      "statistically_mapped_rows": 9478,
+      "locality_mapped_rows": 10112,
+      "missing_stat_geometry_ids": 0,
+      "missing_locality_geometry_ids": 0,
+      "party_vote_mismatch_rows": 0
+    },
+    {
+      "election": "K21",
+      "rows": 10765,
+      "party_columns": 43,
+      "stat_area_vintage": 2011,
+      "statistically_mapped_rows": 9845,
+      "locality_mapped_rows": 10453,
+      "missing_stat_geometry_ids": 0,
+      "missing_locality_geometry_ids": 0,
+      "party_vote_mismatch_rows": 0
+    },
+    {
+      "election": "K22",
+      "rows": 10901,
+      "party_columns": 32,
+      "stat_area_vintage": 2011,
+      "statistically_mapped_rows": 9919,
+      "locality_mapped_rows": 10531,
+      "missing_stat_geometry_ids": 0,
+      "missing_locality_geometry_ids": 0,
+      "party_vote_mismatch_rows": 0
+    },
+    {
+      "election": "K23",
+      "rows": 11179,
+      "party_columns": 30,
+      "stat_area_vintage": 2011,
+      "statistically_mapped_rows": 9930,
+      "locality_mapped_rows": 10623,
+      "missing_stat_geometry_ids": 0,
+      "missing_locality_geometry_ids": 0,
+      "party_vote_mismatch_rows": 0
+    },
+    {
+      "election": "K24",
+      "rows": 12926,
+      "party_columns": 39,
+      "stat_area_vintage": 2011,
+      "statistically_mapped_rows": 11161,
+      "locality_mapped_rows": 12119,
+      "missing_stat_geometry_ids": 0,
+      "missing_locality_geometry_ids": 0,
+      "party_vote_mismatch_rows": 0
+    },
+    {
+      "election": "K25",
+      "rows": 12545,
+      "party_columns": 40,
+      "stat_area_vintage": 2011,
+      "statistically_mapped_rows": 10877,
+      "locality_mapped_rows": 11699,
+      "missing_stat_geometry_ids": 0,
+      "missing_locality_geometry_ids": 0,
+      "party_vote_mismatch_rows": 0
+    }
+  ]
+}

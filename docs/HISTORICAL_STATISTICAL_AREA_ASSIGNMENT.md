@@ -11,9 +11,9 @@ A polling-place address locates the building where voting occurred. It does not 
 Assignment precedence is:
 
 1. official envelope or reviewed non-geographic handling;
-2. reviewed custom geography where no normal statistical area exists;
-3. official election-specific ballot-to-statistical-area crosswalk;
-4. the election-vintage locality when that locality has exactly one published statistical area;
+2. official election-specific ballot-to-statistical-area crosswalk;
+3. the election-vintage locality when that locality has exactly one published statistical area;
+4. reviewed custom geography where no supported historical statistical area exists;
 5. unresolved, with no address-based fallback.
 
 Polling-place geolocation remains in the repository for address search, facility maps, and QA. It does not assign election votes to statistical areas.
@@ -46,16 +46,20 @@ The CBS GIS catalog documents the historical ballot products, including ballot-t
 
 | Vintage | Assignment features | Display replacements |
 |---:|---:|---:|
-| 1995 | 2,660 | 21 |
-| 2008 | 3,030 | 18 |
-| 2011 | 3,086 | 118 |
+| 1995 | 2,660 | 113 |
+| 2008 | 3,030 | 102 |
+| 2011 | 3,105 | 118 |
 
-The canonical geometry is official CBS geometry except for four explicit supplements:
+The canonical geometry is official CBS geometry except for 23 explicit supplements:
 
 - `stat1995:9400008` is the union defined by the official CBS 1995-to-2008 transition key for Yehud-Newe Efrayim.
-- `stat2011:9860001`, `stat2011:36370001`, and `stat2011:37970001` have official crosswalk IDs but are absent from the downloaded CBS 2011 GDB. Their exact-ID geometries come from the supplied 2015 ArcGIS layer and are marked as derivative supplements.
+- Twenty-two 2011 areas are absent from the downloaded CBS GDB and use exact-ID geometry from the supplied 2015 ArcGIS layer. Three are the previously crosswalk-backed `stat2011:9860001`, `stat2011:36370001`, and `stat2011:37970001`; the other 19 are one-area records for 18 reviewed tribal localities plus Hebron.
 
-For display only, small schematic West Bank proxy shapes are replaced by detailed settlement footprints from the supplied ArcGIS election layers when the locality has exactly one statistical area and the candidate polygon is spatially consistent. Assignment IDs and vote totals do not come from ArcGIS. The ArcGIS service itself warns that its election data are not official and that some polygons are schematic.
+The 19 tribe/Hebron supplements are eligible for the one-area fallback only in K19-K25, whose active vintage is 2011. The independent K20 ArcGIS table reproduces the official ballot count, eligible voters, actual voters, valid votes, and invalid votes exactly for all 19 localities. The K21 layer contains all 18 tribal localities but not Hebron; its ballot, eligible-voter, and actual-voter totals agree, while three localities shift one vote between valid and invalid. Election votes always come from the normalized official election source, never from ArcGIS. K17/K18 retain the reviewed tribe and Hebron markers because neither their official crosswalks nor the 1995/2008 CBS geometry supplies a defensible historical area.
+
+For display only, schematic West Bank proxy shapes are replaced by detailed settlement footprints from the supplied ArcGIS election layers when the locality has exactly one statistical area, the candidate has a non-schematic boundary, and the candidate polygon is spatially consistent. Apart from the 22 explicit exact-ID geometry supplements above, assignment IDs do not come from ArcGIS. The ArcGIS service itself warns that its election data are not official and that some polygons are schematic.
+
+This replacement now covers 113 shapes in the 1995 layer and 102 in the 2008 layer. All ordinary K17/K18 West Bank markers that have results therefore render as detailed polygons. The remaining ten 1995 and three 2008 ordinary settlement markers have no result in those elections and no usable detailed candidate; the result-bearing tribe and Hebron custom buckets remain markers for the provenance reason above.
 
 The same display-only rule replaces 115 tiny proxies in current 2022 locality geometry. Rotem, Maskiyot, Avnat, and Mavo'ot Yeriho have no usable detailed footprint in either supplied ArcGIS layer and remain fixed-size markers. Sha'ar Shomron now renders as the union of its two detailed component polygons. The active K25 Yitav/Mavo'ot result remains one result with two marker points so the unresolved Mavo'ot proxy is not hidden inside a mixed polygon.
 
@@ -90,7 +94,7 @@ Ma'ale Adumim is the regression case that exposed the problem. Areas 1, 2, and 3
 
 These rows cannot be repaired from polling-place coordinates because the building is not the voters' residential statistical area. Every pending row is preserved in `unresolved_statistical_area_assignment_rows.csv`.
 
-The geometry join itself has no current missing-ID gap: every mapped target resolves to geometry. The remaining geometry caveats concern provenance and display quality, including four documented historical supplements and derivative ArcGIS West Bank display footprints.
+The geometry join itself has no current missing-ID gap: every mapped target resolves to geometry. The remaining geometry caveats concern provenance and display quality, including 23 documented historical supplements and derivative ArcGIS West Bank display footprints.
 
 ## Generated Outputs
 

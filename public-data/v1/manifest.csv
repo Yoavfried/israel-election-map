@@ -1,0 +1,73 @@
+﻿path,category,election,stat_area_vintage,format,rows_or_features,bytes,sha256,description
+aggregates/custom-geographies/k17.csv,aggregate-custom-geographies,K17,1995,csv,4,1244,c5c400a68928720c1acaf00e4d871ef9dd58d99d866308388b4ccc42dfbce8c9,K17 custom-geographies aggregate or review table.
+aggregates/custom-geographies/k18.csv,aggregate-custom-geographies,K18,2008,csv,4,1308,0bef735243c167c09355dc27453a336fe68059368d888422c00ca2a61028536a,K18 custom-geographies aggregate or review table.
+aggregates/custom-geographies/k19.csv,aggregate-custom-geographies,K19,2011,csv,2,862,73154eb8a2e0f80c3fc0c057db902ebf95f5abd38b1c68e8fcbd4ebe2116a650,K19 custom-geographies aggregate or review table.
+aggregates/custom-geographies/k20.csv,aggregate-custom-geographies,K20,2011,csv,2,798,4bdb5d052165042698c0994cff336242236c27e62070d5404b34bf3a8fd87aa0,K20 custom-geographies aggregate or review table.
+aggregates/custom-geographies/k21.csv,aggregate-custom-geographies,K21,2011,csv,2,939,3aba395c7a65b1fc10341886c45ac9cb7920afc8c94f09097e5118f8d5e3f0f8,K21 custom-geographies aggregate or review table.
+aggregates/custom-geographies/k22.csv,aggregate-custom-geographies,K22,2011,csv,2,850,db3fac87018ee2a05d0c186793c7e9e7aab71bb3751662ae354f280880f22322,K22 custom-geographies aggregate or review table.
+aggregates/custom-geographies/k23.csv,aggregate-custom-geographies,K23,2011,csv,2,826,531ed86d57b6a8c5c8758f07c25118163f24ecb085b43e313f9df0c3b09ef810,K23 custom-geographies aggregate or review table.
+aggregates/custom-geographies/k24.csv,aggregate-custom-geographies,K24,2011,csv,2,895,6078c1a000745391174d73f24d90e51cb9fb07329c84cae88c15084cc972baaf,K24 custom-geographies aggregate or review table.
+aggregates/custom-geographies/k25.csv,aggregate-custom-geographies,K25,2011,csv,2,905,89697deb66cdaea41f0a8b99fd2728b59d84e9e7e1baffd93886714736434611,K25 custom-geographies aggregate or review table.
+aggregates/envelopes/k17.csv,aggregate-envelopes,K17,1995,csv,1,643,16b5930c0aa3212f249b642bf56abac974dd6a335123ce34d614e91353a899a4,K17 envelopes aggregate or review table.
+aggregates/envelopes/k18.csv,aggregate-envelopes,K18,2008,csv,1,675,97a8defdbf055e92ae12e6347e7eef96d279c5082042a85919f0a1b9b9f104ee,K18 envelopes aggregate or review table.
+aggregates/envelopes/k19.csv,aggregate-envelopes,K19,2011,csv,1,675,7c836a1de8383d7c8de4a8637a5aac9cb5b46dee4a4f28df3cdca2810b11f941,K19 envelopes aggregate or review table.
+aggregates/envelopes/k20.csv,aggregate-envelopes,K20,2011,csv,1,605,2e5265663f4cf34ca3893d81dbab56303ed679ae49f128ba7bd678a6dbc352e7,K20 envelopes aggregate or review table.
+aggregates/envelopes/k21.csv,aggregate-envelopes,K21,2011,csv,1,738,acd127e206c329c12773e6cd1ce9b51bdf1e80568c35685c0e88a852dbc3cbf0,K21 envelopes aggregate or review table.
+aggregates/envelopes/k22.csv,aggregate-envelopes,K22,2011,csv,1,646,63ebfe53ccad4b4f27c49cbe9fbf66edfe8585a376aa7af189abf7abec05bbcf,K22 envelopes aggregate or review table.
+aggregates/envelopes/k23.csv,aggregate-envelopes,K23,2011,csv,1,627,10bcfd98848a3a389598fcb42bd0d1db8b71992a74b082834651bec72172b326,K23 envelopes aggregate or review table.
+aggregates/envelopes/k24.csv,aggregate-envelopes,K24,2011,csv,1,712,3f9ee5603976d469a83f832f942628d4ab5260530cb6b842160e965509c29e84,K24 envelopes aggregate or review table.
+aggregates/envelopes/k25.csv,aggregate-envelopes,K25,2011,csv,1,719,f557ce45ae43b6e2ae2c70c8c7294b74b04a3b0d417274fa42383cc5cb6fef9f,K25 envelopes aggregate or review table.
+aggregates/localities/k17.csv,aggregate-localities,K17,1995,csv,1122,183558,37916b7ba612c13de50a1150231c81ae0581a4e3fca13eabbe6539eab5d5429f,K17 localities aggregate or review table.
+aggregates/localities/k18.csv,aggregate-localities,K18,2008,csv,1132,195151,769d4d390af9becc895af8c0e185462ec4a4135188d699837db130924f182fa9,K18 localities aggregate or review table.
+aggregates/localities/k19.csv,aggregate-localities,K19,2011,csv,1155,198196,a82b11245064e45982afef4d46c55a6883d3f6fb59b0206eb2756eea42f82c63,K19 localities aggregate or review table.
+aggregates/localities/k20.csv,aggregate-localities,K20,2011,csv,1165,181168,90f1d8e72bf54e39859e4d8b651f85194838f97487bc920ee9bfe1e33e7f025b,K20 localities aggregate or review table.
+aggregates/localities/k21.csv,aggregate-localities,K21,2011,csv,1184,224064,ad69bf1609bcae71be2cfb20b7d466fa3920fd34009fe2c8588bc02c3ebb2105,K21 localities aggregate or review table.
+aggregates/localities/k22.csv,aggregate-localities,K22,2011,csv,1184,197047,68f33d8d7552689c741da39971d2db32cb7884d093a9dc612d67804755abbac2,K22 localities aggregate or review table.
+aggregates/localities/k23.csv,aggregate-localities,K23,2011,csv,1184,190881,3d9f5519362cd5af12a5c0a17164de03eb43a3f5f4aa1ae9442029894f3a46b4,K23 localities aggregate or review table.
+aggregates/localities/k24.csv,aggregate-localities,K24,2011,csv,1186,215458,cfa6f9fc4743c8e3694dcb63387e5dc6996ea3e689f08ee8cb549e383545a4a4,K24 localities aggregate or review table.
+aggregates/localities/k25.csv,aggregate-localities,K25,2011,csv,1187,217071,fc82128d6bf1caf4cdbf86d47d5f35600ac718899f7021207cabf7c91d0e02af,K25 localities aggregate or review table.
+aggregates/statistical-areas/k17.csv,aggregate-statistical-areas,K17,1995,csv,2359,510107,3ad1a56c0c382dd978cac80ad75fcd708319fa4a6b9b1b838dda29f09585064f,K17 statistical-areas aggregate or review table.
+aggregates/statistical-areas/k18.csv,aggregate-statistical-areas,K18,2008,csv,2633,599280,db648c9eb0b309954d3a4ba11326e048049d10006a64cedc0203558a19003d3a,K18 statistical-areas aggregate or review table.
+aggregates/statistical-areas/k19.csv,aggregate-statistical-areas,K19,2011,csv,2687,612155,23db5da976c627318012e65db689dbd298e7995fe0217f974bae917bf2084284,K19 statistical-areas aggregate or review table.
+aggregates/statistical-areas/k20.csv,aggregate-statistical-areas,K20,2011,csv,2689,569675,9c37a8063e1bb15889c563d2ca0e6a8ea1f24e3133f761d3c64ca78270aef4cd,K20 statistical-areas aggregate or review table.
+aggregates/statistical-areas/k21.csv,aggregate-statistical-areas,K21,2011,csv,2661,652497,8ce45e64c31ccbb21ce8f62a6a4b5266cb02ffb7d120a02c20c0909d0b03d853,K21 statistical-areas aggregate or review table.
+aggregates/statistical-areas/k22.csv,aggregate-statistical-areas,K22,2011,csv,2654,588771,aae0c9336795e331bb79a29e90947cff343b86d3e855457c187b50119685b5dc,K22 statistical-areas aggregate or review table.
+aggregates/statistical-areas/k23.csv,aggregate-statistical-areas,K23,2011,csv,2641,572188,c47d1c3159ebc23664b079fbdd29abeb00d39afec257991680127bb7d1b1120e,K23 statistical-areas aggregate or review table.
+aggregates/statistical-areas/k24.csv,aggregate-statistical-areas,K24,2011,csv,2554,607620,1126b914844885e386ef929539a676b5f0ebc767ff7873906cb0a79ee2c2a465,K24 statistical-areas aggregate or review table.
+aggregates/statistical-areas/k25.csv,aggregate-statistical-areas,K25,2011,csv,2561,611453,e11741b83e616275c27e34c7712462850d242cd0edf6d9abddbf2466a7e8cd2b,K25 statistical-areas aggregate or review table.
+aggregates/unresolved/k17.csv,aggregate-unresolved,K17,1995,csv,573,198392,ffd5824bd98e402e7a7ffa8729fe35567083c214569c3fecc06ad19f80f8688f,K17 unresolved aggregate or review table.
+aggregates/unresolved/k18.csv,aggregate-unresolved,K18,2008,csv,524,193476,7a0be425cc97ffd655d310eae444c6c2729c969f72ebb760536e4bf021b02e83,K18 unresolved aggregate or review table.
+aggregates/unresolved/k19.csv,aggregate-unresolved,K19,2011,csv,800,282691,e580c3bd3bb5754a1adadd5a5f76b3f8196fb0ce66084f3a845199c43aed5fe3,K19 unresolved aggregate or review table.
+aggregates/unresolved/k20.csv,aggregate-unresolved,K20,2011,csv,936,312624,bb217e802d7923eca9b0c6619668d2c23f01d1976a1470c45aba8e437b4559d4,K20 unresolved aggregate or review table.
+aggregates/unresolved/k21.csv,aggregate-unresolved,K21,2011,csv,920,339097,0abd6e41c98cd0b0e6f4a9e24cac4aa0391ca3d5583c7e099aa875607482d72d,K21 unresolved aggregate or review table.
+aggregates/unresolved/k22.csv,aggregate-unresolved,K22,2011,csv,982,336719,d9b447c58acb437c5c01b1aedbac081c6e287cc5c1b1bd02d4c6e234c6f63885,K22 unresolved aggregate or review table.
+aggregates/unresolved/k23.csv,aggregate-unresolved,K23,2011,csv,1249,418498,d526eac29ffa54b87893fdfb1a1c6d256670f44cb36f003e65ceb6fa4464fcb8,K23 unresolved aggregate or review table.
+aggregates/unresolved/k24.csv,aggregate-unresolved,K24,2011,csv,1765,630556,b4046053a67a31f1788cbe8e0c07930e411fe4465ba97193c739d7e2b5029c3b,K24 unresolved aggregate or review table.
+aggregates/unresolved/k25.csv,aggregate-unresolved,K25,2011,csv,1668,591801,4dda9323a248971d371708445decff7f27e69e2cf793fa868bfed7ec2d99173e,K25 unresolved aggregate or review table.
+ballots/k17.csv,ballot-results,K17,1995,csv,8426,3642834,fce8d3acd7c105bec07daa3a5eb20f594b21c4f35a3a22ebdbca027795d7bab2,Complete ballot-row vote table with statistical and locality join IDs.
+ballots/k18.csv,ballot-results,K18,2008,csv,9264,3831549,116260eaca0eaa17f5567e524527dda228dba215b8ccc8efbf6e48c3ab5363e5,Complete ballot-row vote table with statistical and locality join IDs.
+ballots/k19.csv,ballot-results,K19,2011,csv,10109,4170324,1507c9973172800935efee02b6896782f6eed0e332d2dcb660d29b950710c0fb,Complete ballot-row vote table with statistical and locality join IDs.
+ballots/k20.csv,ballot-results,K20,2011,csv,10414,4134280,f2302997ae93862901a7a4a1b005b2dfdccecd033d62c6b11b47dbacbb285fe4,Complete ballot-row vote table with statistical and locality join IDs.
+ballots/k21.csv,ballot-results,K21,2011,csv,10765,4681050,39aa774d51a8bb39c5f598b0fca982f2229a441105b1d5c8379dd794e2fd63b3,Complete ballot-row vote table with statistical and locality join IDs.
+ballots/k22.csv,ballot-results,K22,2011,csv,10901,4495897,293e327bf4812ce63500e9d745565e1b7bbed17cce4d375056ea9711f1f549cb,Complete ballot-row vote table with statistical and locality join IDs.
+ballots/k23.csv,ballot-results,K23,2011,csv,11179,4556746,0cd3cfe37f47d0003a83b67deedb5f36905729145d60196abfc908b992c61a29,Complete ballot-row vote table with statistical and locality join IDs.
+ballots/k24.csv,ballot-results,K24,2011,csv,12926,5696785,37f9b88777992c9486ebdb6aae1215098a208b172bfa351686096d3f6dfdd4fd,Complete ballot-row vote table with statistical and locality join IDs.
+ballots/k25.csv,ballot-results,K25,2011,csv,12545,5514176,819f720aa6547c78c2e57f2cfd821341662ef31652c95e5e94d15a5129550d9b,Complete ballot-row vote table with statistical and locality join IDs.
+geographies/composite_localities.csv,geography-metadata,,reviewed,csv,100,38995,bc8cd5c073e077f341ea7f0266da866f6a8da0ba8fbcfa9ef64fb82dbb6e7d34,Feature metadata and join IDs for composite_localities.
+geographies/composite_localities.zip,geography-package,,reviewed,zip,100,1255602,f7222f8f2873b412b687ba4a55556a311d244ccf29c58a68abb0a0684a7c116f,Full-resolution GeoJSON and metadata for composite_localities.
+geographies/custom_geographies.csv,geography-metadata,,reviewed,csv,4,1307,cc4b1b5565a11b0bfd8729e2b14f3c33dbad20b4c6a00b31200f871bb31682e6,Feature metadata and join IDs for custom_geographies.
+geographies/custom_geographies.zip,geography-package,,reviewed,zip,4,14174,ab1d97ee2d44b8df96eacb665d2905c2a8b1d221b98a21b1b81757a66579d63f,Full-resolution GeoJSON and metadata for custom_geographies.
+geographies/localities_2022.csv,geography-metadata,,2022,csv,1387,275427,168d328f55eba6079b3d02e3cc5f68becb158d7ae36b88b34c9097efeecde7da,Feature metadata and join IDs for localities_2022.
+geographies/localities_2022.zip,geography-package,,2022,zip,1387,36115778,b093c4008589d11b64cb76bb1635756d41b4c54563fd6c0424de65fc0f220892,Full-resolution GeoJSON and metadata for localities_2022.
+geographies/statistical_areas_1995.csv,geography-metadata,,1995,csv,2660,509298,883255057baaf5f9bd7217eb60b6efc7de3f09a9c7bad8b9f6436b6cf9797cdb,Feature metadata and join IDs for statistical_areas_1995.
+geographies/statistical_areas_1995.zip,geography-package,,1995,zip,2660,4730117,6bec0599f7d497625cff4b3d41f1fe3c24174c94be71328a7e0ee46ee85a2c34,Full-resolution GeoJSON and metadata for statistical_areas_1995.
+geographies/statistical_areas_2008.csv,geography-metadata,,2008,csv,3030,591088,2d33ca3b916a5bb79ba6f985a1269a153d8fb63d5ae7ee9582174f70e594874f,Feature metadata and join IDs for statistical_areas_2008.
+geographies/statistical_areas_2008.zip,geography-package,,2008,zip,3030,7349861,e8d626c0b2b9b61f8ed2f26242fae89a8a5f70e0124e7e1bc8f7756caf78ce9d,Full-resolution GeoJSON and metadata for statistical_areas_2008.
+geographies/statistical_areas_2011.csv,geography-metadata,,2011,csv,3105,608192,672f6e3a965d1fd299d98254936ba782baedeb481823825acf27e5b01f0eac8a,Feature metadata and join IDs for statistical_areas_2011.
+geographies/statistical_areas_2011.zip,geography-package,,2011,zip,3105,13411534,42096b65e5fc72b65063ffa9931a96a20fa9aff4a0c19a6037f8ce9fb16f7aa4,Full-resolution GeoJSON and metadata for statistical_areas_2011.
+geographies/statistical_areas_2022.csv,geography-metadata,,2022,csv,3857,818142,f30980fa68550ed5be3d9717f3ea3467de71273014d804742880249449c55c33,Feature metadata and join IDs for statistical_areas_2022.
+geographies/statistical_areas_2022.zip,geography-package,,2022,zip,3857,39526690,ddb21bd8a8315291b5170a961b14e5e74c2b221e6f3ddaf3f7ed6f6398a42c28,Full-resolution GeoJSON and metadata for statistical_areas_2022.
+metadata/coverage.csv,metadata,,,csv,9,2149,397bb870542bd51f2fb5a150423e02e9473b21773ac39d0c1bc4102d4a4b3a98,Per-election statistical and locality mapping coverage.
+metadata/elections.csv,metadata,,,csv,9,1511,50a458587a5de8941d14a899b58ce2cabc4bbcc974366c2296c39ade0588624a,"Election years, active statistical-area vintages, and principal download paths."
+metadata/geographies.csv,metadata,,,csv,14143,3353898,162b144c747c11c441999149296b6abe939e3011b7cc3ad74ec666b4d92c8875,Combined lookup for every published geography ID and package.
+metadata/parties.csv,metadata,,,csv,309,144901,59e641886cc1bc59210c979bffb10f0eeed9d17491aea8d7ba6ab645e05271a1,Election-specific party/list lookup keyed by election and source_column; no map colors.

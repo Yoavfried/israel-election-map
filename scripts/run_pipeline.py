@@ -21,6 +21,7 @@ STAGES = [
     ["scripts/audit_polling_place_address_quality.py"],
     ["scripts/build_final_geography_assignments.py"],
     ["scripts/build_public_outputs.py"],
+    ["scripts/build_public_data_release.py"],
 ]
 
 GEOGRAPHY_OUTPUTS = [

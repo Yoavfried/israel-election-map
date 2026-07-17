@@ -28,7 +28,7 @@ scripts/build-data.mjs
   - joins bilingual geography metadata
   - prunes GeoJSON properties
   - attaches stable feature IDs
-  - merges custom geography results
+  - merges mode-tagged custom geography results
   - applies election-specific composite visibility and joined-host result aliases
   - applies reviewed historical locality names and no-result visibility
   - attaches envelope aggregates
@@ -122,60 +122,22 @@ Move to tiles before public launch if any of these remain true after compression
 - A polygon without mapped results remains visible but muted.
 - The UI never interprets an absent polygon result as zero votes.
 - Mapped coverage is shown for every election and is prominent while it remains partial.
-- Coverage is mode-specific: locality coverage is complete; direct historical statistical coverage ranges from 94.13% to 100% by election. The partial-presence locality audit remains open.
+- Coverage is mode-specific: locality coverage is complete; historical statistical coverage ranges from 92.37% to 94.65% by election. The partial-presence locality audit remains open.
 - Envelope votes are excluded from polygon coverage and remain visible through the separate national result control.
 - Active composite localities hide their 2022 component features; inactive composites are hidden. A joined-register union replaces exactly one published host result and is rejected if another union claims that host or an attached component has a standalone result. Its visible title/code remain the host's, and attached polygon names are exposed separately through the details-panel info tooltip. Other hidden-result conflicts remain fatal.
 - `data/manual/locality_display_overrides.csv` can preserve an election-time name on 2022 geometry or hide a reviewed feature that has no standalone result. The geometry remains canonical and the same hidden-result rejection applies.
 - Custom geometries remain in the canonical geometry asset but are filtered out of rendering and hit-testing unless the selected result asset contains their ID.
+- Custom result aggregates are tagged by geography mode. A row can therefore use a real historical statistical polygon while retaining its reviewed custom grouping in locality mode without being omitted or counted twice.
 - Custom buckets and remaining point-like proxies render as fixed-size markers. Multi-part proxy results use `MultiPoint`; audited detailed West Bank display footprints render as polygons.
 - Compiler errors are fatal for missing metadata, duplicate result IDs, invalid numbers, or missing required output files.
 
-## Implementation phases
+## Project Tracking
 
-### Implemented foundation
+This document defines the frontend architecture and invariants; it does not
+track completion or roadmap state. The repository's sole completion tracker is
+[`docs/PROJECT_STATUS.md`](../../../docs/PROJECT_STATUS.md).
 
-- Isolated Vite/React/TypeScript app under `web/app/`.
-- Atomic build-time asset compiler.
-- Runtime Zod contracts and cached data client.
-- Election and geography selectors.
-- Hebrew/English and RTL/LTR support.
-- Responsive map shell and details panel.
-- Coverage disclosure and partial-data treatment.
-- Complete locality aggregation with historical composite geometry replacement and source-backed K19/K20/K25 joined-register unions.
-- Election-specific 1995/2008/2011 statistical geometry selected through catalog schema version 3.
-- Direct official CBS ballot crosswalk assignment ahead of address-geolocation work.
-- Selectable envelope summary and full national ballot breakdown.
-- Complete election-specific result-column registry coverage and reviewed party/list display names; Hebrew/English article candidates remain under editorial review.
-- Scrollable area details that retain every ballot list, including zero-vote rows.
-- MapLibre renderer with stable feature-state joins.
-- Unit tests for contracts, compiler behavior, preferences, and localized controls.
-
-### Before the first product demo
-
-1. Complete the election-by-election history and visibility review for the 80 partial-presence locality features. Fifty-two have no supported joined election yet; the other 28 still have unresolved gaps outside their supported K19/K20 joins.
-2. Complete the Hebrew/English Wikipedia-link audit. Party/list names are complete.
-3. Complete the reviewed party-color table, including election-specific exceptions where a ballot letter changes identity.
-4. Audit the remaining official-crosswalk omissions across K17-K25 without using demographic reference fields or polling-place coordinates as assignment shortcuts.
-5. Decide how Wikipedia links and any future cross-election lineage should appear in the UI.
-6. Add coloring controls for winner, selected-party share, turnout, and margin.
-7. Add a searchable locality/area navigator and keyboard-accessible result list.
-8. Add per-area contribution drill-down from `ballot_contributions` through a separate on-demand asset.
-9. Continue general UX refinement across desktop, mobile, Hebrew, and English; resolve accessibility and interaction issues found during browser QA.
-10. Decide whether custom buckets belong in both modes or in a third explicit mode.
-11. Add end-to-end browser tests for election/mode/language switching and mobile breakpoints.
-12. Measure GeoJSON transfer/parse cost on a representative phone; switch to PMTiles if needed.
-
-UX and feature development remain active work; the implemented foundation is not a declaration that the product experience is finished.
-
-### Public-release hardening
-
-1. Add source/provenance and methodology pages in both languages.
-2. Add downloadable mapped/unmapped tables and a clear election-vintage/source explanation.
-3. Add asset cache headers and immutable build-ID paths.
-4. Add privacy-safe analytics only if there is a concrete product need.
-5. Run accessibility, browser, performance, and data-reconciliation checks as release gates.
-
-## Non-goals for this stage
+## Architectural Non-goals
 
 - No browser-side election ingestion, geocoding, or assignment logic.
 - No server database or API.

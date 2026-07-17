@@ -27,7 +27,30 @@ SOURCE_DIR = RAW_DIR / "cbs_historical_geography"
 EXTRACTED_DIR = SOURCE_DIR / "extracted"
 OUT_DIR = PROCESSED_DIR / "geographies"
 ARCGIS_DIR = RAW_DIR / "arcgis"
-ARCGIS_2011_SUPPLEMENT_IDS = {9860001, 36370001, 37970001}
+ARCGIS_2011_SUPPLEMENT_IDS = {
+    9390001,
+    9560001,
+    9570001,
+    9580001,
+    9600001,
+    9610001,
+    9630001,
+    9640001,
+    9650001,
+    9660001,
+    9670001,
+    9690001,
+    9700001,
+    9720001,
+    9760001,
+    9860001,
+    10410001,
+    11690001,
+    12340001,
+    34000001,
+    36370001,
+    37970001,
+}
 TRANSITION_1995_TARGETS = {
     (9400, 8): {
         "locality_name_he": "\u05d9\u05d4\u05d5\u05d3-\u05e0\u05d5\u05d5\u05d4 \u05d0\u05e4\u05e8\u05d9\u05dd",

@@ -47,16 +47,18 @@ Pipeline order:
 7. build official historical ballot-to-area assignments;
 8. retain address-geocoding inputs and audits as a separate polling-place-location dataset;
 9. build final row-level geography assignments with historical assignments first;
-10. aggregate public statistical-area, locality, custom, envelope, contribution, and unresolved outputs.
+10. aggregate statistical-area, locality, custom, envelope, contribution, and unresolved working outputs;
+11. publish the committed `public-data/v1` ballot CSVs, aggregate tables,
+    full-resolution geography ZIPs, metadata, checksums, and validation report.
 
 ## Assignment Precedence
 
 `scripts/build_final_geography_assignments.py` applies:
 
 1. envelope and reviewed non-geographic rules;
-2. reviewed custom geography rules;
-3. official CBS election-specific ballot crosswalk;
-4. unique historical-area locality fallback;
+2. official CBS election-specific ballot crosswalk;
+3. unique historical-area locality fallback;
+4. reviewed custom geography rules when no supported historical area exists;
 5. unresolved historical assignment.
 
 Historical unresolved rows are terminal for election statistical-area mode. They do not fall through to OSM, Photon, or reviewed building coordinates. Address geolocation remains available for polling-place features and QA.
@@ -69,11 +71,11 @@ Historical unresolved rows are terminal for election statistical-area mode. They
 - preserves each historical election-area ID and does not treat demographic reference fields as unions;
 - produces stable IDs `stat<vintage>:<combined-code>`;
 - constructs the one missing 1995 Yehud-Newe Efrayim target from the official transition table;
-- adds three exact-ID 2011 geometry supplements from the audited ArcGIS 2015 layer;
-- creates separate display geometry with detailed West Bank footprints where a CBS source is only a tiny proxy;
+- adds 22 exact-ID 2011 geometry supplements from the audited ArcGIS 2015 layer, including 18 tribal localities and Hebron;
+- creates separate display geometry with detailed West Bank footprints where a CBS source is a small or low-vertex proxy;
 - never imports ArcGIS vote totals.
 
-Current feature counts are 2,660 for 1995, 3,030 for 2008, and 3,086 for 2011. Display-only detailed replacements number 21, 18, and 118 respectively.
+Current feature counts are 2,660 for 1995, 3,030 for 2008, and 3,105 for 2011. Display-only detailed replacements number 113, 102, and 118 respectively.
 
 `scripts/build_geographies.py` applies the same display-only source policy to current geometry. It writes separate official and `.display` 2022 assets, replaces 115 current locality/statistical proxies, and builds composites from the display geometry. Four West Bank settlements without a detailed source remain markers.
 
@@ -87,6 +89,7 @@ Current feature counts are 2,660 for 1995, 3,030 for 2008, and 3,086 for 2011. D
 - respects cross-locality combined target IDs;
 - preserves exact crosswalk area IDs; `Stat08_Unite` and `Stat11_Ref` are demographic references, not election-area unions;
 - permits a locality fallback only when one historical area exists;
+- permits the reviewed tribe/Hebron custom rows to use that fallback only for the 2011 vintage; K17/K18 retain their custom markers;
 - emits explicit unresolved and missing-geometry statuses.
 
 After geometry supplements, missing-geometry status is zero in every election.
@@ -113,7 +116,23 @@ After geometry supplements, missing-geometry status is zero in every election.
 - `data/processed/public/ballot_contributions/*.csv`
 - `data/processed/public/unmapped_rows/*.csv`
 
+The curated repository release is written separately so ignored working data
+does not need to be committed:
+
+- `public-data/v1/ballots/*.csv`
+- `public-data/v1/aggregates/<mode>/*.csv`
+- `public-data/v1/geographies/*.zip` and matching feature-metadata CSVs
+- `public-data/v1/metadata/*.csv`
+- `public-data/v1/manifest.{csv,json}` and `validation.json`
+
+Every published polygon aggregate has a generic `geography_id` that joins to
+the same property in its GeoJSON. The release builder rejects missing geometry
+IDs, duplicate assignment rows, and party totals that do not reconcile to valid
+votes.
+
 The old generated filename `missing_geography_assignment_rows.csv` is retained as a compatibility copy of `unresolved_statistical_area_assignment_rows.csv`.
+
+`custom_geography_results` rows carry `geography_mode`. This keeps K17/K18 custom statistical markers separate from the locality-mode tribe/Hebron aggregates after K19-K25 move onto exact 2011 statistical polygons.
 
 ## Verified Coverage
 

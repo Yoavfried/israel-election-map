@@ -44,6 +44,9 @@ The compiler reads promoted public assignment outputs. Locality mode covers the 
 
 Statistical mode uses official ballot-to-area crosswalks and election-specific historical geometry: 1995 for K17, 2008 for K18, and 2011 for K19-K25. Address-geocoding candidates are not eligible assignment inputs. Result payloads disclose mapped-voter coverage and preserve pending rows instead of inferring their polygons.
 
-Party/list display names are complete. Party colors and Wikipedia-link review remain in progress, as do broader UX and feature work.
+Party/list metadata and presentation configuration are compiled into the map
+separately from the downloadable public-data release.
 
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the data contract and implementation status.
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the data contract and
+[`../../docs/PROJECT_STATUS.md`](../../docs/PROJECT_STATUS.md) for the sole
+project completion tracker.

@@ -2,7 +2,9 @@
 
 Last updated: 2026-07-17
 
-This is the canonical status summary. Methodology and evidence remain in the linked subject-specific documents.
+This is the repository's only project completion tracker. Methodology, audit
+evidence, and generated coverage tables remain in subject-specific documents,
+but open/complete workstream declarations belong here.
 
 ## Workstreams
 
@@ -16,7 +18,24 @@ This is the canonical status summary. Methodology and evidence remain in the lin
 | Wikipedia links | In progress | Hebrew and English candidates exist for many lists, but links and intentional blanks are not fully audited. |
 | UX and accessibility | In progress | The bilingual responsive map works, but interaction polish, mobile QA, keyboard behavior, and accessibility review continue. |
 | Product features | In progress | Search/navigation, additional map coloring modes, contribution drill-down, methodology UI, and a possible polling-place layer remain planned or partial. |
-| Public release hardening | In progress | Documentation and repository hygiene are public-facing; source bootstrap, licensing, CI, performance, and release packaging are not finished. |
+| Public data distribution | Implemented; release policy open | Versioned K17-K25 ballot CSVs, polygon aggregates, full-resolution geography ZIPs, metadata, checksums, and validation are committed under `public-data/v1`. Licensing and a future release/versioning policy remain open. |
+| Public repository hardening | In progress | Documentation and repository hygiene are public-facing; fresh-clone source bootstrap, licensing, CI, and performance checks are not finished. |
+
+## Public Data Release
+
+The committed `public-data/v1` release can be used without running the private
+working-data pipeline. It includes:
+
+- nine complete election-specific ballot-row CSVs covering 96,529 rows;
+- statistical-area, locality, custom-geography, envelope, and unresolved tables;
+- full-resolution 1995, 2008, 2011, and 2022 statistical-area packages;
+- current locality, reviewed composite-locality, and custom-geography packages;
+- direct `geography_id` joins, party/election metadata, checksums, and validation.
+
+Map colors and other presentation choices are intentionally excluded from the
+data release and remain in `web/app/`. The public files are downloadable, but a
+reuse license has not yet been selected; the repository must not describe them
+as legally open data until that decision is made.
 
 ## Statistical-Area Data Gaps
 
@@ -42,8 +61,8 @@ These are missing assignment records, not an address-geocoding queue. A polling-
 
 - Every currently assigned statistical-area ID resolves to geometry; the generated assignment summary reports zero missing-geometry rows.
 - Historical election-area IDs remain separate. The CBS `Stat08_Unite` and `Stat11_Ref` demographic references are not assignment or display unions.
-- Four canonical historical IDs require documented supplements because the downloaded CBS geometry omits them. One comes from an official transition-key union and three use exact-ID ArcGIS geometry.
-- Detailed West Bank footprints from ArcGIS are display-only derivatives. They do not supply assignment IDs or vote totals, and some unresolved tiny current-locality footprints remain markers.
+- Twenty-three canonical historical IDs require documented supplements because the downloaded CBS geometry omits them. One comes from an official transition-key union and 22 use exact-ID ArcGIS geometry, including the 18 tribal localities and Hebron used only for 2011-vintage elections.
+- Outside those explicit supplements, detailed West Bank footprints from ArcGIS are display-only derivatives. They never supply vote totals. K17/K18 now use detailed polygons for every ordinary West Bank marker with results; their tribe and Hebron results remain custom markers because 1995/2008 assignment evidence is absent.
 - The neutral grey land backdrop is visual context only. It does not imply that a historical statistical area or election result exists underneath it.
 - K25 intentionally stays on 2011 areas. At least 3,543 direct-crosswalk rows target 2011 areas that split across multiple 2022 areas, so a wholesale conversion would invent precision.
 

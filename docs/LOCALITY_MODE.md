@@ -2,7 +2,7 @@
 
 Last updated: 2026-07-15
 
-## Status
+## Coverage And Scope
 
 Locality result-row assignment and aggregation are complete for the current K17-K25 geographic scope. They do not wait for polling-place address geocoding. The 36 features with no standalone K17-K25 result now have evidence-level explanations. Source-backed host/component unions are implemented for K19, K20, and five K25 cases; the remaining partial-presence elections and most other visibility decisions are not yet reviewed.
 

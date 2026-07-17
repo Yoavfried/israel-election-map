@@ -8,12 +8,35 @@ import pandas as pd
 
 
 POINT_PROXY_MAX_AREA_M2 = 50_000
+POINT_PROXY_MAX_COORDINATES = 12
 DISPLAY_DETAIL_MAX_DISTANCE_M = 5_000
 WEST_BANK_DETAIL_CODES = {3488, *range(3500, 4000)}
 
 
 def integer_series(values: pd.Series) -> pd.Series:
     return pd.to_numeric(values, errors="coerce").round().astype("Int64")
+
+
+def geometry_coordinate_count(geometry: Any) -> int:
+    if geometry is None or geometry.is_empty:
+        return 0
+    if geometry.geom_type == "Polygon":
+        return sum(
+            len(ring.coords)
+            for ring in [geometry.exterior, *geometry.interiors]
+        )
+    if hasattr(geometry, "geoms"):
+        return sum(geometry_coordinate_count(part) for part in geometry.geoms)
+    if hasattr(geometry, "coords"):
+        return len(geometry.coords)
+    return 0
+
+
+def is_point_proxy(geometry: Any) -> bool:
+    return (
+        geometry.area < POINT_PROXY_MAX_AREA_M2
+        or geometry_coordinate_count(geometry) <= POINT_PROXY_MAX_COORDINATES
+    )
 
 
 def load_arcgis_detail_by_locality(
@@ -43,12 +66,16 @@ def load_arcgis_detail_by_locality(
             & ~features.geometry.is_empty
         ].copy()
         features = features.to_crs("EPSG:2039")
-        features = features[features.geometry.area > POINT_PROXY_MAX_AREA_M2]
-        if features.empty:
-            continue
         dissolved = features[["locality_code", "geometry"]].dissolve(
             by="locality_code", as_index=False
         )
+        dissolved = dissolved[
+            (dissolved.geometry.area > POINT_PROXY_MAX_AREA_M2)
+            & dissolved.geometry.map(
+                lambda geometry: geometry_coordinate_count(geometry)
+                > POINT_PROXY_MAX_COORDINATES
+            )
+        ]
         for row in dissolved.itertuples(index=False):
             code = int(row.locality_code)
             detailed.setdefault(code, (row.geometry, source_name))
@@ -62,7 +89,6 @@ def apply_detailed_display_geometries(
 ) -> tuple[gpd.GeoDataFrame, int, list[int]]:
     projected = features.to_crs("EPSG:2039")
     counts = projected.groupby("locality_code")["locality_code"].transform("size")
-    source_area = projected.geometry.area
     if "geometry_source" in projected:
         projected["display_geometry_source"] = projected["geometry_source"].fillna(
             default_source
@@ -77,7 +103,7 @@ def apply_detailed_display_geometries(
         if (
             code not in WEST_BANK_DETAIL_CODES
             or counts.loc[index] != 1
-            or source_area.loc[index] >= POINT_PROXY_MAX_AREA_M2
+            or not is_point_proxy(row.geometry)
             or code not in detailed_by_locality
         ):
             continue

@@ -43,6 +43,9 @@ The production stages are:
 - `build_geocoding_input.py`, `build_geocoding_work_units.py`, and `audit_polling_place_address_quality.py` maintain the separate polling-place-location research dataset.
 - `build_final_geography_assignments.py` gives official historical assignment precedence and writes independent locality/statistical fields.
 - `build_public_outputs.py` writes statistical-area, locality, custom, envelope, contribution, coverage, and pending outputs.
+- `build_public_data_release.py` publishes the curated `public-data/v1` ballot
+  CSVs, aggregate tables, full-resolution geography ZIPs, metadata, checksums,
+  and release validation.
 
 ## Assignment Boundary
 

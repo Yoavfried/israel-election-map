@@ -229,6 +229,12 @@ async function main() {
         prunedLocalities,
         election.id,
       )
+      const statisticalCustomRows = customRows.filter(
+        (row) => !row.geography_mode || row.geography_mode === 'statistical-area',
+      )
+      const localityCustomRows = customRows.filter(
+        (row) => !row.geography_mode || row.geography_mode === 'locality',
+      )
       const overrides = partyOverrideConfig.elections[election.id] ?? {}
       const partyRegistry = partyRegistryByElection.get(election.id)
       const excludedPartyColumns = Object.keys(
@@ -238,7 +244,7 @@ async function main() {
         electionId: election.id,
         mode: 'statistical-area',
         primaryRows: statisticalRows,
-        customRows,
+        customRows: statisticalCustomRows,
         envelopeRows,
         metadataById: statisticalMetadata,
         customMetadataById: customMetadata,
@@ -252,7 +258,7 @@ async function main() {
         electionId: election.id,
         mode: 'locality',
         primaryRows: displayedLocalityRows,
-        customRows,
+        customRows: localityCustomRows,
         envelopeRows,
         metadataById: electionLocalityMetadata,
         customMetadataById: customMetadata,

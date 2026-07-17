@@ -52,6 +52,10 @@ NON_GEOGRAPHIC_METHODS = {
     "special_non_geographic",
     "custom_point_size_polygon",
 }
+HISTORICALLY_MAPPABLE_CUSTOM_GEOGRAPHIES = {
+    "custom:tribal_negev",
+    "custom:hebron",
+}
 
 
 def normalize_code(value: Any) -> str:
@@ -263,6 +267,7 @@ def main() -> None:
             "target_locality_code",
             "assignment_method",
             "target_geography_type",
+            "custom_geography_id",
         ]
     ]
 
@@ -340,7 +345,16 @@ def main() -> None:
         for _, row in wide.iterrows():
             base = ballot_base(election, row["source_kalpi"])
             method = row.get("assignment_method", "")
-            if method in NON_GEOGRAPHIC_METHODS or str(row.get("is_envelope", "")).lower() in {
+            custom_has_historical_geometry = (
+                vintage == 2011
+                and method == "custom_point_size_polygon"
+                and row.get("custom_geography_id", "")
+                in HISTORICALLY_MAPPABLE_CUSTOM_GEOGRAPHIES
+            )
+            if (
+                method in NON_GEOGRAPHIC_METHODS
+                and not custom_has_historical_geometry
+            ) or str(row.get("is_envelope", "")).lower() in {
                 "true",
                 "1",
                 "yes",

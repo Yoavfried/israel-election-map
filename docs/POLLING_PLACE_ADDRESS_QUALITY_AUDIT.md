@@ -98,7 +98,7 @@ Completed checks include:
 - K18 Segev-Shalom kalpi 1-5: page 301 itself contains only `38,`; K19 repeats it. This remains a facility-placement case, not an OCR correction.
 - Dimona kalpi 91 in K22-K25, address `מחנה עדי`: reviewed as envelope votes and removed from geographic address placement through `data/manual/polling_place_assignment_overrides.csv`.
 
-The K18 review overlay now contains 126 source rows: 121 corrected values and 5 confirmations that the weak source text is genuinely present in the scan. The final user-confirmed batch covered 82 suspicious signatures and 113 rows. All 113 are now marked as visually corrected, including the five polling-place-name corrections listed in `docs/GEOGRAPHIC_ASSIGNMENT_STATUS.md`.
+The K18 review overlay now contains 126 source rows: 121 corrected values and 5 confirmations that the weak source text is genuinely present in the scan. The final user-confirmed batch covered 82 suspicious signatures and 113 rows. All 113 are now marked as visually corrected, including the five polling-place-name corrections recorded in the reviewed K18 overlay.
 
 ## K17 Locality-Only Correction
 
@@ -204,4 +204,4 @@ The 683 canonical residuals comprise 389 street names not found in the target lo
 - `data/processed/geocoding/unmatched_location_units.csv`: one row per unresolved location signature.
 - `data/processed/geocoding/unmatched_location_reason_summary.csv`: current unmatched reason totals.
 
-OSM candidates are not promoted into election-result statistical assignments. They remain polling-place-location evidence and must retain OSM/review provenance if exposed as a separate feature. The current election assignment is in `docs/GEOGRAPHIC_ASSIGNMENT_STATUS.md`.
+OSM candidates are not promoted into election-result statistical assignments. They remain polling-place-location evidence and must retain OSM/review provenance if exposed as a separate feature. Current assignment scope and gaps are in `docs/PROJECT_STATUS.md`; full methodology is in `docs/HISTORICAL_STATISTICAL_AREA_ASSIGNMENT.md`.

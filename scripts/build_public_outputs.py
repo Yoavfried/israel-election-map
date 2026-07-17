@@ -162,7 +162,9 @@ def main() -> None:
         mapped = bool_series(merged["is_mapped"])
         locality_mapped = bool_series(merged["is_locality_mapped"])
         stat_rows = merged[mapped & (merged["geography_type"] == "statistical_area")].copy()
-        custom_rows = merged[mapped & (merged["geography_type"] == "custom_geography")].copy()
+        statistical_custom_rows = merged[
+            mapped & (merged["geography_type"] == "custom_geography")
+        ].copy()
         geographic_rows = merged[mapped & bool_series(merged["is_geographic"])].copy()
         unmapped_rows = merged[~mapped].copy()
         geographic_scope_mask = ~merged["locality_geography_type"].isin(
@@ -176,6 +178,18 @@ def main() -> None:
         locality_rows["locality_id"] = locality_rows["locality_geography_id"]
         locality_rows["locality_code"] = locality_rows["locality_result_code"]
         locality_rows["locality_name"] = locality_rows["locality_result_name"]
+        locality_custom_rows = merged[
+            locality_mapped & (merged["locality_geography_type"] == "custom_geography")
+        ].copy()
+        locality_custom_rows["custom_geography_id"] = locality_custom_rows[
+            "locality_geography_id"
+        ]
+        locality_custom_rows["geography_id"] = locality_custom_rows[
+            "locality_geography_id"
+        ]
+        locality_custom_rows["locality_name"] = locality_custom_rows[
+            "locality_result_name"
+        ]
         locality_geographic_rows = merged[locality_mapped].copy()
         locality_unmapped_rows = merged[geographic_scope_mask & ~locality_mapped].copy()
         envelope_rows = merged[
@@ -212,10 +226,20 @@ def main() -> None:
             ["election", "locality_id", "locality_code", "locality_name"],
             parties,
         )
-        custom_agg = aggregate(
-            custom_rows,
+        statistical_custom_agg = aggregate(
+            statistical_custom_rows,
             ["election", "custom_geography_id", "geography_id", "locality_name"],
             parties,
+        )
+        statistical_custom_agg.insert(1, "geography_mode", "statistical-area")
+        locality_custom_agg = aggregate(
+            locality_custom_rows,
+            ["election", "custom_geography_id", "geography_id", "locality_name"],
+            parties,
+        )
+        locality_custom_agg.insert(1, "geography_mode", "locality")
+        custom_agg = pd.concat(
+            [statistical_custom_agg, locality_custom_agg], ignore_index=True
         )
         envelope_agg = aggregate(
             envelope_rows,
@@ -311,8 +335,10 @@ def main() -> None:
                 ),
                 "statistical_area_rows": len(stat_rows),
                 "statistical_area_actual_voters": int(stat_rows["actual_voters"].sum()),
-                "custom_geography_rows": len(custom_rows),
-                "custom_geography_actual_voters": int(custom_rows["actual_voters"].sum()),
+                "custom_geography_rows": len(statistical_custom_rows),
+                "custom_geography_actual_voters": int(
+                    statistical_custom_rows["actual_voters"].sum()
+                ),
                 "unmapped_rows": len(unmapped_rows),
                 "unmapped_actual_voters": int(unmapped_rows["actual_voters"].sum()),
                 "envelope_rows": len(envelope_rows),

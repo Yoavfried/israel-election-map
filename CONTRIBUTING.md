@@ -13,21 +13,29 @@ Contributions should preserve source provenance and avoid inventing geographic p
 
 - Put reviewed corrections and overrides in `data/manual/`, with source evidence in the row notes or relevant methodology document.
 - Do not edit generated files in `data/processed/` or `web/app/public/data/` by hand.
+- Do not edit `public-data/v1` by hand. Change the source pipeline or release
+  builder, regenerate it, and review the manifest and validation report.
 - Do not infer voter geography from a polling-place address.
 - Do not replace official totals with derivative ArcGIS values.
 - Keep assignment geometry and display-only geometry provenance separate.
 
 ## Public Repository Hygiene
 
-- Do not commit credentials, API tokens, private contact data, machine-specific paths, raw downloads, generated data, logs, or files under `work/`.
+- Do not commit credentials, API tokens, private contact data, machine-specific
+  paths, raw downloads, uncurated generated data, logs, or files under `work/`.
+  The versioned `public-data/` release is the intentional generated-data
+  exception.
 - Use environment variables for optional service credentials. Commit only documented example configuration with placeholder values.
 - Keep documentation factual and source-oriented. Avoid private deployment domains or notes that depend on one contributor's machine.
 
 ## Change Checks
 
 - Data pipeline changes should run the affected Python stage and its downstream reconciliation checks.
+- Public-data changes should run `python scripts/build_public_data_release.py`
+  and verify `public-data/v1/validation.json` plus the manifest checksums.
 - Frontend or compiler changes should pass `npm run check` in `web/app/`.
 - User-facing map changes should be checked in Hebrew and English and at desktop and mobile widths.
 - Update `docs/PROJECT_STATUS.md` only when a workstream's actual completion state changes.
 
-The repository does not yet have a selected license. External contributions should wait until contribution and licensing terms are explicitly established.
+The repository does not yet have a selected license. External contributions
+should wait until contribution and licensing terms are explicitly established.

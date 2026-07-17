@@ -4,7 +4,7 @@
 
 Last updated: 2026-07-15
 
-## Status
+## Research Outcome
 
 Photon is installed locally through a Nominatim-backed import from the Geofabrik Israel/Palestine OpenStreetMap extract. It is now a fallback for units not resolved by the direct OSM exact-address or street-geometry layers.
 
