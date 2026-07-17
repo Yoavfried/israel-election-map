@@ -126,6 +126,9 @@ def main() -> None:
         "geography_type",
         "geography_id",
         "stat_area_id",
+        "stat_area_vintage",
+        "stat_area_yishuv_stat",
+        "stat_area_number",
         "stat_area_yishuv_stat_2022",
         "stat_area_stat_2022",
         "locality_id",
@@ -195,8 +198,9 @@ def main() -> None:
             [
                 "election",
                 "stat_area_id",
-                "stat_area_yishuv_stat_2022",
-                "stat_area_stat_2022",
+                "stat_area_vintage",
+                "stat_area_yishuv_stat",
+                "stat_area_number",
                 "locality_id",
                 "locality_code",
                 "locality_name",
@@ -218,6 +222,8 @@ def main() -> None:
             ["election", "envelope_id", "envelope_name_he", "envelope_name_en"],
             parties,
         )
+        if not envelope_agg.empty:
+            envelope_agg["eligible_voters"] = 0
 
         contribution_columns = [
             "source_row_uid",
@@ -230,6 +236,9 @@ def main() -> None:
             "geography_type",
             "geography_id",
             "stat_area_id",
+            "stat_area_vintage",
+            "stat_area_yishuv_stat",
+            "stat_area_number",
             "locality_id",
             "locality_code",
             "locality_name",
@@ -304,8 +313,6 @@ def main() -> None:
                 "statistical_area_actual_voters": int(stat_rows["actual_voters"].sum()),
                 "custom_geography_rows": len(custom_rows),
                 "custom_geography_actual_voters": int(custom_rows["actual_voters"].sum()),
-                "pending_or_missing_geocode_rows": len(pending),
-                "pending_or_missing_geocode_actual_voters": int(pending["actual_voters"].sum()),
                 "unmapped_rows": len(unmapped_rows),
                 "unmapped_actual_voters": int(unmapped_rows["actual_voters"].sum()),
                 "envelope_rows": len(envelope_rows),
@@ -331,7 +338,7 @@ def main() -> None:
     for row in summary_rows:
         print(
             f"{row['election']}: mapped_rows={row['mapped_geographic_rows']} "
-            f"pending_geocode={row['pending_or_missing_geocode_rows']} "
+            f"stat_pending={row['statistical_mode_pending_rows']} "
             f"stat_share={row['statistical_mode_mapped_actual_voter_share']:.2%} "
             f"locality_share={row['locality_mode_mapped_actual_voter_share']:.2%}"
         )

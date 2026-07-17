@@ -1,64 +1,70 @@
 # Scripts
 
-Data pipeline scripts are Python-based.
-
-Install dependencies:
+The data pipeline is Python-based. Install dependencies from the repository root:
 
 ```bash
 python -m pip install -r requirements.txt
 ```
 
-Run the current pipeline:
+## Source Preparation
+
+The repository does not commit raw downloads. Prepare inputs using the source inventory in `docs/DATA_SOURCES.md`.
+
+```bash
+python scripts/fetch_election_results.py
+python scripts/fetch_cbs_historical_geography.py
+```
+
+`fetch_arcgis_feature_layer.py` can download the reviewed ArcGIS layers used for geometry supplements and display footprints. Those layers never replace official election totals.
+
+Archived polling-place files and the canonical 2022 FileGDB are not yet covered by one automatic fresh-clone bootstrap.
+
+## Production Pipeline
 
 ```bash
 python scripts/run_pipeline.py
 ```
 
-If the generated 2022 geography files already exist, reuse them while rebuilding every downstream stage:
+Reuse already generated 1995, 2008, 2011, and 2022 geography assets:
 
 ```bash
 python scripts/run_pipeline.py --skip-geographies
 ```
 
-Stages:
+The production stages are:
 
-- `fetch_election_results.py` fetches K17-K25 official ballot rows through data.gov.il CKAN datastore and writes a source manifest.
-- `build_geographies.py` converts the 2022 statistical-area FileGDB to WGS84 GeoJSON, dissolves localities, unions reviewed election-specific composites, creates metadata, and writes custom synthetic geographies.
-- `normalize_election_results.py` normalizes official ballot rows into a stable row index and per-election wide vote files.
-- `normalize_polling_places.py` normalizes available election-specific polling-place address sources.
-- `build_assignment_plan.py` applies envelope detection, reviewed locality crosswalks, row-level polling-place overrides, single-stat shortcuts, custom buckets, and geocode-needed classification.
-- `build_geocoding_input.py` joins the assignment plan to polling-place addresses and emits the rows ready for geocoding.
-- `build_geocoding_work_units.py` deduplicates geocoding input rows into query-lineage units and row mappings. Canonical physical-address deduplication happens in the OSM address stage.
-- `audit_polling_place_address_quality.py` classifies address usability, verifies normalized values against available source evidence, and emits row-level, review, visual-review, and true locality-only/no-place outputs before OSM matching.
-- `build_geocoding_spike_sample.py` builds a representative sample of geocoding work units for provider testing.
-- `export_geocoding_spike_web.py` exports that representative sample to `web/geocode-spike/sample.json` for the domain-approved browser spike.
-- `check_geocode_spike_static.py` validates the static browser spike files and exported sample before deployment.
-- `run_govmap_geocoding_spike.py` runs a small GovMap search spike when `GOVMAP_API_KEY` is available; outputs are marked `needs_review`.
-- `run_arcgis_geocoding_spike.py` runs the same representative sample against ArcGIS `findAddressCandidates`; outputs are marked `needs_review`.
-- `run_photon_geocoding_spike.py` runs the representative sample against a local Photon server at `127.0.0.1:2322`; outputs are marked `needs_review`.
-- `validate_geocode_candidate_localities.py` checks candidate geocode coordinates against expected dissolved 2022 locality polygons before any promotion to the reviewed cache.
-- `build_osm_street_stat_lookup.py` reads the local Geofabrik PBF street geometries and classifies canonical locality-street pairs by whether the OSM street corridor stays inside one 2022 statistical area.
-- `build_osm_address_stat_lookup.py` reads exact OSM `addr:housenumber` objects with `addr:street` or `addr:place` from points, lines, and multipolygons; exact scalar numbers outrank matching multi-value tags, and reviewed exceptions come from `data/manual/manual_osm_address_stat_reviews.csv` with stale-status validation.
-- `build_unmatched_location_inventory.py` reconciles non-envelope rows after single-area locality, reviewed custom-geography, exact-address OSM, and missing-number street matches, then emits unique-signature category and reason summaries.
-- `build_final_geography_assignments.py` writes independent locality and statistical-area assignment fields, then consumes an optional reviewed geocode cache for rows that still need statistical-area placement.
-- `build_public_outputs.py` writes statistical-area, complete locality, custom-geography, envelope, contribution, and unmapped CSV outputs for the website and public downloads.
+- `fetch_election_results.py` fetches official K17-K25 ballot rows and writes a source manifest.
+- `build_geographies.py` builds 2022 statistical/locality geometry, composites, custom geometry, display replacements, and the neutral statistical-mode land backdrop.
+- `build_historical_geographies.py` builds canonical and display geometry for 1995, 2008, and 2011 statistical areas.
+- `normalize_election_results.py` normalizes official ballot rows and party-vote columns.
+- `normalize_polling_places.py` normalizes the separate polling-place address dataset.
+- `build_assignment_plan.py` applies envelope handling, locality crosswalks, reviewed custom buckets, and address-research classifications.
+- `build_historical_ballot_assignments.py` applies official election-specific ballot-to-area crosswalks and the single-historical-area fallback.
+- `build_geocoding_input.py`, `build_geocoding_work_units.py`, and `audit_polling_place_address_quality.py` maintain the separate polling-place-location research dataset.
+- `build_final_geography_assignments.py` gives official historical assignment precedence and writes independent locality/statistical fields.
+- `build_public_outputs.py` writes statistical-area, locality, custom, envelope, contribution, coverage, and pending outputs.
 
-Dependency note:
+## Assignment Boundary
 
-- `extract_k18_polling_places.py` extracts and reconciles the scanned/OCRed K18 polling-place PDF. Run it with `--validate` if `data/processed/k18_polling_places_resolved.csv` is missing.
-- Raw K20-K21 XLS verification requires `xlrd`; the address audit checks `.local/python-audit` before the active Python environment.
-- Geography and OSM stages use the active environment, with `.local/python-geo` as an optional workspace-local dependency overlay. `--skip-geographies` still validates that the previously generated geography files exist.
+Election results are not assigned from polling-place addresses. A polling-place building may serve voters from several residential statistical areas. Missing official crosswalk rows therefore remain pending instead of falling through to OSM, Photon, GovMap, or ArcGIS geocoding.
 
-Known current input gap:
+The current production gaps are documented in `docs/PROJECT_STATUS.md` and `docs/HISTORICAL_STATISTICAL_AREA_ASSIGNMENT.md`.
 
-- `data/processed/geocoding/geocoded_points.csv` does not exist yet, so statistical-area outputs remain partial until reviewed coordinates are added. Locality output is complete for the current scope.
-- The GovMap token request is domain-approved for `yoavfried.com`; use `web/geocode-spike/` for live browser testing if direct Python calls are blocked.
-- ArcGIS is being tested as a fallback provider. Retained ArcGIS geocodes should use `forStorage=true` and an access token/API key with stored-geocoding privileges.
-- OSM exact-address and street geometry are the first address-placement layers. Photon is a later local fallback; its results require point-in-expected-locality validation before promotion.
+## Address and Geocoder Research
 
-Source guardrail:
+The retained OSM/GovMap/ArcGIS/Photon scripts support polling-place search, source QA, and a possible future facility layer:
 
-- `normalize_polling_places.py` fails by default if any required K17-K25 polling-place source or the reviewed K18 scan-review overlay is missing. Use `--allow-missing` only for research/debug runs where partial coverage is intentional. K18 visual corrections and source confirmations belong in `data/manual/manual_k18_address_reviews.csv`, not in the generated resolved-OCR CSV.
-- Direct K17 scan place transcriptions belong in `data/manual/manual_k17_scanned_place_names.csv`; K18 values are review leads only and must not be copied as K17 evidence.
-- Reviewed row-level exceptions such as the `מחנה עדי` envelope classification belong in `data/manual/polling_place_assignment_overrides.csv`.
+- `build_osm_street_stat_lookup.py` and `build_osm_address_stat_lookup.py` audit whether address features can be located within 2022 areas.
+- `build_unmatched_location_inventory.py` reports unresolved polling-place-location signatures.
+- `build_geocoding_spike_sample.py`, `export_geocoding_spike_web.py`, and `check_geocode_spike_static.py` maintain the provider-comparison sample.
+- `run_govmap_geocoding_spike.py`, `run_arcgis_geocoding_spike.py`, and `run_photon_geocoding_spike.py` create review candidates only.
+- `validate_geocode_candidate_localities.py` checks candidate coordinates against expected locality geometry.
 
+Optional service credentials must be supplied through environment variables and must never be committed. The GovMap browser spike accepts its approved origin as runtime configuration rather than embedding a contributor's domain.
+
+## Validation Notes
+
+- Run `python scripts/extract_k18_polling_places.py --validate` if `data/processed/k18_polling_places_resolved.csv` is missing.
+- `normalize_polling_places.py` fails by default when a required source or reviewed K18 overlay is absent; `--allow-missing` is for intentionally partial research runs only.
+- Reviewed row-level exceptions belong in `data/manual/`, not generated CSV files.
+- `--skip-geographies` still validates that all expected generated geography files exist.

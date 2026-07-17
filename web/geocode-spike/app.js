@@ -1,5 +1,7 @@
 const SAMPLE_URL = "./sample.json";
-const APPROVED_ORIGIN = "https://yoavfried.com";
+const APPROVED_ORIGIN = new URLSearchParams(window.location.search)
+  .get("approvedOrigin")
+  ?.replace(/\/$/, "") || "";
 
 const CSV_FIELDS = [
   "geocode_key",
@@ -86,6 +88,10 @@ function bindActions() {
 
 function renderOrigin() {
   const origin = window.location.origin;
+  if (!APPROVED_ORIGIN) {
+    els.originText.textContent = `Origin: ${origin}. Add ?approvedOrigin=https%3A%2F%2Fmaps.example.org to compare this page with a token's approved origin.`;
+    return;
+  }
   if (origin === APPROVED_ORIGIN) {
     els.originText.textContent = `Origin: ${origin}. This matches the GovMap domain request.`;
     return;

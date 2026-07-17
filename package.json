@@ -1,11 +1,14 @@
 {
   "name": "israel-election-map",
-  "version": "0.0.0",
-  "private": false,
+  "version": "0.1.0",
+  "private": true,
   "type": "module",
   "description": "Local-first web map for exploring Israeli Knesset election results by geography.",
   "scripts": {
-    "test": "echo \"No tests yet\""
+    "dev": "npm --prefix web/app run dev",
+    "build": "npm --prefix web/app run build",
+    "test": "npm --prefix web/app test",
+    "check": "npm --prefix web/app run check"
   }
 }
 

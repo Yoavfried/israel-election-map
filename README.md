@@ -1,51 +1,53 @@
 # Israel Election Map
 
-Local-first web map for exploring K17-K25 Knesset election results on 2022 Israeli geography.
+Local-first bilingual web map for exploring K17-K25 Knesset election results by locality and election-appropriate statistical area.
 
-The repository contains both the reproducible election/geography pipeline and a React/TypeScript map client. Historical ballot rows are assigned to 2022 statistical areas where the evidence supports it; inferred areas are not presented as official historical polling boundaries.
+The repository contains a Python data pipeline and a React/TypeScript/MapLibre client. Statistical results are assigned from official CBS ballot-to-area crosswalks, not from polling-place addresses.
 
 ## Current Status
 
-- Official K17-K25 ballot results are normalized into 96,529 source rows.
-- Every row has a handling rule: 2022 statistical area, reviewed custom geography, address placement required, envelope, or reviewed non-geographic exception.
-- OSM is the first address-placement layer. Photon is reserved for unresolved fallback work.
-- The current OSM audit leaves 4,893 unique unresolved location signatures covering 52,437 non-envelope ballot rows.
-- Locality mode maps all 92,945 geographic-scope rows for K17-K25. Reviewed composite municipalities preserve the election-time locality geometry where the 2022 layer has separate component localities. The separate review of 2022 features with partial or no standalone election results is still in progress.
-- Statistical-area mode does not yet promote OSM candidates; its current geographic-scope voter coverage ranges from 12.65% to 14.38% by election.
-- Official envelope rows and 59 reviewed military/special rows are combined into one separate national envelope result per election and are not placed on locality polygons.
-- `data/manual/party_registry.csv` structurally identifies all 309 election-specific ballot-list columns, including zero-vote lists. Its current 165 Hebrew and 150 English Wikipedia URLs and its party/list names are a working snapshot that still requires editorial review.
-- K17 scan recovery and the completed K18 visual-review corrections are part of the normalized source pipeline.
-
-Locality behavior is documented in `docs/LOCALITY_MODE.md`. The statistical-area methodology, unmatched categories, and promotion boundary are documented in `docs/GEOGRAPHIC_ASSIGNMENT_STATUS.md`.
-
-## Explicitly Incomplete
-
-- **Locality feature audit:** the reproducible inventory contains 80 features with results in only some elections and 36 with no standalone K17-K25 result. The inventory exists, but the historical explanation and election-specific visibility decision for every row have not been reviewed.
-- **Party colors:** the stable-letter color mechanism and election-specific overrides work, but reviewed colors currently cover only `מחל`, `אמת`, `מרצ`, `שס`, `ג`, and Kadima's `כן` in K17-K19. The remaining lists still use deterministic placeholder colors.
-- **Party names and Wikipedia links:** all result columns have registry rows, but the displayed names and candidate Hebrew/English links have not received a complete manual audit. Registry coverage must not be described as completed metadata review.
-- **UX:** the map is functional, bilingual, and responsive, but interaction design and visual polish remain active work. Search/navigation, additional coloring modes, contribution drill-down, accessibility, mobile QA, and broader end-to-end testing are not finished.
+- Official K17-K25 results are normalized into 96,529 source rows.
+- Statistical mode uses 1995 areas for K17, 2008 for K18, and 2011 for K19-K25.
+- Statistical-mode mapped-voter coverage ranges from 92.37% to 94.65%; every row without a defensible historical-area assignment remains explicit and unpainted.
+- Locality mode maps 100% of the geographic scope and supports reviewed historical municipalities and joined polling-register display unions.
+- Envelope and reviewed envelope-like rows are shown as a separate national result, never duplicated across polygons.
+- Historical geometry and current locality mode use audited detailed West Bank display footprints where available. Current locality mode replaces 115 tiny proxies; only Rotem, Maskiyot, Avnat, and Mavo'ot Yeriho remain settlement markers. The K25 Yitav/Mavo'ot joined result stays a two-point marker.
+- K17 ordinary geography has reviewed eligible-voter denominators and turnout; envelope turnout remains unavailable.
+- The party registry covers every K17-K25 result column, and the published party/list names are reviewed and complete. Party colors and Hebrew/English Wikipedia links remain separate, incomplete editorial work.
 
 ## Assignment Strategy
 
-Locality mode assigns rows directly through the reviewed locality crosswalk. It does not wait for address geocoding. Statistical-area mode uses the following narrower process:
+Statistical-area assignment precedence is:
 
-1. Exclude official envelope and reviewed non-geographic rows.
-2. Assign a locality directly when it has exactly one 2022 statistical area.
-3. In multi-area localities, accept an OSM street only when its 25 m corridor lies in one area.
-4. Use an exact OSM house number to resolve streets that span or touch multiple areas.
-5. Keep unresolved place names, suspicious source text, and OSM misses in explicit review inventories.
-6. Use Photon only after OSM, with expected-locality validation and point-in-2022-area assignment.
+1. official envelope or reviewed non-geographic handling;
+2. reviewed custom geography;
+3. official election-specific CBS ballot-to-statistical-area crosswalk;
+4. historical locality fallback only when that locality has exactly one published area;
+5. explicit unresolved status.
 
-Source AGS is diagnostic context, not a hard building-location check. Multiple kalpis and multiple source AGS values can share one polling-place building, and one observed AGS does not prove that the building lies inside it.
+Address geolocation does not assign election results. A polling-place building can serve voters from several statistical areas, so its coordinates cannot recover voter geography. OSM and Photon code remains for polling-place search, address QA, and future building-location features.
 
-## Run
+K25 currently uses 2011 areas because the official November 2022 crosswalk targets 2011. Thousands of its target areas split across multiple 2022 areas, so forcing K25 onto 2022 polygons would invent precision.
+
+## Local Setup
+
+The full pipeline depends on downloaded official source files that are intentionally not committed. Start with `docs/DATA_SOURCES.md` and `data/README.md`; a fresh clone is not yet a one-command data bootstrap.
+
+Install Python dependencies and download the sources supported by the fetch scripts:
 
 ```powershell
 python -m pip install -r requirements.txt
+python scripts/fetch_cbs_historical_geography.py
+python scripts/fetch_election_results.py
+```
+
+After preparing the remaining raw inputs listed in the data-source documentation, run the pipeline:
+
+```powershell
 python scripts/run_pipeline.py
 ```
 
-When the generated 2022 geography files already exist, the non-geography stages can be reproduced without rebuilding the FileGDB layer:
+Reuse already generated current and historical geometry:
 
 ```powershell
 python scripts/run_pipeline.py --skip-geographies
@@ -59,32 +61,50 @@ npm install
 npm run dev
 ```
 
-Vite serves the app at `http://localhost:4173`. The frontend compiler reads `data/processed/` and writes disposable, validated assets under `web/app/public/data/v2/`.
+Vite serves the app at `http://localhost:4173`. The frontend compiler reads `data/processed/` and writes disposable validated assets under `web/app/public/data/v2/`.
+
+ArcGIS layers used for audited display geometry are downloaded separately:
+
+```powershell
+python scripts/fetch_arcgis_feature_layer.py <FeatureServer-layer-url> <output.geojson>
+```
 
 ## Documentation
 
-- `docs/GEOGRAPHIC_ASSIGNMENT_STATUS.md` - current end-to-end assignment and unmatched inventory.
-- `docs/LOCALITY_MODE.md` - complete result-row coverage, the unfinished feature-presence audit, composite municipalities, and envelope presentation.
-- `data/manual/locality_display_overrides.csv` - reviewed historical locality names and election-specific no-result visibility.
-- `docs/LOCALITY_RESULT_PRESENCE_AUDIT.md` - all 2022 locality features with partial or no standalone K17-K25 results.
-- `data/manual/party_registry.csv` - election-specific ballot letters and the current, not-yet-fully-audited list names and Wikipedia links.
-- `web/app/config/party-overrides.json` - reviewed default ballot-letter colors and election-specific color/name overrides.
-- `docs/POLLING_PLACE_ADDRESS_QUALITY_AUDIT.md` - source fidelity, OCR/manual review, and OSM address QA.
-- `docs/DATA_PIPELINE.md` - stages, outputs, commands, and verified run counts.
-- `docs/POLLING_PLACE_ADDRESSES.md` - election-specific address sources.
-- `docs/AGS_HISTORICAL_QA.md` - why AGS is diagnostic rather than a hard geocode gate.
-- `docs/STATISTICAL_AREA_ASSIGNMENT_COVERAGE.md` - assignments currently promoted to public outputs.
-- `web/app/docs/ARCHITECTURE.md` - frontend data contract and product boundary.
+- `docs/PROJECT_STATUS.md` - canonical completed/in-progress status and the current statistical-mode gap explanation.
+- `docs/HISTORICAL_STATISTICAL_AREA_ASSIGNMENT.md` - source hierarchy, vintages, geometry provenance, matching rules, and coverage.
+- `docs/GEOGRAPHIC_ASSIGNMENT_STATUS.md` - concise current assignment state.
+- `docs/STATISTICAL_AREA_ASSIGNMENT_COVERAGE.md` - election-by-election published coverage.
+- `docs/LOCALITY_MODE.md` - locality aggregation, composites, result-presence audit, and envelopes.
+- `docs/DATA_PIPELINE.md` - reproducible stage order and outputs.
+- `docs/DATA_SOURCES.md` - election, geography, party, and polling-place sources.
+- `docs/POLLING_PLACE_ADDRESS_QUALITY_AUDIT.md` - address/OCR fidelity for the separate polling-place-location dataset.
+- `docs/AGS_HISTORICAL_QA.md` - why source AGS is not a polling-place building test.
+- `docs/K17_ELIGIBLE_VOTER_RECOVERY.md` - K17 turnout recovery.
+- `web/app/docs/ARCHITECTURE.md` - frontend data contracts and product boundary.
+
+## Explicitly Incomplete
+
+- Historical crosswalk gaps remain in every election and require source research; demographic reference fields are not used to manufacture area assignments.
+- The partial/no-result locality-history audit is not finished.
+- Party colors and Wikipedia links are not fully reviewed. Party/list names are complete.
+- General UX, accessibility, mobile QA, and broader end-to-end tests remain active work.
+- Planned features such as search/navigation, additional coloring modes, contribution drill-down, and a polling-place layer are not complete.
+- A fully automated fresh-clone source bootstrap and public release packaging are not complete.
 
 ## Repository Layout
 
 - `data/manual/` - committed reviewed corrections and assignment overrides.
 - `data/raw/` and `data/processed/` - local source and generated data, intentionally ignored by Git.
 - `docs/` - methodology, source notes, decisions, and committed reference tables.
-- `scripts/` - ingestion, normalization, QA, OSM matching, assignment, and aggregation.
+- `scripts/` - ingestion, normalization, geography, assignment, QA, and aggregation.
 - `web/app/` - Vite, React, TypeScript, and MapLibre client.
-- `web/geocode-spike/` - static provider-research page retained for geocoder investigation.
+- `web/geocode-spike/` - retained geocoder research page.
 
-## License
+## Contributing
 
-TBD.
+See `CONTRIBUTING.md` before changing reviewed data or generated outputs. Do not commit raw downloads, generated data, credentials, local paths, or disposable investigation files.
+
+## License Status
+
+No license has been selected yet. Public repository visibility does not grant permission to reuse the code or data; selecting an explicit code/data license remains a release task.

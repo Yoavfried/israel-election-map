@@ -1,5 +1,7 @@
 # Locality to 2022 Statistical-Area Layer Audit
 
+> Current scope: the 2022 layer remains the locality-display source. Its former single-area/address assignment rules are superseded by election-specific historical CBS ballot crosswalks.
+
 Last updated: 2026-07-07
 
 ## Purpose
@@ -77,15 +79,14 @@ The K17 result file has 15 non-envelope rows with an empty address field. Agains
 - 11 rows are in matched multi-stat localities: Ar'ara-BaNegev has 3 statistical areas and Tayibe has 8.
 - 2 rows are Beit Arye, now reviewed as an alias for Beit Arye-Ofarim code 3652, a single-stat locality.
 
-## Consequences
+## Current Consequences
 
-1. Use the FileGDB as the canonical 2022 statistical-area source.
+1. Use the FileGDB as the canonical 2022 source for current locality display and for a future election with a direct 2022 ballot crosswalk.
 2. Do not use the old partial GeoJSON for coverage calculations.
-3. Apply the reviewed locality resolution plan before deciding whether a row needs geocoding.
-4. Apply the single-stat locality shortcut before geocoding.
-5. Geocode polling-place addresses only for rows in matched multi-stat localities or reviewed address-target sets that are not covered by custom point or non-geographic rules.
-6. Store assignment provenance so the UI can distinguish exact-code, exact-name, reviewed-crosswalk, address-target-set, custom point, geocoded, non-geographic, and unresolved records.
+3. Use election-specific historical CBS crosswalks and matching historical geometry for K17-K25 statistical assignment.
+4. Retain single-area, street, address, and geocoder analysis only for polling-place-location research and QA.
+5. Preserve source and method provenance in both the production assignment and separate location datasets.
 
 ## Generated Audit Files
 
-The working audit generated scratch files under the Codex workspace. These files are diagnostics and are not committed to the project.
+The working audit generated disposable diagnostic files under local scratch directories. They are not committed to the project.

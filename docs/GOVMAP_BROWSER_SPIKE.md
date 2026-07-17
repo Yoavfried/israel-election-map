@@ -1,56 +1,26 @@
 # GovMap Browser Spike
 
-Last updated: 2026-07-08
+> Historical research note: this page tests polling-place building search. It is not a source for election-result statistical assignment.
+
+Last updated: 2026-07-17
 
 ## Purpose
 
-GovMap API tokens are approved for a domain. The current token request is for:
+GovMap browser API tokens are approved for a specific web origin. The retained page under `web/geocode-spike/` runs the representative polling-place query sample from an approved deployment and exports review-oriented candidate data.
+
+The token is entered at run time. It is not stored in source files, browser storage, or generated sample files.
+
+## Runtime Origin Configuration
+
+The repository does not embed a contributor-specific domain. Open the deployed page with the approved origin supplied as a URL-encoded query parameter:
 
 ```text
-yoavfried.com
+https://maps.example.org/geocode-spike/?approvedOrigin=https%3A%2F%2Fmaps.example.org
 ```
 
-That means the useful pre-token work is to prepare a browser page that can run from that exact domain after approval. The page lives in:
+The page compares `window.location.origin` with that value and reports whether they match. This check is informational; GovMap remains the authority that accepts or rejects the token/origin pair.
 
-```text
-web/geocode-spike/
-```
-
-It uses the existing 50-row representative geocoding sample and calls the documented GovMap browser API:
-
-- `govmap.search(params)`
-- `govmap.getSearchResultData(searchResult, apiToken)`
-
-The token is pasted into the page at run time. It is not stored in source files, browser storage, or generated sample files.
-
-## What "Under yoavfried.com" Means
-
-The page can be served from any path on the approved host. These should be equivalent for GovMap domain approval:
-
-```text
-https://yoavfried.com/geocode-spike/
-https://yoavfried.com/israel-election-map/geocode-spike/
-```
-
-The important part is the browser origin:
-
-```text
-https://yoavfried.com
-```
-
-Opening the same files from another origin is not the same thing:
-
-```text
-http://localhost:8765/
-https://www.yoavfried.com/
-https://yoavfried.github.io/
-```
-
-Those are useful for page-preview only. Live GovMap calls may fail unless GovMap also approves that exact host.
-
-## Pre-Token Checklist
-
-Build the sample and export the browser payload:
+## Prepare and Validate
 
 ```bash
 python scripts/build_geocoding_spike_sample.py
@@ -58,64 +28,20 @@ python scripts/export_geocoding_spike_web.py
 python scripts/check_geocode_spike_static.py
 ```
 
-Preview the static page locally:
+The page uses:
 
-```bash
-python -m http.server 8765 -d web/geocode-spike
-```
+- `govmap.search(params)`
+- `govmap.getSearchResultData(searchResult, apiToken)`
 
-Open:
+All returned candidates remain `needs_review`. Do not commit tokens or raw retained responses containing information that is not appropriate for the public repository.
 
-```text
-http://127.0.0.1:8765/
-```
+## Live Check
 
-Pre-token checks available there:
+1. Deploy `web/geocode-spike/` under the origin approved for the token.
+2. Open the page with the `approvedOrigin` query parameter.
+3. Confirm that the displayed origin matches.
+4. Enter the token at run time.
+5. Run one sample row before a batch.
+6. Export the CSV and review locality, coordinates, match type, and raw-result provenance.
 
-- `sample.json` loads.
-- The page reports the current origin.
-- `Download dry-run CSV` creates a CSV with the same columns expected from the live browser spike.
-- The table layout works on desktop and narrow widths.
-
-Pre-token checks that cannot be completed:
-
-- Whether GovMap accepts the approved token from `yoavfried.com`.
-- Whether GovMap blocks browser requests by CORS or origin.
-- Real match quality and ambiguity rates.
-
-## Deployment Options
-
-Preferred if `yoavfried.com` already has a host:
-
-1. Copy the contents of `web/geocode-spike/` to a path under the existing site.
-2. Open the resulting URL on `https://yoavfried.com/...`.
-3. Confirm the page shows `Origin: https://yoavfried.com`.
-
-Use GitHub Pages only if it is acceptable for this repository to serve the domain:
-
-1. Configure GitHub Pages for the repository.
-2. Set the custom domain to `yoavfried.com`.
-3. Point the domain DNS to GitHub Pages.
-4. Serve the `web/geocode-spike/` files from the published site.
-
-This can affect the current `yoavfried.com` site, so do not use this route if the domain already hosts something important.
-
-## After Token Approval
-
-1. Open the deployed page from `https://yoavfried.com/...`.
-2. Paste the GovMap token into the token field.
-3. Run `Run first row`.
-4. Inspect the first result in the table.
-5. Run all sample rows.
-6. Download the CSV.
-7. Save the result as:
-
-```text
-data/processed/geocoding/govmap_spike_results.csv
-```
-
-All rows are exported with `review_status=needs_review`. Nothing from the spike becomes production geography until reviewed rows are promoted into:
-
-```text
-data/processed/geocoding/geocoded_points.csv
-```
+GovMap candidates may support a future polling-place layer. They must not be used to infer the residential statistical area represented by a ballot result.

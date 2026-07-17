@@ -1,5 +1,7 @@
 # Photon Geocoding Spike
 
+> Historical research note: Photon candidates may support a future polling-place feature, but they are not election-result statistical assignments.
+
 Last updated: 2026-07-15
 
 ## Status

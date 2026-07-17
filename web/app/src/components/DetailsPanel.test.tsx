@@ -55,4 +55,58 @@ describe('DetailsPanel', () => {
     expect(html).toContain('<span class="party-votes">0</span>')
     expect(html).not.toContain('<dt>Lead</dt>')
   })
+
+  it('shows attached locality names through a bilingual info tooltip', () => {
+    const joinedRecord: ResultRecord = {
+      ...record,
+      names: { en: "ZOR'A", he: 'צרעה' },
+      includedNames: {
+        en: ['DEIR RAFAT', "GIV'AT SHEMESH"],
+        he: ['דייר ראפאת', 'גבעת שמש'],
+      },
+    }
+
+    const english = renderToStaticMarkup(
+      <DetailsPanel language="en" record={joinedRecord} parties={parties} />,
+    )
+    const hebrew = renderToStaticMarkup(
+      <DetailsPanel language="he" record={joinedRecord} parties={parties} />,
+    )
+
+    expect(english).toContain('aria-label="Includes: DEIR RAFAT, GIV&#x27;AT SHEMESH"')
+    expect(hebrew).toContain('aria-label="כולל: דייר ראפאת, גבעת שמש"')
+  })
+
+  it('shows unavailable turnout instead of a false zero', () => {
+    const unavailableRecord: ResultRecord = {
+      ...record,
+      totals: { ...record.totals, eligibleVoters: 0, turnout: null },
+    }
+
+    const html = renderToStaticMarkup(
+      <DetailsPanel language="en" record={unavailableRecord} parties={parties} />,
+    )
+
+    expect(html).toContain('<dt>Turnout</dt><dd>Unavailable</dd>')
+    expect(html).not.toContain('<dt>Turnout</dt><dd>0.0%</dd>')
+  })
+
+  it('omits invalid votes and turnout from envelope details', () => {
+    const envelopeRecord: ResultRecord = {
+      ...record,
+      id: 'envelope:official',
+      geographyType: 'envelope',
+      localityId: null,
+      totals: { ...record.totals, eligibleVoters: 0, invalidVotes: 3094, turnout: null },
+    }
+
+    const html = renderToStaticMarkup(
+      <DetailsPanel language="en" record={envelopeRecord} parties={parties} />,
+    )
+
+    expect(html.match(/<dt>/g)).toHaveLength(2)
+    expect(html).not.toContain('Invalid votes')
+    expect(html).not.toContain('Turnout')
+    expect(html).not.toContain('3,094')
+  })
 })

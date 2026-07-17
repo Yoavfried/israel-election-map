@@ -1,6 +1,8 @@
 # Polling-Place Address Quality Audit
 
-Last updated: 2026-07-15
+> Current scope: this is an address/OCR and polling-place-location audit. OSM containment results are not promoted into election statistical-area assignment.
+
+Last updated: 2026-07-16
 
 ## Purpose
 
@@ -41,7 +43,7 @@ Current pipeline-fidelity failures:
 | Missing source evidence record | 0 |
 | Normalized field differs from source evidence | 0 |
 
-This rules out a downstream copy, row-key, or normalization mismatch in the current table. It does not clear unreviewed K18 OCR or prove that an address printed by the election authority is geographically correct.
+This rules out a downstream copy, row-key, or normalization mismatch in the current table. Fidelity comparisons apply only to fields actually present in each evidence source; the K17 result file's absent eligible-voter field is restored and validated separately rather than compared with a fabricated zero. This does not clear unreviewed K18 OCR or prove that an address printed by the election authority is geographically correct.
 
 ## Address Usability
 
@@ -202,4 +204,4 @@ The 683 canonical residuals comprise 389 street names not found in the target lo
 - `data/processed/geocoding/unmatched_location_units.csv`: one row per unresolved location signature.
 - `data/processed/geocoding/unmatched_location_reason_summary.csv`: current unmatched reason totals.
 
-OSM candidates are not yet promoted automatically into final public assignments. Promotion must retain the assignment method and OSM/review provenance. The complete current reconciliation is in `docs/GEOGRAPHIC_ASSIGNMENT_STATUS.md`.
+OSM candidates are not promoted into election-result statistical assignments. They remain polling-place-location evidence and must retain OSM/review provenance if exposed as a separate feature. The current election assignment is in `docs/GEOGRAPHIC_ASSIGNMENT_STATUS.md`.

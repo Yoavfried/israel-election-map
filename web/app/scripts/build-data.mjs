@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto'
 import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises'
 import { dirname, isAbsolute, relative, resolve } from 'node:path'
 import {
+  aliasJoinedCompositeResults,
   buildCoverage,
   buildCompositeMetadataIndex,
   buildCustomMetadataIndex,
@@ -18,6 +19,7 @@ const APP_ROOT = resolve(import.meta.dirname, '..')
 const REPOSITORY_ROOT = resolve(APP_ROOT, '..', '..')
 const DEFAULT_SOURCE_ROOT = resolve(REPOSITORY_ROOT, 'data', 'processed')
 const DEFAULT_OUTPUT_ROOT = resolve(APP_ROOT, 'public', 'data', 'v2')
+const HISTORICAL_STATISTICAL_AREA_VINTAGES = [1995, 2008, 2011]
 
 async function main() {
   const options = parseArguments(process.argv.slice(2))
@@ -41,6 +43,7 @@ async function main() {
       localityMetadataRows,
       statisticalAreas,
       localities,
+      statisticalAreaBackdrop,
       compositeLocalities,
       customGeographies,
     ] = await Promise.all([
@@ -52,10 +55,38 @@ async function main() {
       readJson(resolve(sourceRoot, 'geographies', 'geography_build_summary.json')),
       readCsv(resolve(sourceRoot, 'geographies', 'statistical_areas_2022.metadata.csv')),
       readCsv(resolve(sourceRoot, 'geographies', 'localities_2022.metadata.csv')),
-      readJson(resolve(sourceRoot, 'geographies', 'statistical_areas_2022.simplified.geojson')),
-      readJson(resolve(sourceRoot, 'geographies', 'localities_2022_dissolved.simplified.geojson')),
+      readJson(
+        resolve(sourceRoot, 'geographies', 'statistical_areas_2022.display.simplified.geojson'),
+      ),
+      readJson(
+        resolve(sourceRoot, 'geographies', 'localities_2022_dissolved.display.simplified.geojson'),
+      ),
+      readJson(
+        resolve(sourceRoot, 'geographies', 'statistical_area_land_backdrop.simplified.geojson'),
+      ),
       readJson(resolve(sourceRoot, 'geographies', 'composite_localities.simplified.geojson')),
       readJson(resolve(sourceRoot, 'geographies', 'custom_geographies.geojson')),
+    ])
+    const historicalStatisticalSources = await Promise.all(
+      HISTORICAL_STATISTICAL_AREA_VINTAGES.map(async (vintage) => [
+        vintage,
+        {
+          metadataRows: await readCsv(
+            resolve(sourceRoot, 'geographies', `statistical_areas_${vintage}.metadata.csv`),
+          ),
+          geography: await readJson(
+            resolve(
+              sourceRoot,
+              'geographies',
+              `statistical_areas_${vintage}.display.simplified.geojson`,
+            ),
+          ),
+        },
+      ]),
+    )
+    const statisticalSourcesByVintage = new Map([
+      ...historicalStatisticalSources,
+      [2022, { metadataRows: statisticalMetadataRows, geography: statisticalAreas }],
     ])
 
     validateConfiguration(electionConfig, partyOverrideConfig)
@@ -63,7 +94,12 @@ async function main() {
     validatePartyRegistryElections(electionConfig, partyRegistryByElection)
 
     const summaryByElection = new Map(summaryRows.map((row) => [row.election, row]))
-    const statisticalMetadata = buildMetadataIndex(statisticalMetadataRows, 'statistical-area')
+    const statisticalMetadataByVintage = new Map(
+      [...statisticalSourcesByVintage].map(([vintage, source]) => [
+        vintage,
+        buildMetadataIndex(source.metadataRows, 'statistical-area'),
+      ]),
+    )
     const localityMetadata = new Map([
       ...buildMetadataIndex(localityMetadataRows, 'locality'),
       ...buildCompositeMetadataIndex(compositeLocalities),
@@ -84,10 +120,11 @@ async function main() {
       ]),
     )
 
-    const prunedStatisticalAreas = pruneGeography(
-      statisticalAreas,
-      'statistical-area',
-      customGeographies,
+    const prunedStatisticalAreasByVintage = new Map(
+      [...statisticalSourcesByVintage].map(([vintage, source]) => [
+        vintage,
+        pruneGeography(source.geography, 'statistical-area', customGeographies),
+      ]),
     )
     const prunedLocalities = pruneGeography(
       localities,
@@ -95,7 +132,13 @@ async function main() {
       customGeographies,
       compositeLocalities,
     )
-    const statisticalMarkers = buildDisplayMarkers(prunedStatisticalAreas)
+    const statisticalAreaBackdropUrl = 'geographies/statistical-area-backdrop.geojson'
+    const statisticalMarkersByVintage = new Map(
+      [...prunedStatisticalAreasByVintage].map(([vintage, geography]) => [
+        vintage,
+        buildDisplayMarkers(geography),
+      ]),
+    )
     const localityMarkers = buildDisplayMarkers(prunedLocalities)
 
     const assets = []
@@ -108,16 +151,59 @@ async function main() {
       assets.push({ path: relativePath.replaceAll('\\', '/'), bytes: Buffer.byteLength(text), sha256: assetHash })
     }
 
+    const statisticalGeographyAssetsByVintage = new Map(
+      [...prunedStatisticalAreasByVintage].map(([vintage, geography]) => {
+        const markers = statisticalMarkersByVintage.get(vintage)
+        if (!markers) {
+          throw new Error(`Missing marker geography for statistical-area vintage ${vintage}`)
+        }
+        return [
+          vintage,
+          {
+            vintage,
+            geometryUrl: `geographies/statistical-areas-${vintage}.geojson`,
+            markerGeometryUrl: `geographies/statistical-area-markers-${vintage}.geojson`,
+            backdropGeometryUrl: statisticalAreaBackdropUrl,
+            featureCount: geography.features.length,
+            markerFeatureCount: markers.features.length,
+          },
+        ]
+      }),
+    )
+    const localityGeographyAsset = {
+      vintage: 2022,
+      geometryUrl: 'geographies/localities.geojson',
+      markerGeometryUrl: 'geographies/locality-markers.geojson',
+      featureCount: prunedLocalities.features.length,
+      markerFeatureCount: localityMarkers.features.length,
+    }
+
     await Promise.all([
-      writeJsonAsset('geographies/statistical-areas.geojson', prunedStatisticalAreas),
-      writeJsonAsset('geographies/localities.geojson', prunedLocalities),
-      writeJsonAsset('geographies/statistical-area-markers.geojson', statisticalMarkers),
-      writeJsonAsset('geographies/locality-markers.geojson', localityMarkers),
+      ...[...prunedStatisticalAreasByVintage].flatMap(([vintage, geography]) => [
+        writeJsonAsset(`geographies/statistical-areas-${vintage}.geojson`, geography),
+        writeJsonAsset(
+          `geographies/statistical-area-markers-${vintage}.geojson`,
+          statisticalMarkersByVintage.get(vintage),
+        ),
+      ]),
+      writeJsonAsset(localityGeographyAsset.geometryUrl, prunedLocalities),
+      writeJsonAsset(localityGeographyAsset.markerGeometryUrl, localityMarkers),
+      writeJsonAsset(statisticalAreaBackdropUrl, statisticalAreaBackdrop),
     ])
 
     const catalogElections = []
     for (const election of electionConfig) {
       const electionSlug = election.id.toLowerCase()
+      const statisticalAreaVintage = Number(election.statisticalAreaVintage)
+      const statisticalMetadata = statisticalMetadataByVintage.get(statisticalAreaVintage)
+      const statisticalGeographyAsset = statisticalGeographyAssetsByVintage.get(
+        statisticalAreaVintage,
+      )
+      if (!statisticalMetadata || !statisticalGeographyAsset) {
+        throw new Error(
+          `${election.id} references unavailable statistical-area vintage ${election.statisticalAreaVintage}`,
+        )
+      }
       const [statisticalRows, localityRows, customRows, envelopeRows] = await Promise.all([
         readCsv(resolve(sourceRoot, 'public', 'statistical_area_results', `${electionSlug}.csv`)),
         readCsv(resolve(sourceRoot, 'public', 'locality_results', `${electionSlug}.csv`)),
@@ -137,6 +223,11 @@ async function main() {
       const electionLocalityMetadata = applyLocalityNameOverrides(
         localityMetadata,
         displayOverrides,
+      )
+      const displayedLocalityRows = aliasJoinedCompositeResults(
+        localityRows,
+        prunedLocalities,
+        election.id,
       )
       const overrides = partyOverrideConfig.elections[election.id] ?? {}
       const partyRegistry = partyRegistryByElection.get(election.id)
@@ -160,7 +251,7 @@ async function main() {
       const localityPayload = buildResultPayload({
         electionId: election.id,
         mode: 'locality',
-        primaryRows: localityRows,
+        primaryRows: displayedLocalityRows,
         customRows,
         envelopeRows,
         metadataById: electionLocalityMetadata,
@@ -187,6 +278,10 @@ async function main() {
         ...election,
         coverageByMode,
         resultUrls,
+        geographiesByMode: {
+          'statistical-area': statisticalGeographyAsset,
+          locality: localityGeographyAsset,
+        },
       })
     }
 
@@ -196,14 +291,19 @@ async function main() {
       buildHash.update(asset.path).update('\0').update(asset.sha256)
     }
     const buildId = buildHash.digest('hex').slice(0, 16)
+    const currentStatisticalGeographyAsset = statisticalGeographyAssetsByVintage.get(2022)
+    if (!currentStatisticalGeographyAsset) {
+      throw new Error('Missing current 2022 statistical-area geography asset')
+    }
     const catalog = {
-      schemaVersion: 2,
+      schemaVersion: 3,
       buildId,
       generatedAt: new Date().toISOString(),
       source: {
-        geographyVintage: 2022,
+        statisticalAreaVintages: [...statisticalGeographyAssetsByVintage.keys()].toSorted(),
+        localityGeometryVintage: 2022,
         electionRange: { first: 'K17', last: 'K25' },
-        assignmentStatus: 'locality-complete-statistical-areas-partial',
+        assignmentStatus: 'official-crosswalk-first-locality-complete-statistical-areas-partial',
         resultColumnExclusions: Object.entries(partyOverrideConfig.ignoredResultColumns).flatMap(
           ([electionId, columns]) =>
             Object.entries(columns).map(([column, reason]) => ({ electionId, column, reason })),
@@ -221,18 +321,12 @@ async function main() {
         {
           id: 'statistical-area',
           label: { en: 'Statistical areas', he: 'אזורים סטטיסטיים' },
-          geometryUrl: 'geographies/statistical-areas.geojson',
-          markerGeometryUrl: 'geographies/statistical-area-markers.geojson',
-          featureCount: prunedStatisticalAreas.features.length,
-          markerFeatureCount: statisticalMarkers.features.length,
+          ...currentStatisticalGeographyAsset,
         },
         {
           id: 'locality',
           label: { en: 'Localities', he: 'יישובים' },
-          geometryUrl: 'geographies/localities.geojson',
-          markerGeometryUrl: 'geographies/locality-markers.geojson',
-          featureCount: prunedLocalities.features.length,
-          markerFeatureCount: localityMarkers.features.length,
+          ...localityGeographyAsset,
         },
       ],
       elections: catalogElections,
@@ -394,8 +488,16 @@ function validateConfiguration(elections, partyOverrides) {
   }
   const ids = new Set()
   for (const election of elections) {
-    if (!election.id || !election.number || !election.label?.en || !election.label?.he) {
-      throw new Error('Every election needs an ID, number, and English/Hebrew labels')
+    if (
+      !election.id ||
+      !election.number ||
+      !election.label?.en ||
+      !election.label?.he ||
+      ![1995, 2008, 2011, 2022].includes(Number(election.statisticalAreaVintage))
+    ) {
+      throw new Error(
+        'Every election needs an ID, number, statistical-area vintage, and English/Hebrew labels',
+      )
     }
     if (ids.has(election.id)) {
       throw new Error(`Duplicate election ID: ${election.id}`)
@@ -429,6 +531,11 @@ function validateConfiguration(elections, partyOverrides) {
       }
       if (override.color) {
         assertHexColor(override.color, `elections.${electionId}.${partyId}.color`)
+      }
+      for (const field of ['nameHe', 'nameEn']) {
+        if (override[field] !== undefined && (typeof override[field] !== 'string' || !override[field].trim())) {
+          throw new Error(`elections.${electionId}.${partyId}.${field} must be a non-empty string`)
+        }
       }
     }
   }

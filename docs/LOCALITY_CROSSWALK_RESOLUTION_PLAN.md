@@ -4,6 +4,8 @@ Last updated: 2026-07-15
 
 Scope note: this file was created during the earlier K16-K25 investigation. Current product scope is K17-K25; K16-only rows are retained as historical review/future-reactivation context.
 
+Production note: the address-based statistical assignment ideas in the original plan are superseded. K17-K25 statistical mode now uses official election-specific CBS ballot crosswalks and matching historical geometry.
+
 This file turns the reviewed locality crosswalk table into implementation actions.
 
 Source review table:
@@ -25,7 +27,7 @@ Derived full-resolution CSV:
 | N.S. | 3 | Custom Northern Samaria evacuated-localities point-size polygon. |
 | HEBRON | 2 | Custom Hebron point-size polygon. |
 | (blank) | 1 | One row: Ma'ale Shomron maps to Karnei Shomron based on note. |
-| SH | 1 | Use polling-place addresses for statistical-area placement; use the reviewed Sha'ar Shomron composite in K25 locality mode. |
+| SH | 1 | Use the reviewed Sha'ar Shomron composite in K25 locality mode; use the official K25 historical ballot crosswalk for statistical mode. |
 
 ## Solution Counts
 
@@ -48,11 +50,11 @@ Derived full-resolution CSV:
 ## Implementation Decisions
 
 - Accepted single-locality matches use the reviewed 2022 locality name.
-- Statistical-area mode assigns accepted historical split rows with multiple possible current matches by polling-place address/geocode into component polygons; it does not split votes heuristically.
+- Statistical-area mode uses the official historical ballot crosswalk. Polling-place address/geocode analysis is retained only for building-location research.
 - Locality mode preserves the reviewed election-time municipality for באקה-ג'ת, עיר כרמל, שגור, and שער שומרון by using the component unions declared in `data/manual/composite_localities.csv`.
 - `TRIBE`, `GAZA`, `N.S.`, and `HEBRON` become custom point-size polygon buckets. The visual design can be decided later, but the data model treats each bucket as a synthetic geography with preserved source-row contributions.
 - `ENVELOPE` rows are non-geographic and should be handled like envelope/special votes: included in totals and details, not assigned to map polygons.
-- `SH` represents `שער שומרון`; use polling-place addresses to assign each row to the relevant component in statistical-area mode, and use the reviewed composite municipality in K25 locality mode.
+- `SH` represents `שער שומרון`; use the official K25 historical ballot crosswalk in statistical mode and the reviewed composite municipality in K25 locality mode.
 - The blank reviewed row with note `שכונה בקרני שומרון` is resolved to `קרני שומרון`.
 
 ## Full Resolution Table

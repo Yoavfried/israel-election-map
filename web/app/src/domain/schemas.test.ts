@@ -16,11 +16,12 @@ const coverage = {
 describe('web data contracts', () => {
   it('accepts a versioned catalog', () => {
     const catalog = AppCatalogSchema.parse({
-      schemaVersion: 2,
+      schemaVersion: 3,
       buildId: '12345678abcdef00',
       generatedAt: '2026-07-14T10:00:00.000Z',
       source: {
-        geographyVintage: 2022,
+        statisticalAreaVintages: [1995, 2008, 2011, 2022],
+        localityGeometryVintage: 2022,
         electionRange: { first: 'K17', last: 'K25' },
         assignmentStatus: 'partial',
         resultColumnExclusions: [],
@@ -33,6 +34,7 @@ describe('web data contracts', () => {
       geographyModes: [
         {
           id: 'statistical-area',
+          vintage: 2022,
           label: { en: 'Statistical areas', he: 'אזורים סטטיסטיים' },
           geometryUrl: 'geographies/statistical-areas.geojson',
           markerGeometryUrl: 'geographies/statistical-area-markers.geojson',
@@ -41,6 +43,7 @@ describe('web data contracts', () => {
         },
         {
           id: 'locality',
+          vintage: 2022,
           label: { en: 'Localities', he: 'יישובים' },
           geometryUrl: 'geographies/localities.geojson',
           markerGeometryUrl: 'geographies/locality-markers.geojson',
@@ -52,6 +55,7 @@ describe('web data contracts', () => {
         {
           id: 'K25',
           number: 25,
+          statisticalAreaVintage: 2011,
           dateLabel: '2022',
           label: { en: 'Knesset 25', he: 'הכנסת ה־25' },
           coverageByMode: {
@@ -61,6 +65,22 @@ describe('web data contracts', () => {
           resultUrls: {
             'statistical-area': 'results/k25/statistical-areas.json',
             locality: 'results/k25/localities.json',
+          },
+          geographiesByMode: {
+            'statistical-area': {
+              vintage: 2011,
+              geometryUrl: 'geographies/statistical-areas-2011.geojson',
+              markerGeometryUrl: 'geographies/statistical-area-markers-2011.geojson',
+              featureCount: 2_848,
+              markerFeatureCount: 118,
+            },
+            locality: {
+              vintage: 2022,
+              geometryUrl: 'geographies/localities.geojson',
+              markerGeometryUrl: 'geographies/locality-markers.geojson',
+              featureCount: 1_329,
+              markerFeatureCount: 100,
+            },
           },
         },
       ],

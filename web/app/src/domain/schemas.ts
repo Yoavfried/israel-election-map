@@ -26,18 +26,24 @@ const AssetSchema = z.object({
   sha256: z.string().regex(/^[a-f0-9]{64}$/),
 })
 
-const GeographyModeCatalogSchema = z.object({
-  id: GeographyModeSchema,
-  label: LocalizedTextSchema,
+const GeographyAssetSchema = z.object({
+  vintage: z.number().int().positive(),
   geometryUrl: z.string().min(1),
   markerGeometryUrl: z.string().min(1),
+  backdropGeometryUrl: z.string().min(1).optional(),
   featureCount: z.number().int().positive(),
   markerFeatureCount: z.number().int().positive(),
+})
+
+const GeographyModeCatalogSchema = GeographyAssetSchema.extend({
+  id: GeographyModeSchema,
+  label: LocalizedTextSchema,
 })
 
 const ElectionCatalogSchema = z.object({
   id: z.string().regex(/^K\d+$/),
   number: z.number().int().positive(),
+  statisticalAreaVintage: z.number().int().positive(),
   dateLabel: z.string().min(1),
   label: LocalizedTextSchema,
   coverageByMode: z.object({
@@ -48,14 +54,19 @@ const ElectionCatalogSchema = z.object({
     'statistical-area': z.string().min(1),
     locality: z.string().min(1),
   }),
+  geographiesByMode: z.object({
+    'statistical-area': GeographyAssetSchema,
+    locality: GeographyAssetSchema,
+  }),
 })
 
 export const AppCatalogSchema = z.object({
-  schemaVersion: z.literal(2),
+  schemaVersion: z.literal(3),
   buildId: z.string().min(8),
   generatedAt: z.string().datetime(),
   source: z.object({
-    geographyVintage: z.number().int(),
+    statisticalAreaVintages: z.array(z.number().int().positive()).min(1),
+    localityGeometryVintage: z.number().int().positive(),
     electionRange: z.object({ first: z.string(), last: z.string() }),
     assignmentStatus: z.string().min(1),
     resultColumnExclusions: z.array(
@@ -96,6 +107,12 @@ const ResultRecordSchema = z.object({
   id: z.string().min(1),
   geographyType: z.enum(['statistical-area', 'locality', 'custom', 'envelope']),
   names: LocalizedTextSchema,
+  includedNames: z
+    .object({
+      en: z.array(z.string().min(1)),
+      he: z.array(z.string().min(1)),
+    })
+    .optional(),
   code: z.string().min(1),
   localityId: z.string().nullable(),
   totals: z.object({
@@ -105,7 +122,7 @@ const ResultRecordSchema = z.object({
     actualVoters: z.number().nonnegative(),
     validVotes: z.number().nonnegative(),
     invalidVotes: z.number().nonnegative(),
-    turnout: z.number().min(0),
+    turnout: z.number().min(0).nullable(),
   }),
   winner: z.object({
     partyId: z.string(),

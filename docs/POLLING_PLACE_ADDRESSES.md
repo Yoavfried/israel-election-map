@@ -1,22 +1,14 @@
 # Polling-Place Address Coverage
 
+> Current scope: this dataset locates polling-place buildings and audits source quality. It no longer assigns election votes to statistical areas; production assignment uses official historical CBS ballot crosswalks.
+
 Last updated: 2026-07-15
 
 ## Purpose
 
-The statistical-area map needs an approximate kalpi-to-statistical-area assignment. Official ballot-result rows include votes and kalpi identifiers, but no kalpi polygons or coordinates.
+Official ballot-result rows include votes and ballot identifiers but no polling-place coordinates. This inventory recovers election-specific address and place text so a separate polling-place layer can eventually locate the buildings and so OCR/parsing quality remains auditable.
 
-The statistical-area approach is:
-
-> poll result row -> polling-place address/place source -> geocoded point -> 2022 statistical area
-
-There is also a shortcut:
-
-> if the reviewed 2022 locality has exactly one statistical area, assign by locality and skip geocoding
-
-This is intentionally approximate. It maps the polling-place building, not each voter's residential statistical area.
-
-Locality totals use the same normalized ballot rows but join directly through the reviewed locality crosswalk; they do not wait for address geocoding. Official locality aggregate files are useful as QA/reference material, but they are not product input totals.
+It does not infer voter geography. Statistical-area election assignment uses direct CBS ballot crosswalks; locality totals use the reviewed locality crosswalk. Both are independent of address geocoding.
 
 Current product scope is K17-K25. K16 / 2003 is deferred until a usable election-specific polling-place address source is recovered.
 
@@ -180,13 +172,13 @@ This table reflects the address sources currently present under `data/raw` and `
 | K18 | 9,263 | 9,248 | 15 | No |
 | K17 | 8,718 | 8,262 | 456 | No |
 
-K22-K24 address reports were recovered in an earlier research pass, then were stranded in the old Codex scratch folder during project-folder reorganization. They are now copied into `data/raw` and parsed by the pipeline.
+K22-K24 archived address reports were recovered during source research and are now parsed from ignored files under `data/raw`.
 
 Reviewed K18 scan corrections and source confirmations are stored separately in `data/manual/manual_k18_address_reviews.csv` and applied by normalization. The generated OCR-reconciliation CSV is not edited by hand. The overlay now contains 126 rows: 121 corrections and 5 confirmations of weak text visible in the scan; its final 113-row batch covers the 82 suspicious signatures reviewed by the user.
 
 ## Geocoding Input Readiness
 
-This table covers only rows that need address-level point-in-polygon assignment after applying the reviewed locality crosswalk, custom buckets, and single-stat locality shortcut.
+This historical table describes address-level polling-place-location readiness after applying locality and source-quality rules. It is not a queue for assigning election results to statistical areas.
 
 | Election | Ready address rows | Place-only rows | Missing address rows | Missing-address actual voters |
 |---|---:|---:|---:|---:|
@@ -315,12 +307,12 @@ Rules:
 
 - Exact current locality-code matches can be automated.
 - Historical aliases, spelling changes, merges, and splits must be reviewed and recorded.
-- In statistical-area mode, reviewed split localities and Sha'ar Shomron are address-target sets: use each ballot row's address/geocoded point to assign it to the correct component polygon.
+- In statistical-area mode, reviewed split localities and Sha'ar Shomron use the official election-specific historical ballot crosswalk. Address targets are retained only for locating polling-place buildings.
 - In locality mode, באקה-ג'ת, עיר כרמל, שגור, and שער שומרון use reviewed election-specific unions of their component locality polygons. This preserves the election-time municipality without heuristically splitting votes.
 - Reviewed custom buckets (`TRIBE`, `GAZA`, `N.S.`, `HEBRON`) are assigned to synthetic point-size polygon geographies and preserve source-row contributions.
-- A merge can use the single-stat shortcut only if the merged 2022 target has exactly one statistical area, or if a reviewed rule assigns the old locality unambiguously.
+- Single-area and merged-locality shortcuts in this document describe 2022 polling-place-location QA, not production election-result assignment.
 
-## Current Blockers
+## Current Polling-Place Research Backlog
 
 - Deciding which of the 450 PDF/OCR-only address-content units that lack digital-election or reviewed-image corroboration warrant the next visual-review batch.
 - Geocoding/reviewing the K17, K18, and K19 place-name-only rows.

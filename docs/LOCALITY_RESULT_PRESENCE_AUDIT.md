@@ -8,9 +8,29 @@ This audit asks whether each 2022 CBS display feature has its own standalone row
 
 The 1700-1799 special-purpose facilities, 5500-5599 regional-council footprints, and 9900-9999 no-jurisdiction/background footprints are structural display geometry, not candidate election localities, and are excluded from the exception inventory.
 
+The structural exclusion was checked against the official 2022 CBS locality workbook. All 56 special-purpose records have a blank 2022 population; the other 104 features are regional-council or no-jurisdiction footprints rather than locality records. No additional never-result polygon with an expected locality electorate sits outside the 36-row review set.
+
 ## Review Status
 
-This inventory is complete as a reproducible presence calculation, but the historical interpretation and election-specific display review are not complete. A `none` value in the reviewed-display column means that no explicit decision has been recorded yet; it does not mean that the current visible or neutral treatment is final.
+The 36 features with no standalone K17-K25 result now have evidence-level explanations. The 80 partial-presence features still require historical and election-specific review. A `none` value in the reviewed-display column means that no explicit visibility decision has been recorded; it does not mean the explanation audit is missing.
+
+A joined polling area cannot be split back into locality-specific party totals. The published host row contains one secret-ballot aggregate for the host and every attached register, so moving the whole result to an attached locality would be incorrect.
+
+For `כפר עבודה` and `צופייה`, youth-institution context makes the absence of an adult locality register unsurprising. `ידידה` is an adult residential institution: its absence from every available ordinary polling list is confirmed, but whether its residents remain registered at other addresses or are handled elsewhere is not established by the election sources.
+
+## Election-Specific Joined Polygons
+
+The locality map substitutes reviewed host-plus-attached polygon unions only in elections supported by the source evidence. The canonical locality-result CSV remains under the published host locality; the web bundle aliases that one result to the combined display feature without copying or splitting votes. The visible title remains the published host locality, while an info tooltip lists every attached 2022 polygon represented by the union. Historical source registers without a 2022 polygon cannot add geometry and remain documented only in the source evidence.
+
+| Election | Combined polygons | Attached 2022 polygons | Evidence |
+|---|---|---|---|
+| K19 | 46 | 53 | exact host-level eligible-voter arithmetic |
+| K20 | 45 | 50 | official polling rows explicitly name the host |
+| K25 | 5 | 6 | reviewed under-100 host-delta inference |
+
+Across elections, 33 of the 36 never-present meaningful polygons participate in at least one supported host union; the other 3 are the institution/place cases with no ordinary polling-list row. The unions also include 28 of the 80 partial-presence polygons where the source identifies their host.
+
+K17-K18 and K21-K24 currently have no joined-polygon display rules because the available source rows do not establish the host relationship. 52 partial-presence polygons have no joined election yet, and all 80 partial histories still contain at least one missing election without a supported host rule.
 
 ## Counts
 
@@ -21,6 +41,22 @@ This inventory is complete as a reproducible presence calculation, but the histo
 | Meaningful features with results in all 9 elections | 1111 |
 | Meaningful features with results in some elections | 80 |
 | Meaningful features with no standalone result | 36 |
+
+No-standalone-result explanation breakdown:
+
+| Explanation | Count |
+|---|---|
+| K19 joined register; exact eligible-voter arithmetic | 28 |
+| attached row is explicitly located at the host | 2 |
+| under-100 register; host strongly inferred | 3 |
+| no ordinary voter-list row in available K17-K25 sources | 3 |
+
+Review confidence:
+
+| Status | Count |
+|---|---|
+| confirmed | 31 |
+| strong inference | 5 |
 
 Structural breakdown:
 
@@ -53,44 +89,48 @@ These are the 2022 localities in the West Bank code range that lack a standalone
 
 ## No Standalone Result in K17-K25
 
-| Code | 2022 name | English name | West Bank range | Reviewed display rule |
-|---|---|---|---|---|
-| 88 | כרם בן שמן | KEREM BEN SHEMEN | no | none |
-| 328 | עזוז | EZUZ | no | none |
-| 371 | כדורי | KADOORIE | no | none |
-| 392 | קדמה | QEDMA | no | none |
-| 412 | קריית שלמה | QIRYAT SHELOMO | no | none |
-| 493 | דייר ראפאת | DEIR RAFAT | no | none |
-| 566 | גבעת שמש | GIV'AT SHEMESH | no | none |
-| 875 | כפר עבודה | KEFAR AVODA | no | none |
-| 882 | אורנים | ORANIM | no | none |
-| 886 | איתנים | ETANIM | no | none |
-| 897 | מדרשת רופין | MIDRESHET RUPPIN | no | none |
-| 1053 | עין חצבה | EN HAZEVA | no | none |
-| 1056 | עין כרם-בי"ס חקלאי | EN KAREM-B.S.HAQLA'I | no | none |
-| 1076 | בית ברל | BET BERL | no | none |
-| 1111 | צופייה | ZOFIYYA | no | none |
-| 1117 | יעל | YA'EL | no | none |
-| 1144 | ידידה | YEDIDA | no | none |
-| 1154 | מלכישוע | MALKISHUA | no | none |
-| 1187 | עיר אובות | IR OVOT | no | none |
-| 1196 | מחנה יתיר | MAHANE YATTIR | no | none |
-| 1225 | רביד | RAVID | no | none |
-| 1267 | שיטים | SHITTIM | no | none |
-| 1276 | אשבל | ESHBAL | no | none |
-| 1279 | נווה חריף | NEWE HARIF | no | none |
-| 1318 | מבואות ים | MEVO'OT YAM | no | none |
-| 1322 | הודיות | HODAYOT | no | none |
-| 1325 | כפר זוהרים | KEFAR ZOHARIM | no | none |
-| 1339 | אל -עזי | AL-AZY | no | none |
-| 1341 | רוח מדבר | RUAH MIDBAR | no | none |
-| 1373 | שלווה במדבר | SHALVA BAMIDBAR | no | none |
-| 1378 | שיזף | SHEZAF | no | none |
-| 2006 | כנות | KANNOT | no | none |
-| 2039 | קריית יערים (מוסד) | QIRYAT YE'ARIM(INSTITUTE) | no | none |
-| 3786 | אבנת | AVENAT | yes | K17-K25: hidden |
-| 3825 | מבואות יריחו | MEVO'OT YERIHO | yes | K17-K25: hidden |
-| 4035 | נמרוד | NIMROD | no | none |
+The CBS form and population values are a reviewed 2022 snapshot from the official locality workbook. `place` is a CBS location that is not counted as an independent locality population. Exact joins are validated against the archived K19 polling list and published K19 eligible-voter totals; strong inferences use an explicit attached-row address or an under-100 K25 register plus the nearby host delta.
+
+| Code | 2022 display name | CBS form / population | Explanation | Evidence | Joined host | Confidence |
+|---|---|---|---|---|---|---|
+| 88 | כרם בן שמן | other rural Jewish / 96 | K19 joined register; exact eligible-voter arithmetic | K19: 62 eligible | בן שמן (כפר נוער) (1084), station 1 | confirmed |
+| 328 | עזוז | community settlement / 86 | K19 joined register; exact eligible-voter arithmetic | K19: 42 eligible | ניצני סיני (1280), station 1 | confirmed |
+| 371 | כדורי | institutional Jewish / 209 | K19 joined register; exact eligible-voter arithmetic | K19: 60 eligible | כפר תבור (47), station 2 | confirmed |
+| 392 | קדמה | place / not separate | K19 joined register; exact eligible-voter arithmetic | K19: 31 eligible | ניר בנים (553), station 1 | confirmed |
+| 412 | קריית שלמה | institutional Jewish / 374 | K19 joined register; exact eligible-voter arithmetic | K19: 9 eligible | חרוצים (1024), station 1 | confirmed |
+| 493 | דייר ראפאת | institutional non-Jewish / 97 | K19 joined register; exact eligible-voter arithmetic | K19: 40 eligible | צרעה (567), station 1 | confirmed |
+| 566 | גבעת שמש | place / not separate | K19 joined register; exact eligible-voter arithmetic | K19: 15 eligible | צרעה (567), station 1 | confirmed |
+| 875 | כפר עבודה | institutional Jewish / 204 | no ordinary voter-list row in available K17-K25 sources | K17-K25: no ordinary polling-list row | none | confirmed |
+| 882 | אורנים | institutional Jewish / 116 | K19 joined register; exact eligible-voter arithmetic | K19: 6 eligible | קריית טבעון (2300), station 8 | confirmed |
+| 886 | איתנים | institutional Jewish / 61 | K19 joined register; exact eligible-voter arithmetic | K19: 6 eligible | צובה (465), station 1 | confirmed |
+| 897 | מדרשת רופין | institutional Jewish / 281 | K19 joined register; exact eligible-voter arithmetic | K19: 8 eligible | כפר מונש (387), station 1 | confirmed |
+| 1053 | עין חצבה | place / not separate | K19 joined register; exact eligible-voter arithmetic | K19: 25 eligible | חצבה (13), station 1 | confirmed |
+| 1056 | עין כרם-בי"ס חקלאי | institutional Jewish / 175 | K19 joined register; exact eligible-voter arithmetic | K19: 18 eligible | ירושלים (3000), station 322 | confirmed |
+| 1076 | בית ברל | institutional Jewish / 268 | K19 joined register; exact eligible-voter arithmetic | K19: 52 eligible | צופית (198), station 2 | confirmed |
+| 1111 | צופייה | place / not separate | no ordinary voter-list row in available K17-K25 sources | K17-K25: no ordinary polling-list row | none | confirmed |
+| 1117 | יעל | place / not separate | K19 joined register; exact eligible-voter arithmetic | K19: 20 eligible | פרזון (2053), station 1 | confirmed |
+| 1144 | ידידה | institutional Jewish / 222 | no ordinary voter-list row in available K17-K25 sources | K17-K25: no ordinary polling-list row | none | confirmed |
+| 1154 | מלכישוע | institutional Jewish / 188 | K19 joined register; exact eligible-voter arithmetic | K19: 6 eligible | בית שאן (9200), station 17 | confirmed |
+| 1187 | עיר אובות | place / not separate | K19 joined register; exact eligible-voter arithmetic | K19: 16 eligible | חצבה (13), station 1 | confirmed |
+| 1196 | מחנה יתיר | other rural Jewish / 306 | K19 joined register; exact eligible-voter arithmetic | K19: 44 eligible | הר עמשא (1261), station 1 | confirmed |
+| 1225 | רביד | kibbutz / 108 | K19 joined register; exact eligible-voter arithmetic | K19: 99 eligible | מסד (1258), station 1 | confirmed |
+| 1267 | שיטים | place / not separate | K19 joined register; exact eligible-voter arithmetic | K19: 5 eligible | נאות סמדר (1197), station 1 | confirmed |
+| 1276 | אשבל | kibbutz / 141 | K19 joined register; exact eligible-voter arithmetic | K19: 66 eligible | אשחר (1188), station 1 | confirmed |
+| 1279 | נווה חריף | kibbutz / 111 | K19 joined register; exact eligible-voter arithmetic | K19: 81 eligible | נאות סמדר (1197), station 1 | confirmed |
+| 1318 | מבואות ים | institutional Jewish / 445 | K19 joined register; exact eligible-voter arithmetic | K19: 27 eligible | מכמורת (382), station 1 | confirmed |
+| 1322 | הודיות | institutional Jewish / 329 | K19 joined register; exact eligible-voter arithmetic | K19: 33 eligible | לביא (585), station 1 | confirmed |
+| 1325 | כפר זוהרים | institutional Jewish / 155 | attached row is explicitly located at the host | K20\|K25: source row names host | שריגים (לי-און) (1114), station 1 | strong |
+| 1339 | אל -עזי | other rural non-Jewish / 200 | K19 joined register; exact eligible-voter arithmetic | K19: 72 eligible | כפר מנחם (274), station 1 | confirmed |
+| 1341 | רוח מדבר | institutional Jewish / 57 | attached row is explicitly located at the host | K20: source row names host | טללים (1177), station 1 | strong |
+| 1373 | שלווה במדבר | place / not separate | K19 joined register; exact eligible-voter arithmetic | K19: 7 eligible | מדרשת בן גוריון (1140), station 1 | confirmed |
+| 1378 | שיזף | community settlement / 130 | under-100 register; host strongly inferred | K25: 45 eligible | טללים (1177), station 1 | strong |
+| 2006 | כנות | institutional Jewish / 364 | K19 joined register; exact eligible-voter arithmetic | K19: 41 eligible | נווה מבטח (827), station 1 | confirmed |
+| 2039 | קריית יערים (מוסד) | institutional Jewish / 175 | K19 joined register; exact eligible-voter arithmetic | K19: 23 eligible | קריית יערים (1137), station 2 | confirmed |
+| 3786 | אבנת | community settlement / 249 | K19 joined register; exact eligible-voter arithmetic | K19: 36 eligible | קליה (3601), station 1 | confirmed |
+| 3825 | מבואות יריחו | community settlement / 308 | under-100 register; host strongly inferred | K25: 81 eligible | ייט"ב (3607), station 1 | strong |
+| 4035 | נמרוד | place / not separate | under-100 register; host strongly inferred | K25: 19 eligible | נווה אטי"ב (4303), station 1 | strong |
+
+Detailed arithmetic, source-name discrepancies, and display decisions are retained in `docs/LOCALITY_RESULT_PRESENCE_AUDIT.csv` and `data/manual/locality_result_presence_reviews.csv`.
 
 ## Other Partial-Result Localities
 

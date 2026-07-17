@@ -5,27 +5,706 @@
     "אמת": "#C62828",
     "מרצ": "#18864B",
     "שס": "#202020",
-    "ג": "#8B5A2B"
+    "ג": "#8B5A2B",
+    "ד": "#E67E22",
+    "ו": "#8B1E1E",
+    "ל": "#5DADE2"
   },
   "ignoredResultColumns": {
     "K18": {
+      "פח": "The K18 source carries a zero-filled column for Mahapach BaHinuch, but the list withdrew and did not run; all 9,264 source rows contain zero.",
       "ת. עדכון": "Trailing K18 source metadata field whose value is not part of the valid-vote total; it is not a ballot list."
+    },
+    "K19": {
+      "זה": "The K19 source carries a zero-filled column for Atid Ehad - Nilhamim Basam Hahadash, but the list did not run; all 10,109 source rows contain zero.",
+      "פך": "The K19 source carries a zero-filled column for Bnei Torah (Netzach), but the list did not run; all 10,109 source rows contain zero."
+    },
+    "K20": {
+      "יך": "The K20 source carries a zero-filled column for Maginim Al Yeladeinu, but the list did not run; all 10,414 source rows contain zero."
+    },
+    "K21": {
+      "זנ": "The K21 source carries a zero-filled column for Yachad, but the list did not run; all 10,765 source rows contain zero.",
+      "נך": "The K21 source carries a zero-filled column for the Reform Party, but the list did not run; all 10,765 source rows contain zero.",
+      "ץז": "The K21 source carries a zero-filled column for Ofek Hadash Bekhavod, but the list did not run; all 10,765 source rows contain zero."
+    },
+    "K22": {
+      "זן": "The K22 source carries a zero-filled column for Zehut, but the list did not run; all 10,901 source rows contain zero.",
+      "כ": "The K22 source carries a zero-filled column for Noam, but the list did not run; all 10,901 source rows contain zero.",
+      "נץ": "The K22 source carries a zero-filled column for Kol Yisrael Ahim Leshivyon Hevrati, but the list did not run; all 10,901 source rows contain zero."
+    },
+    "K23": {
+      "זץ": "The K23 source carries a zero-filled column for Tzomet, but the list did not run; all 11,179 source rows contain zero."
+    },
+    "K24": {
+      "רק": "The K24 source carries a zero-filled column for Demokratit, but the list did not run; all 12,926 source rows contain zero."
     }
   },
   "elections": {
     "K17": {
-      "כן": {
+      "אמת": {
+        "nameHe": "העבודה-מימד"
+      },
+      "ג": {
+        "nameHe": "יהדות התורה"
+      },
+      "ד": {
+        "nameHe": "בל\"ד"
+      },
+      "ה": {
+        "nameHe": "ברית עולם",
+        "color": "#4B5563"
+      },
+      "ו": {
+        "nameHe": "חד\"ש"
+      },
+      "ז": {
+        "nameHe": "לחם",
+        "color": "#4B5563"
+      },
+      "זה": {
+        "nameHe": "עתיד אחד",
+        "color": "#2455A4"
+      },
+      "זך": {
+        "nameHe": "גיל",
+        "color": "#8BC34A"
+      },
+      "חץ": {
+        "nameHe": "חץ",
         "color": "#7B2CBF"
+      },
+      "טב": {
+        "nameHe": "האיחוד הלאומי-מפד\"ל",
+        "color": "#F4A261"
+      },
+      "יש": {
+        "nameHe": "שינוי",
+        "color": "#7B2CBF"
+      },
+      "כ": {
+        "nameHe": "חזית יהודית לאומית",
+        "color": "#F2C94C"
+      },
+      "כן": {
+        "nameHe": "קדימה",
+        "color": "#7B2CBF"
+      },
+      "כץ": {
+        "nameHe": "צומת",
+        "color": "#2455A4"
+      },
+      "ל": {
+        "nameHe": "ישראל ביתנו"
+      },
+      "מחל": {
+        "nameHe": "הליכוד"
+      },
+      "מרצ": {
+        "nameHe": "מרצ"
+      },
+      "נץ": {
+        "nameHe": "חרות",
+        "color": "#F2C94C"
+      },
+      "עם": {
+        "nameHe": "רע\"מ-תע\"ל",
+        "color": "#20A4A8"
+      },
+      "פ": {
+        "nameHe": "תפנית",
+        "color": "#2455A4"
+      },
+      "פז": {
+        "nameHe": "לב",
+        "color": "#4B5563"
+      },
+      "פכ": {
+        "nameHe": "עוז לעניים",
+        "color": "#4B5563"
+      },
+      "פץ": {
+        "nameHe": "כוח הכסף",
+        "color": "#4B5563"
+      },
+      "ף": {
+        "nameHe": "מתקדמת",
+        "color": "#4B5563"
+      },
+      "צה": {
+        "nameHe": "הציונות החדשה",
+        "color": "#4B5563"
+      },
+      "ק": {
+        "nameHe": "דע\"ם",
+        "color": "#8B1E1E"
+      },
+      "קז": {
+        "nameHe": "רע\"ש",
+        "color": "#202020"
+      },
+      "קנ": {
+        "nameHe": "עלה ירוק",
+        "color": "#00A651"
+      },
+      "קפ": {
+        "nameHe": "המפלגה הלאומית הערבית",
+        "color": "#4B5563"
+      },
+      "רק": {
+        "nameHe": "הירוקים",
+        "color": "#00A651"
+      },
+      "שס": {
+        "nameHe": "ש\"ס"
       }
     },
     "K18": {
+      "אמת": {
+        "nameHe": "העבודה"
+      },
+      "אר": {
+        "nameHe": "אור בראשון"
+      },
+      "ב": {
+        "nameHe": "הבית היהודי"
+      },
+      "ג": {
+        "nameHe": "יהדות התורה"
+      },
+      "ד": {
+        "nameHe": "בל\"ד"
+      },
+      "ה": {
+        "nameHe": "המפלגה הירוקה"
+      },
+      "ו": {
+        "nameHe": "חד\"ש"
+      },
+      "זך": {
+        "nameHe": "גיל",
+        "color": "#8BC34A"
+      },
+      "חי": {
+        "nameHe": "ישראל חזקה"
+      },
+      "ט": {
+        "nameHe": "האיחוד הלאומי",
+        "color": "#F4A261"
+      },
+      "ים": {
+        "nameHe": "הישראלים"
+      },
+      "ינ": {
+        "nameHe": "לב"
+      },
+      "יק": {
+        "nameHe": "ניצולי השואה"
+      },
       "כן": {
+        "nameHe": "קדימה",
         "color": "#7B2CBF"
+      },
+      "ל": {
+        "nameHe": "ישראל ביתנו"
+      },
+      "מחל": {
+        "nameHe": "הליכוד-אח\"י"
+      },
+      "מרצ": {
+        "nameHe": "מרצ"
+      },
+      "נ": {
+        "nameHe": "עלי\"ה"
+      },
+      "נפ": {
+        "nameHe": "אחריות"
+      },
+      "נץ": {
+        "nameHe": "לזוז"
+      },
+      "נר": {
+        "nameHe": "לוחמי חברה"
+      },
+      "עם": {
+        "nameHe": "רע\"מ-תע\"ל",
+        "color": "#20A4A8"
+      },
+      "פ": {
+        "nameHe": "כח להשפיע"
+      },
+      "פי": {
+        "nameHe": "ברית עולם"
+      },
+      "פק": {
+        "nameHe": "רע\"ש"
+      },
+      "ץ": {
+        "nameHe": "צומת"
+      },
+      "צי": {
+        "nameHe": "צבר"
+      },
+      "ק": {
+        "nameHe": "דע\"ם"
+      },
+      "קנ": {
+        "nameHe": "עלה ירוק",
+        "color": "#00A651"
+      },
+      "קפ": {
+        "nameHe": "כוח הכסף"
+      },
+      "קץ": {
+        "nameHe": "מתקדמת"
+      },
+      "רק": {
+        "nameHe": "הירוקים",
+        "color": "#00A651"
+      },
+      "שס": {
+        "nameHe": "ש\"ס"
       }
     },
     "K19": {
+      "אמת": {
+        "nameHe": "העבודה"
+      },
+      "ד": {
+        "nameHe": "בל\"ד"
+      },
+      "הי": {
+        "nameHe": "מורשת אבות"
+      },
+      "ו": {
+        "nameHe": "חד\"ש"
+      },
+      "ז": {
+        "nameHe": "ארץ חדשה"
+      },
+      "זך": {
+        "nameHe": "דור בוני הארץ"
+      },
       "כן": {
+        "nameHe": "קדימה",
         "color": "#7B2CBF"
+      },
+      "ני": {
+        "nameHe": "אור בראשון"
+      },
+      "נק": {
+        "nameHe": "מתקדמת"
+      },
+      "עם": {
+        "color": "#20A4A8"
+      },
+      "פ": {
+        "nameHe": "הפיראטים"
+      },
+      "פז": {
+        "nameHe": "כח להשפיע"
+      },
+      "פי": {
+        "nameHe": "מפלגת כלכלה"
+      },
+      "צק": {
+        "nameHe": "צדק חברתי"
+      },
+      "ק": {
+        "nameHe": "דע\"ם"
+      },
+      "קנ": {
+        "nameHe": "עלה ירוק",
+        "color": "#00A651"
+      },
+      "רק": {
+        "nameHe": "הירוקים",
+        "color": "#00A651"
+      },
+      "שס": {
+        "nameHe": "ש\"ס"
+      }
+    },
+    "K20": {
+      "ז": {
+        "nameHe": "מפלגת כלכלה"
+      },
+      "זך": {
+        "nameHe": "דמוקראטורה"
+      },
+      "יז": {
+        "nameHe": "מנהיגות חברתית"
+      },
+      "יץ": {
+        "nameHe": "אלאמל לתג'ייר - התקווה לשינוי"
+      },
+      "נז": {
+        "nameHe": "ובזכותן"
+      },
+      "נץ": {
+        "nameHe": "פרח"
+      },
+      "ף": {
+        "nameHe": "הפיראטים"
+      },
+      "קנ": {
+        "nameHe": "עלה ירוק",
+        "color": "#00A651"
+      },
+      "קץ": {
+        "nameHe": "יחד - העם איתנו"
+      },
+      "רק": {
+        "nameHe": "הירוקים",
+        "color": "#00A651"
+      },
+      "שס": {
+        "nameHe": "ש\"ס"
+      }
+    },
+    "K21": {
+      "אמת": {
+        "nameHe": "העבודה"
+      },
+      "ז": {
+        "nameHe": "זהות"
+      },
+      "זץ": {
+        "nameHe": "צומת"
+      },
+      "י": {
+        "nameHe": "ישר"
+      },
+      "יז": {
+        "nameHe": "הגוש התנ\"כי"
+      },
+      "ין": {
+        "nameHe": "איחוד בני הברית"
+      },
+      "יץ": {
+        "nameHe": "אחריות למייסדים"
+      },
+      "נץ": {
+        "nameHe": "מגן"
+      },
+      "נר": {
+        "nameHe": "גשר"
+      },
+      "ן": {
+        "nameHe": "בט\"ח"
+      },
+      "ןנ": {
+        "nameHe": "מנהיגות חברתית"
+      },
+      "פה": {
+        "nameHe": "כחול לבן"
+      },
+      "ףז": {
+        "nameHe": "הפיראטים"
+      },
+      "צק": {
+        "nameHe": "צדק חברתי"
+      },
+      "ץ": {
+        "nameHe": "דע\"ם"
+      },
+      "ץי": {
+        "nameHe": "אני ואתה"
+      },
+      "ק": {
+        "nameHe": "צדק לכל"
+      },
+      "ר": {
+        "nameHe": "הרשימה הערבית"
+      },
+      "שס": {
+        "nameHe": "ש\"ס"
+      }
+    },
+    "K22": {
+      "ז": {
+        "nameHe": "עוצמה כלכלית"
+      },
+      "זכ": {
+        "nameHe": "דמוקראטורה"
+      },
+      "זץ": {
+        "nameHe": "צומת"
+      },
+      "י": {
+        "nameHe": "מנהיגות חברתית"
+      },
+      "יז": {
+        "nameHe": "אדום לבן"
+      },
+      "יק": {
+        "nameHe": "הגוש התנ\"כי"
+      },
+      "כי": {
+        "nameHe": "האחדות העממית - אלוחדה אלשעביה"
+      },
+      "כף": {
+        "nameHe": "עוצמה יהודית",
+        "color": "#F2C94C"
+      },
+      "נ": {
+        "nameHe": "מתקדמת"
+      },
+      "פה": {
+        "nameHe": "כחול לבן"
+      },
+      "ףז": {
+        "nameHe": "הפיראטים"
+      },
+      "צ": {
+        "nameHe": "צדק"
+      },
+      "ץ": {
+        "nameHe": "דע\"ם"
+      },
+      "קך": {
+        "nameHe": "סדר חדש"
+      },
+      "קץ": {
+        "nameHe": "קמ\"ה"
+      },
+      "רק": {
+        "nameHe": "הימין החילוני"
+      },
+      "שס": {
+        "nameHe": "ש\"ס"
+      }
+    },
+    "K23": {
+      "ז": {
+        "nameHe": "עוצמה ליברלית"
+      },
+      "י": {
+        "nameHe": "החזון"
+      },
+      "יז": {
+        "nameHe": "אדום לבן"
+      },
+      "יף": {
+        "nameHe": "כבוד האדם"
+      },
+      "יק": {
+        "nameHe": "הגוש התנ\"כי"
+      },
+      "יר": {
+        "nameHe": "מנהיגות חברתית"
+      },
+      "כ": {
+        "nameHe": "הלב היהודי"
+      },
+      "כן": {
+        "nameHe": "אני ואתה"
+      },
+      "נז": {
+        "nameHe": "הכח להשפיע"
+      },
+      "ני": {
+        "nameHe": "קמ\"ה"
+      },
+      "נץ": {
+        "nameHe": "עוצמה יהודית",
+        "color": "#F2C94C"
+      },
+      "נק": {
+        "nameHe": "מתקדמת"
+      },
+      "פה": {
+        "nameHe": "כחול לבן"
+      },
+      "ףז": {
+        "nameHe": "הפיראטים"
+      },
+      "ץ": {
+        "nameHe": "דע\"ם"
+      },
+      "ק": {
+        "nameHe": "ישראליסט"
+      },
+      "קי": {
+        "nameHe": "שמע"
+      },
+      "קך": {
+        "nameHe": "סדר חדש"
+      },
+      "קץ": {
+        "nameHe": "משפט צדק"
+      },
+      "שס": {
+        "nameHe": "ש\"ס"
+      }
+    },
+    "K24": {
+      "אמת": {
+        "nameHe": "העבודה"
+      },
+      "ג": {
+        "nameHe": "יהדות התורה"
+      },
+      "זץ": {
+        "nameHe": "צומת"
+      },
+      "ט": {
+        "nameHe": "הציונות הדתית"
+      },
+      "יז": {
+        "nameHe": "הכלכלית החדשה"
+      },
+      "ינ": {
+        "nameHe": "ברית השותפות"
+      },
+      "יף": {
+        "nameHe": "כבוד האדם"
+      },
+      "יק": {
+        "nameHe": "הגוש התנ\"כי"
+      },
+      "יר": {
+        "nameHe": "מנהיגות חברתית"
+      },
+      "כ": {
+        "nameHe": "הלב היהודי"
+      },
+      "כך": {
+        "nameHe": "אני ואתה"
+      },
+      "כן": {
+        "nameHe": "כחול לבן"
+      },
+      "נ": {
+        "nameHe": "קמ\"ה"
+      },
+      "ני": {
+        "nameHe": "עולם חדש"
+      },
+      "נר": {
+        "nameHe": "אנחנו"
+      },
+      "עם": {
+        "nameHe": "רע\"מ"
+      },
+      "ףז": {
+        "nameHe": "הפיראטים"
+      },
+      "צכ": {
+        "nameHe": "מד\"ע"
+      },
+      "צף": {
+        "nameHe": "חץ"
+      },
+      "ץ": {
+        "nameHe": "דע\"ם"
+      },
+      "ק": {
+        "nameHe": "הבלתי אפשרי, אפשרי"
+      },
+      "קי": {
+        "nameHe": "שמע"
+      },
+      "קך": {
+        "nameHe": "סדר חדש"
+      },
+      "קץ": {
+        "nameHe": "משפט צדק"
+      },
+      "ר": {
+        "nameHe": "רפא"
+      },
+      "שס": {
+        "nameHe": "ש\"ס"
+      }
+    },
+    "K25": {
+      "אמת": {
+        "nameHe": "העבודה"
+      },
+      "אצ": {
+        "nameHe": "חופש כלכלי"
+      },
+      "ג": {
+        "nameHe": "יהדות התורה"
+      },
+      "ד": {
+        "nameHe": "בל\"ד"
+      },
+      "ום": {
+        "color": "#8B1E1E"
+      },
+      "ז": {
+        "nameHe": "שחר כוח חברתי"
+      },
+      "זך": {
+        "nameHe": "קמ\"ה"
+      },
+      "זנ": {
+        "nameHe": "כח להשפיע"
+      },
+      "זץ": {
+        "nameHe": "צומת"
+      },
+      "ט": {
+        "nameHe": "הציונות הדתית - עוצמה יהודית"
+      },
+      "י": {
+        "nameHe": "ישראל חופשית דמוקרטית"
+      },
+      "יז": {
+        "nameHe": "הכלכלית החדשה"
+      },
+      "יק": {
+        "nameHe": "הגוש התנ\"כי"
+      },
+      "נז": {
+        "nameHe": "כבוד האדם"
+      },
+      "ני": {
+        "nameHe": "נתיב"
+      },
+      "נף": {
+        "nameHe": "שמע"
+      },
+      "נץ": {
+        "nameHe": "העצמאים החדשים"
+      },
+      "נק": {
+        "nameHe": "יש כיוון"
+      },
+      "נר": {
+        "nameHe": "אנחנו"
+      },
+      "עם": {
+        "nameHe": "רע\"מ"
+      },
+      "ף": {
+        "nameHe": "הפיראטים"
+      },
+      "צ": {
+        "nameHe": "צעירים בוערים"
+      },
+      "ץ": {
+        "nameHe": "מנהיגות חברתית"
+      },
+      "קי": {
+        "nameHe": "הלב היהודי"
+      },
+      "קך": {
+        "nameHe": "סדר חדש"
+      },
+      "קנ": {
+        "nameHe": "כל קול קובע"
+      },
+      "רז": {
+        "nameHe": "שלושים ארבעים"
+      },
+      "שס": {
+        "nameHe": "ש\"ס"
+      },
+      "ת": {
+        "nameHe": "עלה ירוק",
+        "color": "#00A651"
       }
     }
   }

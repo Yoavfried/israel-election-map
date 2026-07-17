@@ -17,9 +17,11 @@ import { translate } from '../i18n/translations'
 
 const SOURCE_ID = 'election-geographies'
 const MARKER_SOURCE_ID = 'election-geography-markers'
+const BACKDROP_SOURCE_ID = 'election-geography-backdrop'
 const FILL_LAYER_ID = 'election-fill'
 const LINE_LAYER_ID = 'election-line'
 const MARKER_LAYER_ID = 'election-markers'
+const BACKDROP_FILL_LAYER_ID = 'election-backdrop-fill'
 const MAP_BACKGROUND_COLOR = '#f3f0e8'
 const UNMAPPED_GEOGRAPHY_COLOR = '#aeb5b0'
 
@@ -27,6 +29,7 @@ interface MapCanvasProps {
   language: Language
   geometryUrl: string
   markerGeometryUrl: string
+  backdropGeometryUrl: string | null
   bounds: [[number, number], [number, number]]
   records: ResultRecord[]
   parties: Party[]
@@ -51,6 +54,7 @@ export default function MapCanvas({
   language,
   geometryUrl,
   markerGeometryUrl,
+  backdropGeometryUrl,
   bounds,
   records,
   parties,
@@ -120,11 +124,34 @@ export default function MapCanvas({
     if (map.getLayer(FILL_LAYER_ID)) {
       map.removeLayer(FILL_LAYER_ID)
     }
+    if (map.getLayer(BACKDROP_FILL_LAYER_ID)) {
+      map.removeLayer(BACKDROP_FILL_LAYER_ID)
+    }
     if (map.getSource(SOURCE_ID)) {
       map.removeSource(SOURCE_ID)
     }
     if (map.getSource(MARKER_SOURCE_ID)) {
       map.removeSource(MARKER_SOURCE_ID)
+    }
+    if (map.getSource(BACKDROP_SOURCE_ID)) {
+      map.removeSource(BACKDROP_SOURCE_ID)
+    }
+
+    if (backdropGeometryUrl) {
+      map.addSource(BACKDROP_SOURCE_ID, {
+        type: 'geojson',
+        data: backdropGeometryUrl,
+      })
+      map.addLayer({
+        id: BACKDROP_FILL_LAYER_ID,
+        source: BACKDROP_SOURCE_ID,
+        type: 'fill',
+        filter: buildPolygonVisibilityFilter([]),
+        paint: {
+          'fill-color': UNMAPPED_GEOGRAPHY_COLOR,
+          'fill-opacity': 0.28,
+        },
+      })
     }
 
     map.addSource(SOURCE_ID, {
@@ -260,7 +287,7 @@ export default function MapCanvas({
       map.off('mouseleave', FILL_LAYER_ID, hidePointer)
       map.off('mouseleave', MARKER_LAYER_ID, hidePointer)
     }
-  }, [bounds, geometryUrl, hiddenGeographyIds, mapReady, markerGeometryUrl])
+  }, [backdropGeometryUrl, bounds, geometryUrl, hiddenGeographyIds, mapReady, markerGeometryUrl])
 
   useEffect(() => {
     const map = mapRef.current

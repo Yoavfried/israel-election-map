@@ -1,20 +1,20 @@
 # Israel Election Map Web App
 
-Local-first React/TypeScript map client for the K17–K25 pipeline. The app does not read the working CSV files at runtime. A build-time compiler validates them and writes disposable web assets under `public/data/v2/`.
+Local-first React/TypeScript map client for the K17-K25 pipeline. The app does not read working CSV files at runtime. A build-time compiler validates them and writes disposable web assets under `public/data/v2/`.
 
-## Run locally
+## Run Locally
 
 Prerequisites:
 
-- Node.js 20.19+ (the current workspace uses Node 24).
-- The generated pipeline outputs under `../../data/processed/`.
+- Node.js 20.19 or newer.
+- Generated pipeline outputs under `../../data/processed/`.
 
 ```powershell
 npm install
 npm run dev
 ```
 
-`npm run dev` first rebuilds the web data, then starts Vite on `http://localhost:4173`.
+`npm run dev` rebuilds the web data and starts Vite on `http://localhost:4173`.
 
 Useful commands:
 
@@ -31,17 +31,19 @@ To compile from another processed-data directory:
 npm run data:build -- --source C:\path\to\data\processed
 ```
 
-## Isolation from the data pipeline
+## Isolation From the Data Pipeline
 
 - `scripts/build-data.mjs` only reads `data/processed/`.
 - Generated web assets are ignored by Git.
 - The compiler writes to a staging directory and replaces only `web/app/public/data/v2/` after a successful build.
-- No existing pipeline script or in-progress review file is modified by this app.
+- The web build does not modify pipeline scripts or review files.
 
-## Coverage boundary
+## Coverage Boundary
 
-The compiler reads the promoted public assignment outputs. Locality mode is complete for the K17-K25 geographic scope and includes reviewed election-specific composite municipalities. Official envelope results appear as a separate selectable national aggregate.
+The compiler reads promoted public assignment outputs. Locality mode covers the complete K17-K25 geographic scope and includes reviewed election-specific composite municipalities and joined-register unions. Official envelope results appear as a separate selectable national aggregate.
 
-The compiler does not treat analytical OSM candidates as final statistical-area assignments. Until those matches are promoted by the Python assignment stage, statistical-area mode intentionally shows only the current reviewed subset and displays pending-voter coverage prominently.
+Statistical mode uses official ballot-to-area crosswalks and election-specific historical geometry: 1995 for K17, 2008 for K18, and 2011 for K19-K25. Address-geocoding candidates are not eligible assignment inputs. Result payloads disclose mapped-voter coverage and preserve pending rows instead of inferring their polygons.
 
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the data contract and phased implementation plan.
+Party/list display names are complete. Party colors and Wikipedia-link review remain in progress, as do broader UX and feature work.
+
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the data contract and implementation status.

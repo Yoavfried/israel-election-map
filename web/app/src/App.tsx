@@ -65,6 +65,7 @@ export default function App() {
   const catalog = catalogState.status === 'ready' ? catalogState.data : null
   const selectedElection = catalog?.elections.find((election) => election.id === electionId)
   const selectedMode = catalog?.geographyModes.find((mode) => mode.id === geographyMode)
+  const selectedGeography = selectedElection?.geographiesByMode[geographyMode]
 
   useEffect(() => {
     if (!selectedElection) {
@@ -135,7 +136,13 @@ export default function App() {
   if (catalogState.status === 'loading') {
     return <LoadingState language={language} />
   }
-  if (catalogState.status === 'error' || !catalog || !selectedElection || !selectedMode) {
+  if (
+    catalogState.status === 'error' ||
+    !catalog ||
+    !selectedElection ||
+    !selectedMode ||
+    !selectedGeography
+  ) {
     return (
       <main className="fatal-state" role="alert">
         <h1>{translate(language, 'dataError')}</h1>
@@ -164,8 +171,13 @@ export default function App() {
           <Suspense fallback={<LoadingState language={language} kind="map" />}>
             <MapCanvas
               language={language}
-              geometryUrl={resolveDataUrl(selectedMode.geometryUrl)}
-              markerGeometryUrl={resolveDataUrl(selectedMode.markerGeometryUrl)}
+              geometryUrl={resolveDataUrl(selectedGeography.geometryUrl)}
+              markerGeometryUrl={resolveDataUrl(selectedGeography.markerGeometryUrl)}
+              backdropGeometryUrl={
+                selectedGeography.backdropGeometryUrl
+                  ? resolveDataUrl(selectedGeography.backdropGeometryUrl)
+                  : null
+              }
               bounds={catalog.bounds}
               records={results.records}
               parties={results.parties}

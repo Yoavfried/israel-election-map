@@ -4,6 +4,7 @@ const RESULT_CORE_LAST_COLUMN = 'winning_vote_share'
 const DEFAULT_PARTY_SATURATION = 58
 const DEFAULT_PARTY_LIGHTNESS = 46
 const POINT_PROXY_MAX_VERTICES = 12
+const SPECIAL_POINT_PROXY_LOCALITY_CODES = new Set(['1791', '1792', '1793', '1794', '3488'])
 
 export function parseCsv(text, sourceName = 'CSV input') {
   const parsed = Papa.parse(text, {
@@ -100,6 +101,11 @@ export function isWestBankSettlementCode(value) {
   return Number.isInteger(code) && code >= 3500 && code < 4000
 }
 
+export function isPointProxyLocalityCode(value) {
+  const code = cleanNumericCode(value)
+  return SPECIAL_POINT_PROXY_LOCALITY_CODES.has(code) || isWestBankSettlementCode(code)
+}
+
 export function isPointLikeGeometry(geometry) {
   return coordinatePositionCount(geometry?.coordinates) <= POINT_PROXY_MAX_VERTICES
 }
@@ -111,14 +117,20 @@ export function buildMetadataIndex(rows, mode) {
     if (!id) {
       throw new Error(`Missing ${mode} ID in geography metadata`)
     }
+    const statAreaNumber = cleanNumericCode(row.stat_area_number || row.stat_2022)
+    const yishuvStat = cleanNumericCode(
+      row.yishuv_stat || row.stat_area_yishuv_stat || row.yishuv_stat_2022,
+    )
     index.set(id, {
       id,
       localityId: row.locality_id,
       localityCode: cleanNumericCode(row.locality_code),
       nameHe: row.locality_name_he || '',
       nameEn: row.locality_name_en || row.locality_name_he || '',
-      statAreaNumber: cleanNumericCode(row.stat_2022),
-      yishuvStat2022: cleanNumericCode(row.yishuv_stat_2022),
+      statAreaNumber,
+      yishuvStat,
+      yishuvStat2022: cleanNumericCode(row.yishuv_stat_2022) || yishuvStat,
+      statAreaVintage: numberValue(row.stat_area_vintage || (mode === 'statistical-area' ? 2022 : 0)),
     })
   }
   return index
@@ -156,9 +168,13 @@ export function buildCompositeMetadataIndex(featureCollection) {
     index.set(id, {
       id,
       localityId: id,
-      localityCode: '',
+      localityCode: cleanNumericCode(properties.host_locality_code),
       nameHe: properties.name_he || id,
       nameEn: properties.name_en || properties.name_he || id,
+      includedNames: {
+        he: splitPipeValues(properties.included_locality_names_he),
+        en: splitPipeValues(properties.included_locality_names_en),
+      },
       statAreaNumber: '',
       yishuvStat2022: '',
       isComposite: true,
@@ -184,9 +200,16 @@ export function pruneGeography(
       throw new Error(`${mode} feature is missing its stable ID`)
     }
 
-    const statAreaNumber = cleanNumericCode(properties.stat_2022)
+    const statAreaNumber = cleanNumericCode(
+      properties.stat_area_number ?? properties.stat_2022,
+    )
+    const hasDetailedDisplayGeometry = String(
+      properties.display_geometry_source ?? '',
+    ).startsWith('arcgis_')
     const displayMode =
-      isWestBankSettlementCode(properties.locality_code) && isPointLikeGeometry(feature.geometry)
+      isPointProxyLocalityCode(properties.locality_code) &&
+      !hasDetailedDisplayGeometry &&
+      isPointLikeGeometry(feature.geometry)
         ? 'marker'
         : 'polygon'
     return {
@@ -202,12 +225,20 @@ export function pruneGeography(
         displayMode,
         isComposite: false,
         ...(mode === 'statistical-area' ? { statAreaNumber } : {}),
+        ...(mode === 'statistical-area'
+          ? { statAreaVintage: numberValue(properties.stat_area_vintage ?? 2022) }
+          : {}),
       },
       geometry: roundGeometry(feature.geometry),
     }
   })
 
   if (mode === 'locality') {
+    const markerLocalityCodes = new Set(
+      features
+        .filter((feature) => feature.properties.displayMode === 'marker')
+        .map((feature) => feature.properties.localityCode),
+    )
     for (const feature of compositeFeatureCollection.features) {
       const properties = feature.properties ?? {}
       const id = properties.composite_locality_id
@@ -217,14 +248,14 @@ export function pruneGeography(
       const componentCodes = splitPipeValues(properties.component_locality_codes)
       const inferredDisplayMode =
         componentCodes.length > 0 &&
-        componentCodes.every(isWestBankSettlementCode) &&
-        isPointLikeGeometry(feature.geometry)
+        componentCodes.every((code) => markerLocalityCodes.has(cleanNumericCode(code)))
           ? 'marker'
           : 'polygon'
       const displayMode = properties.display_mode || inferredDisplayMode
       if (!['polygon', 'marker'].includes(displayMode)) {
         throw new Error(`${id} has invalid composite display mode: ${displayMode}`)
       }
+      const hostLocalityCode = cleanNumericCode(properties.host_locality_code)
       features.push({
         type: 'Feature',
         id,
@@ -232,13 +263,21 @@ export function pruneGeography(
           id,
           geographyType: 'locality',
           localityId: id,
-          localityCode: '',
+          localityCode: hostLocalityCode,
           nameHe: properties.name_he || id,
           nameEn: properties.name_en || properties.name_he || id,
           displayMode,
           isComposite: true,
+          compositeKind: properties.composite_kind || 'historical_municipality',
           activeElections: splitPipeValues(properties.elections),
           componentLocalityIds: splitPipeValues(properties.component_locality_ids),
+          hostLocalityId: hostLocalityCode ? `loc:${hostLocalityCode}` : null,
+          includedNames: {
+            he: splitPipeValues(properties.included_locality_names_he),
+            en: splitPipeValues(properties.included_locality_names_en),
+          },
+          evidenceStatus: properties.evidence_status || '',
+          evidenceMethod: properties.evidence_method || '',
         },
         geometry: roundGeometry(feature.geometry),
       })
@@ -292,6 +331,56 @@ export function buildHiddenLocalityIds(featureCollection, electionId) {
   return [...hidden].toSorted()
 }
 
+export function aliasJoinedCompositeResults(primaryRows, featureCollection, electionId) {
+  assertFeatureCollection(featureCollection, 'locality display geography')
+  const rowsById = new Map()
+  for (const row of primaryRows) {
+    const id = row.locality_id
+    if (!id || rowsById.has(id)) {
+      throw new Error(`${electionId} has a missing or duplicate locality result ID: ${id || '(blank)'}`)
+    }
+    rowsById.set(id, row)
+  }
+
+  const aliasesByHostId = new Map()
+  for (const feature of featureCollection.features) {
+    const properties = feature.properties ?? {}
+    if (
+      properties.compositeKind !== 'joined_polling_register' ||
+      !(properties.activeElections ?? []).includes(electionId)
+    ) {
+      continue
+    }
+
+    const compositeId = properties.id
+    const hostId = properties.hostLocalityId
+    const componentIds = properties.componentLocalityIds ?? []
+    if (!compositeId || !hostId || !componentIds.includes(hostId)) {
+      throw new Error(`${electionId} has an invalid joined-locality composite: ${compositeId || '(blank)'}`)
+    }
+    if (aliasesByHostId.has(hostId)) {
+      throw new Error(`${electionId} host locality ${hostId} has more than one joined composite`)
+    }
+    if (!rowsById.has(hostId)) {
+      throw new Error(`${electionId} joined composite ${compositeId} has no host result for ${hostId}`)
+    }
+    const unexpectedComponentResult = componentIds.find(
+      (componentId) => componentId !== hostId && rowsById.has(componentId),
+    )
+    if (unexpectedComponentResult) {
+      throw new Error(
+        `${electionId} joined composite ${compositeId} would hide standalone result ${unexpectedComponentResult}`,
+      )
+    }
+    aliasesByHostId.set(hostId, compositeId)
+  }
+
+  return primaryRows.map((row) => {
+    const compositeId = aliasesByHostId.get(row.locality_id)
+    return compositeId ? { ...row, locality_id: compositeId } : row
+  })
+}
+
 export function buildDisplayMarkers(featureCollection) {
   assertFeatureCollection(featureCollection, 'display geography')
 
@@ -303,12 +392,40 @@ export function buildDisplayMarkers(featureCollection) {
         type: 'Feature',
         id: feature.id,
         properties: { ...feature.properties },
-        geometry: {
-          type: 'Point',
-          coordinates: geometryBoundsCenter(feature.geometry),
-        },
+        geometry: displayMarkerGeometry(feature.geometry),
       })),
   }
+}
+
+function displayMarkerGeometry(geometry) {
+  const coordinates = markerCoordinates(geometry)
+  if (coordinates.length === 0) {
+    throw new Error('Display marker geometry has no coordinates')
+  }
+  return coordinates.length === 1
+    ? { type: 'Point', coordinates: coordinates[0] }
+    : { type: 'MultiPoint', coordinates }
+}
+
+function markerCoordinates(geometry) {
+  if (!geometry) {
+    return []
+  }
+  if (geometry.type === 'Point') {
+    return [roundCoordinates(geometry.coordinates)]
+  }
+  if (geometry.type === 'MultiPoint') {
+    return roundCoordinates(geometry.coordinates)
+  }
+  if (geometry.type === 'MultiPolygon') {
+    return geometry.coordinates.map((coordinates) =>
+      geometryBoundsCenter({ type: 'Polygon', coordinates }),
+    )
+  }
+  if (geometry.type === 'GeometryCollection') {
+    return geometry.geometries.flatMap(markerCoordinates)
+  }
+  return [geometryBoundsCenter(geometry)]
 }
 
 export function buildCoverage(summaryRow, mode) {
@@ -368,7 +485,7 @@ export function buildResultPayload({
   const partyIds = inferPartyColumns(primaryRows, customRows, envelopeRows).filter(
     (partyId) => !excludedColumns.has(partyId),
   )
-  assertPartyRegistryCoverage(electionId, partyIds, partyRegistry)
+  assertPartyRegistryCoverage(electionId, partyIds, partyRegistry, excludedColumns)
 
   for (const row of primaryRows) {
     const id = mode === 'statistical-area' ? row.stat_area_id : row.locality_id
@@ -471,6 +588,8 @@ function buildResultRecord(row, id, geographyType, metadata, partyColumns) {
           en: `${metadata.nameEn} · Statistical area ${statAreaNumber}`,
         }
       : { he: metadata.nameHe, en: metadata.nameEn }
+  const includedNames = metadata.includedNames
+  const hasIncludedNames = includedNames?.he?.length > 0 || includedNames?.en?.length > 0
 
   return {
     id,
@@ -478,9 +597,10 @@ function buildResultRecord(row, id, geographyType, metadata, partyColumns) {
     names,
     code:
       geographyType === 'statistical-area'
-        ? metadata.yishuvStat2022 || id
+        ? metadata.yishuvStat || metadata.yishuvStat2022 || id
         : metadata.localityCode || metadata.customKey || id,
     localityId: metadata.localityId || null,
+    ...(hasIncludedNames ? { includedNames } : {}),
     totals: {
       contributingRows: numberValue(row.contributing_rows, `${id}.contributing_rows`),
       contributingKalpis: numberValue(row.contributing_kalpis, `${id}.contributing_kalpis`),
@@ -488,7 +608,7 @@ function buildResultRecord(row, id, geographyType, metadata, partyColumns) {
       actualVoters,
       validVotes,
       invalidVotes: numberValue(row.invalid_votes, `${id}.invalid_votes`),
-      turnout: eligibleVoters > 0 ? actualVoters / eligibleVoters : 0,
+      turnout: eligibleVoters > 0 ? actualVoters / eligibleVoters : null,
     },
     winner: {
       partyId: winningPartyId,
@@ -555,13 +675,15 @@ function buildPartyDefinition(
   }
 }
 
-function assertPartyRegistryCoverage(electionId, partyIds, partyRegistry) {
+function assertPartyRegistryCoverage(electionId, partyIds, partyRegistry, excludedColumns = new Set()) {
   if (!(partyRegistry instanceof Map)) {
     throw new Error(`${electionId} is missing its party-registry map`)
   }
   const sourceColumns = new Set(partyIds)
   const missing = partyIds.filter((partyId) => !partyRegistry.has(partyId))
-  const extra = [...partyRegistry.keys()].filter((partyId) => !sourceColumns.has(partyId))
+  const extra = [...partyRegistry.keys()].filter(
+    (partyId) => !sourceColumns.has(partyId) && !excludedColumns.has(partyId),
+  )
   if (missing.length > 0 || extra.length > 0) {
     throw new Error(
       `${electionId} party registry does not match result columns; ` +

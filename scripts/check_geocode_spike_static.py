@@ -40,7 +40,7 @@ def main() -> None:
             fail(f"index.html missing {needle}")
 
     for needle in [
-        'APPROVED_ORIGIN = "https://yoavfried.com"',
+        'get("approvedOrigin")',
         "govmap.search",
         "getSearchResultData",
         'review_status: "needs_review"',
@@ -68,7 +68,7 @@ def main() -> None:
 
     print(f"static_files=ok")
     print(f"sample_rows={len(units)}")
-    print(f"approved_origin=https://yoavfried.com")
+    print("approved_origin=runtime_query_parameter")
     print(f"review_status=needs_review")
 
 

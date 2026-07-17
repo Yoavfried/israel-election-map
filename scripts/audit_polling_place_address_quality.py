@@ -175,6 +175,7 @@ def make_evidence(
         "expected_locality_name": clean_source(expected_locality_name),
         "expected_kalpi": normalize_kalpi(expected_kalpi),
         "expected_eligible": int_value(expected_eligible),
+        "eligible_is_present": bool(normalize_spaces(expected_eligible)),
     }
 
 
@@ -450,8 +451,11 @@ def verification_for(row: dict[str, str], evidence: dict[str, Any] | None) -> di
         "locality_code": normalize_code(row.get("source_locality_code", "")) == evidence["expected_locality_code"],
         "locality_name": clean_source(row.get("source_locality_name", "")) == evidence["expected_locality_name"],
         "kalpi": normalize_kalpi(row.get("source_kalpi", "")) == evidence["expected_kalpi"],
-        "eligible": int_value(row.get("source_eligible_voters", "")) == evidence["expected_eligible"],
     }
+    if evidence["eligible_is_present"]:
+        comparisons["eligible"] = (
+            int_value(row.get("source_eligible_voters", "")) == evidence["expected_eligible"]
+        )
     mismatches = [field for field, matches in comparisons.items() if not matches]
     if mismatches:
         status = "pipeline_value_mismatch"

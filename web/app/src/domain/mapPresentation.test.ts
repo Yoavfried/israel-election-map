@@ -13,6 +13,8 @@ describe('map presentation rules', () => {
     expect(
       mayHaveDisplayMarker(record('stat2022:36160001', 'statistical-area', 'loc:3616', '36160001')),
     ).toBe(true)
+    expect(mayHaveDisplayMarker(record('loc:1791', 'locality', 'loc:1791', '1791'))).toBe(true)
+    expect(mayHaveDisplayMarker(record('loc:3488', 'locality', 'loc:3488', '3488'))).toBe(true)
     expect(mayHaveDisplayMarker(record('loc:3000', 'locality', 'loc:3000', '3000'))).toBe(false)
   })
 
@@ -40,14 +42,8 @@ describe('map presentation rules', () => {
     expect(buildPolygonVisibilityFilter(['loc:628', 'loc:9920'])).toEqual([
       'all',
       ['!=', ['get', 'displayMode'], 'marker'],
-      [
-        '!',
-        [
-          'in',
-          ['get', 'id'],
-          ['literal', ['loc:628', 'loc:9920', 'stat2022:9920']],
-        ],
-      ],
+      ['!=', ['get', 'localityCode'], '9920'],
+      ['!', ['in', ['get', 'id'], ['literal', ['loc:628', 'loc:9920']]]],
     ])
   })
 })

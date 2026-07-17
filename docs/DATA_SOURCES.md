@@ -1,6 +1,6 @@
 # Data Sources
 
-Last updated: 2026-07-15
+Last updated: 2026-07-17
 
 ## Election Results
 
@@ -14,6 +14,7 @@ Useful notes:
 
 - K19-K25 include official locality-level resources, but product totals should not depend on them.
 - Locality totals are generated directly from normalized ballot rows and the reviewed locality crosswalk. They do not wait for statistical-area assignment.
+- The recovered K17 result CSV contains voters, valid votes, and party votes but no ballot-level eligible-voter field. `data/manual/k17_eligible_voters.csv` restores the denominator for all 8,277 ordinary result rows from archived official reports and polling-place lists. The table passes key, turnout-constraint, and national-total checks, so locality/statistical-area turnout is now published. Envelope turnout remains unavailable rather than zero.
 - Party columns are election-specific ballot letters and must not be treated as stable party IDs across elections.
 - Some direct file downloads from `e.data.gov.il` may hit browser/security interstitials; datastore/API access was usable during investigation.
 - K16 / 2003 is deferred until a usable election-specific polling-place address source is recovered.
@@ -24,15 +25,35 @@ https://votes25.bechirot.gov.il/
 
 ## Party/List Registry
 
-`data/manual/party_registry.csv` is the working election-specific lookup used by the web compiler. Its key is `(election, source_column)`, because the same ballot letters can identify different lists in different elections. `ballot_letter` stores the official code separately; the known K19 source column `מרץ` is retained as the data key and corrected to official code `מרצ` for display. Structural coverage is complete, but editorial review of names and links is not.
+`data/manual/party_registry.csv` is the election-specific lookup used by the web compiler. Its key is `(election, source_column)`, because the same ballot letters can identify different lists in different elections. `ballot_letter` stores the official code separately; the known K19 source column `מרץ` is retained as the data key and corrected to official code `מרצ` for display. Structural coverage and published display-name review are complete; Wikipedia-link review is not.
 
-The registry covers all 309 real K17-K25 result columns: 297 with at least one national vote and 12 zero-vote columns. Names come from the official Central Elections Committee national results pages for K21-K25, official results PDFs for K17-K20 where extractable, and official candidate-list publications for the three old zero-vote rows missing from the result PDFs. Positive-vote Wikipedia rows are matched within the same election by exact national vote total; duplicate totals are disambiguated by ballot code. Zero-vote article matches are explicit.
+The registry tracks all 309 K17-K25 source columns: 297 with at least one national vote and 12 zero-filled columns. The web payload excludes all 12 zero-filled lists after confirming that they did not run: K18 `פח`; K19 `זה` / `פך`; K20 `יך`; K21 `זנ` / `נך` / `ץז`; K22 `זן` / `כ` / `נץ`; K23 `זץ`; and K24 `רק`. The source-row validation and row counts are recorded in `web/app/config/party-overrides.json`. This leaves 297 published lists. Names come from the official Central Elections Committee national results pages for K21-K25, official results PDFs for K17-K20 where extractable, and official candidate-list publications for old zero-vote rows missing from the result PDFs. Positive-vote Wikipedia rows are matched within the same election by exact national vote total; duplicate totals are disambiguated by ballot code. Zero-vote article matches are explicit.
 
-The builder keeps Hebrew links only when its checks identify a standalone party/list article. Redirects to a person or to the election article itself are rejected. English links come only from the Hebrew article's actual English interlanguage link, never from a guessed title. The current snapshot contains 165 Hebrew URLs and 150 English URLs, but these links and the associated list names have not completed manual auditing; blank URLs are expected candidates for later review rather than a final assertion that no article exists.
+The builder keeps Hebrew links only when its checks identify a standalone party/list article. Redirects to a person or to the election article itself are rejected. English links come only from the Hebrew article's actual English interlanguage link, never from a guessed title. The current snapshot contains 165 Hebrew URLs and 150 English URLs, but the links and intentional blanks have not completed manual auditing. The party/list display names are complete independently of that link audit.
 
-Party identity and color policy are deliberately separate. `web/app/config/party-overrides.json` gives reviewed official ballot letters a stable default color across elections and supports election-specific source-column overrides. The reviewed table is still partial; unreviewed letters use deterministic placeholders. Reusing a color for the same letter is a display convention, not a claim that every list using that letter is the same party.
+Party identity and presentation policy are deliberately separate. `web/app/config/party-overrides.json` gives reviewed official ballot letters a stable default color across elections and supports election-specific source-column name/color overrides. All K17-K25 published display names are reviewed; English presentation falls back to the reviewed Hebrew name where no separate English label is maintained. The later-election color table remains partial; unreviewed and mixed lists use deterministic placeholders. Reusing a color for the same letter is a display convention, not a claim that every list using that letter is the same party.
 
-## 2022 Statistical Areas
+### K17 Eligible-Voter Recovery
+
+The official data.gov.il package exposes only one K17 result resource, and its schema omits eligible voters. However, `data/raw/archive_knesset17_kalpies-list17-1.pdf` and `data/raw/archive_knesset17_kalpies-list17-2.pdf` print an eligible-voter count for each planned polling place, followed by a locality subtotal and polling-place count. The old official site also exposes national and 18 regional-committee totals. The official K17 memorandum records the national total of 5,014,622 eligible voters and states that the polling-station and regional protocols, together with the other documents used to determine the results, were deposited with the Interior Minister and State Archives.
+
+The public PDFs make local recovery possible without individual voter-roll records. The production table is keyed only to the 8,277 ordinary result rows; planned polling places without a published result are not invented as zero-vote records. Final-report image OCR supplies 8,199 rows, 14 more are recovered from otherwise unaligned final-report lines, and one omitted zero-voter row is explicitly recorded as zero. The remaining 63 rows use the official planned list under exact subtotal or national reconciliation, including 49 Rehovot rows whose local final-report scan ends before their pages. The resulting ordinary-register total is exactly 5,011,053. The separate 3,569-person Gush Katif register brings the official national denominator to 5,014,622 but has no published ordinary result-row distribution, so it is not attached to map geographies. Full methods and exceptions are in `docs/K17_ELIGIBLE_VOTER_RECOVERY.md`.
+
+## Historical Ballot Crosswalks And Geometry
+
+The CBS public GIS catalog supplies direct ballot-to-statistical-area tables for every current-scope election:
+
+- K17 -> 1995 areas
+- K18 -> 2008 areas
+- K19-K25 -> 2011 areas
+
+It also supplies the corresponding 1995, 2008, and 2011 geometry plus transition tables. `scripts/fetch_cbs_historical_geography.py` downloads the selected files and records exact source URLs, byte lengths, and SHA-256 hashes in `data/raw/cbs_historical_geography/manifest.json`.
+
+The two supplied ArcGIS FeatureServer layers are complete downloadable query services. They are used only for detailed display footprints and three explicit exact-ID geometry gaps. Current locality display geometry replaces 115 CBS point proxies from these sources; four settlements remain markers because no detailed footprint exists. The service description says the election output is not official and that some polygons are schematic, so its vote totals are never ingested. Full decisions are in `docs/HISTORICAL_STATISTICAL_AREA_ASSIGNMENT.md`.
+
+## Current Locality Display Geometry (2022)
+
+The 2022 FileGDB is canonical for current locality display geometry and for future elections that publish a direct 2022 ballot crosswalk. K17-K25 statistical results instead use their official 1995, 2008, or 2011 targets.
 
 Canonical raw polygon source for the project:
 
@@ -42,7 +63,7 @@ Canonical raw polygon source for the project:
 - 1,387 dissolved locality/display-footprint features.
 - 1,242 dissolved locality/display-footprint features have exactly one statistical-area feature.
 - 145 dissolved localities have multiple statistical-area features.
-- 4 reviewed election-specific composite-locality features are unions of 2022 component localities.
+- 4 historical composite-municipality features and 96 joined-result display features are election-specific unions of 2022 component localities.
 - Coordinate range is WGS84/browser-map compatible: roughly `34.27,29.49` to `35.89,33.33`.
 
 The 1,387-feature layer deliberately preserves 58 polygons with no English locality label. Most are CBS no-jurisdiction land; two are the Neve Midbar and Al-Kasom regional-council footprints. Keeping them prevents false sea-colored gaps in locality mode. They carry no election result and are therefore neutral and non-interactive; Kinneret remains unfilled.
@@ -77,13 +98,29 @@ Locality geometry decision:
 - The current implementation derives locality polygons by dissolving/unioning this 2022 statistical-area layer by `SEMEL_YISHUV` / `SHEM_YISHUV`.
 - Locality mode should render the dissolved locality as a single visual polygon or multipolygon with no internal statistical-area boundary lines.
 - `data/manual/composite_localities.csv` defines the four source municipalities that require an election-specific union of multiple 2022 localities: באקה-ג'ת, עיר כרמל, שגור, and שער שומרון.
+- `data/manual/joined_locality_composites.csv` defines source-backed host/result unions for K19, K20, and five reviewed K25 cases. The canonical result remains under the published host and is aliased to the union only in that election's web payload.
 - A separate locality polygon source is not required for the current implementation.
 
-Older official CBS statistical-area polygon layer from the 2008 census:
+Official 2022 locality metadata used for the no-standalone-result explanation audit:
+
+- CBS locality workbook: https://www.cbs.gov.il/he/publications/DocLib/2019/ishuvim/bycode2022.xlsx
+- CBS locality-file definitions: https://www.cbs.gov.il/he/publications/DocLib/2019/ishuvim/intro.pdf
+
+The workbook supplies the reviewed locality form and population snapshot stored in `data/manual/locality_result_presence_reviews.csv`. The CBS definitions distinguish an institutional locality from a `place`, which is populated but not counted as an independent locality population. These classifications describe the 2022 feature; they do not by themselves prove that it had a separate voter register in an older election. As a completeness check, all 56 special-purpose geometry records in the 1700-1799 range are present in the workbook and have blank 2022 population; the additional 48 regional-council and 56 no-jurisdiction features are not ordinary locality candidates.
+
+Small voter registers can be joined to a nearby polling area. Section 70 of the official Knesset election law permits joining a polling area with fewer than 100 eligible voters to the nearest reasonable polling area: https://www.gov.il/apps/elections/elections-knesset-17/heb/law/ElectionLaw.html. The published host result is a single secret-ballot aggregate and cannot be split back into locality-specific party totals. Where the source establishes the host, locality mode may display the host and attached 2022 polygons as one named union for that election.
+
+Context sources for the three reviewed features with no ordinary K17-K25 polling-list row:
+
+- `כפר עבודה`: the CBS workbook classifies it as institutional; an archived State Comptroller report describes the site as a youth institution: https://library.mevaker.gov.il/sites/DigitalLibrary/Documents/1950-2008/1960/1960-HAMOATZA_HAMEKOMIT_TEL_MOND.pdf
+- `צופייה`: the CBS workbook classifies it as a `place` without a separate population; official planning material describes Maon Zofiyya as a Youth Protection residence for girls: https://apps.land.gov.il/IturTabotData/takanonim/merkaz/4050268.pdf
+- `ידידה`: the CBS workbook classifies it as institutional, and the institution describes itself as a residential system for adults with special needs: https://www.yedida-h.co.il/. Unlike the two youth facilities, this context does not establish why no separate voter-list row exists; the residents may be registered elsewhere, but that remains an inference.
+
+Official CBS 2008 statistical-area package:
 
 https://data.gov.il/api/3/action/package_show?id=statistical-area-2008
 
-The 2008 layer remains a historical reference only. It should not replace the 2022 layer for the main product.
+The 2008 layer is active K18 statistical geometry. K17 uses 1995, K19-K25 use 2011, and locality mode continues to use dissolved 2022 display geometry.
 
 ## Historical AGS QA
 
@@ -91,9 +128,9 @@ Dedicated note:
 
 - `docs/AGS_HISTORICAL_QA.md`
 
-The official CBS 2008 statistical-area package exists (`statistical-area-2008`), but command-line download from `e.data.gov.il` returned a browser-challenge HTML page during the 2026-07-08 check. The actual `50400-2008.7z` archive still needs to be obtained before historical AGS point-in-polygon QA can be implemented.
+The official CBS 1995, 2008, and 2011 geometry and all K17-K25 ballot crosswalks are now downloaded and integrated. Source AGS is interpreted as ballot/voter assignment, not as the polling-place building's containing area.
 
-Local raw election-source inspection found explicit AGS metadata only in the K23 polling-place report so far. `ריכוז` / `סמל רכוז` should not be treated as AGS; K23 shows `locality + concentration` is ambiguous for 741 AGS-bearing pairs.
+The K23 polling-place report remains the only inspected address source with an explicit AGS field. Production assignment uses the separate official CBS ballot-to-2011-area table; the address AGS remains diagnostic metadata.
 
 ## 2022 Census Statistical Area Attributes
 
@@ -164,17 +201,17 @@ K16 can be reconsidered later if a real election-specific source is found.
 
 ## K23 Statistical Area Field
 
-The K23 polling-place report includes an AGS/statistical-area-like field, but it should not be joined directly to the 2022 statistical-area polygons.
+The K23 polling-place report includes an AGS field, but production assignment does not join that address report to 2022 polygons.
 
-Earlier compatibility checks showed that this field is not compatible enough with the 2022 FileGDB statistical-area IDs for direct joining. The current FileGDB build has 3,857 unique `YISHUV_STAT_2022` / `stat_area_id` features, and the pipeline does not use K23 AGS for assignment.
+Production uses the separate official `kalpi_March2020_stat2011.xlsx` crosswalk and 2011 geometry. This directly maps ballot rows to voter statistical areas without treating the polling-place building as voter geography.
 
 Decision:
 
-Keep K23 AGS as source metadata only. Use geocoded polling-place addresses plus point-in-polygon for multi-stat localities, and use the single-stat locality shortcut only where the 2022 layer has exactly one statistical area for the locality.
+Keep the address-report AGS as diagnostic metadata. Use the official ballot crosswalk for election assignment.
 
 ## Preferred Polygon Export Format
 
-For project ingestion, keep the most complete official/raw source available. The current canonical source is the FileGDB because it contains the complete 2022 statistical-area layer we inspected.
+For project ingestion, keep the most complete official/raw source for each vintage. Canonical inputs are the CBS 1995 archive, 2008 FileGDB, 2011 FileGDB, and 2022 FileGDB. ArcGIS layers are derivative display/supplement sources with explicit provenance, not replacements for CBS vote totals.
 
 If a source offers multiple formats:
 

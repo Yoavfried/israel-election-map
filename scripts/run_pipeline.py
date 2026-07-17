@@ -11,9 +11,11 @@ from pipeline_common import PROCESSED_DIR, ROOT
 STAGES = [
     ["scripts/fetch_election_results.py"],
     ["scripts/build_geographies.py"],
+    ["scripts/build_historical_geographies.py"],
     ["scripts/normalize_election_results.py"],
     ["scripts/normalize_polling_places.py"],
     ["scripts/build_assignment_plan.py"],
+    ["scripts/build_historical_ballot_assignments.py"],
     ["scripts/build_geocoding_input.py"],
     ["scripts/build_geocoding_work_units.py"],
     ["scripts/audit_polling_place_address_quality.py"],
@@ -25,7 +27,21 @@ GEOGRAPHY_OUTPUTS = [
     PROCESSED_DIR / "geographies" / "statistical_areas_2022.geojson",
     PROCESSED_DIR / "geographies" / "statistical_areas_2022.metadata.csv",
     PROCESSED_DIR / "geographies" / "localities_2022_dissolved.geojson",
+    PROCESSED_DIR / "geographies" / "statistical_areas_2022.display.simplified.geojson",
+    PROCESSED_DIR / "geographies" / "localities_2022_dissolved.display.simplified.geojson",
     PROCESSED_DIR / "geographies" / "composite_localities.simplified.geojson",
+    PROCESSED_DIR / "geographies" / "statistical_areas_1995.geojson",
+    PROCESSED_DIR / "geographies" / "statistical_areas_2008.geojson",
+    PROCESSED_DIR / "geographies" / "statistical_areas_2011.geojson",
+    PROCESSED_DIR / "geographies" / "statistical_areas_1995.display.simplified.geojson",
+    PROCESSED_DIR / "geographies" / "statistical_areas_2008.display.simplified.geojson",
+    PROCESSED_DIR / "geographies" / "statistical_areas_2011.display.simplified.geojson",
+    PROCESSED_DIR / "geographies" / "statistical_areas_1995.metadata.csv",
+    PROCESSED_DIR / "geographies" / "statistical_areas_2008.metadata.csv",
+    PROCESSED_DIR / "geographies" / "statistical_areas_2011.metadata.csv",
+    PROCESSED_DIR / "geographies" / "statistical_areas_1995.aliases.csv",
+    PROCESSED_DIR / "geographies" / "statistical_areas_2008.aliases.csv",
+    PROCESSED_DIR / "geographies" / "statistical_areas_2011.aliases.csv",
 ]
 
 
@@ -63,8 +79,11 @@ def main() -> None:
     if args.skip_geographies:
         require_existing_geographies()
     for stage in STAGES:
-        if args.skip_geographies and stage == ["scripts/build_geographies.py"]:
-            print("\n==> scripts/build_geographies.py (reusing existing outputs)", flush=True)
+        if args.skip_geographies and stage in (
+            ["scripts/build_geographies.py"],
+            ["scripts/build_historical_geographies.py"],
+        ):
+            print(f"\n==> {' '.join(stage)} (reusing existing outputs)", flush=True)
             continue
         print(f"\n==> {' '.join(stage)}", flush=True)
         subprocess.run([sys.executable, *stage], cwd=ROOT, check=True)

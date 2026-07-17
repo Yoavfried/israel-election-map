@@ -2,4 +2,4 @@ composite_locality_id,elections,source_locality_name,name_he,name_en,component_l
 composite:baqa-jatt,K17|K18,באקה-ג'ת,באקה-ג'ת,Baqa-Jatt,6000|628,polygon,Historical municipality represented by the union of its 2022 component localities.
 composite:ir-carmel,K17|K18,עיר כרמל,עיר כרמל,Carmel City,494|534,polygon,Historical municipality represented by the union of its 2022 component localities.
 composite:shaghur,K17|K18,שגור,שגור,Shaghur,483|490|516,polygon,Historical municipality represented by the union of its 2022 component localities.
-composite:shaar-shomron,K25,שער שומרון,שער שומרון,Sha'ar Shomron,3720|3778,marker,Current composite municipality represented by the union of the two component localities in the 2022 layer.
+composite:shaar-shomron,K25,שער שומרון,שער שומרון,Sha'ar Shomron,3720|3778,polygon,Current composite municipality represented by the union of the two component localities in the 2022 layer.

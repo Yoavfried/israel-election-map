@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import {
+  aliasJoinedCompositeResults,
   buildCompositeMetadataIndex,
   buildDisplayMarkers,
   buildHiddenLocalityIds,
   buildPartyRegistryIndex,
   buildResultPayload,
   isPointLikeGeometry,
+  isPointProxyLocalityCode,
   isWestBankSettlementCode,
   parseCsv,
   pruneGeography,
@@ -106,6 +108,10 @@ describe('web data compiler', () => {
     expect(isWestBankSettlementCode(3825)).toBe(true)
     expect(isWestBankSettlementCode('3000')).toBe(false)
     expect(isWestBankSettlementCode('4000')).toBe(false)
+    expect(isPointProxyLocalityCode('1791')).toBe(true)
+    expect(isPointProxyLocalityCode('1794')).toBe(true)
+    expect(isPointProxyLocalityCode('3488')).toBe(true)
+    expect(isPointProxyLocalityCode('3000')).toBe(false)
 
     const pointProxyRing = Array.from({ length: 9 }, (_, index) => [index, index])
     const detailedRing = Array.from({ length: 14 }, (_, index) => [index, index])
@@ -118,10 +124,38 @@ describe('web data compiler', () => {
     ).toBe(false)
   })
 
+  it('keeps audited detailed West Bank display geometry polygonal', () => {
+    const source = {
+      type: 'FeatureCollection',
+      features: [
+        {
+          type: 'Feature',
+          properties: {
+            locality_id: 'loc:3605',
+            locality_code: 3605,
+            locality_name_he: '3605',
+            locality_name_en: 'MASU\'A',
+            display_geometry_source: 'arcgis_systematics_elections2019',
+          },
+          geometry: {
+            type: 'Polygon',
+            coordinates: [[[35, 32], [35.1, 32], [35.1, 32.1], [35, 32]]],
+          },
+        },
+      ],
+    }
+    const empty = { type: 'FeatureCollection', features: [] }
+
+    const output = pruneGeography(source, 'locality', empty)
+
+    expect(output.features[0].properties.displayMode).toBe('polygon')
+    expect(buildDisplayMarkers(output).features).toHaveLength(0)
+  })
+
   it('adds reviewed composite localities and hides their components only in active elections', () => {
     const localities = {
       type: 'FeatureCollection',
-      features: ['1', '2'].map((code) => ({
+      features: ['3720', '3778'].map((code) => ({
         type: 'Feature',
         properties: {
           locality_id: `loc:${code}`,
@@ -144,13 +178,19 @@ describe('web data compiler', () => {
             composite_locality_id: 'composite:test',
             elections: 'K17|K18',
             component_locality_codes: '3720|3778',
-            component_locality_ids: 'loc:1|loc:2',
+            component_locality_ids: 'loc:3720|loc:3778',
             name_he: 'בדיקה',
             name_en: 'Test composite',
+            host_locality_code: '3720',
+            included_locality_names_he: 'מצורף',
+            included_locality_names_en: 'Included locality',
           },
           geometry: {
-            type: 'Polygon',
-            coordinates: [[[35, 32], [35.2, 32], [35.2, 32.2], [35, 32]]],
+            type: 'MultiPolygon',
+            coordinates: [
+              [[[35, 32], [35.02, 32], [35.02, 32.02], [35, 32]]],
+              [[[35.2, 32.2], [35.22, 32.2], [35.22, 32.22], [35.2, 32.2]]],
+            ],
           },
         },
       ],
@@ -159,11 +199,11 @@ describe('web data compiler', () => {
     const output = pruneGeography(localities, 'locality', empty, composites)
 
     expect(output.features.map((feature) => feature.id)).toEqual([
-      'loc:1',
-      'loc:2',
+      'loc:3720',
+      'loc:3778',
       'composite:test',
     ])
-    expect(buildHiddenLocalityIds(output, 'K17')).toEqual(['loc:1', 'loc:2'])
+    expect(buildHiddenLocalityIds(output, 'K17')).toEqual(['loc:3720', 'loc:3778'])
     expect(buildHiddenLocalityIds(output, 'K25')).toEqual(['composite:test'])
     expect(output.features.find((feature) => feature.id === 'composite:test')?.properties.displayMode).toBe(
       'marker',
@@ -171,6 +211,50 @@ describe('web data compiler', () => {
     expect(buildCompositeMetadataIndex(composites).get('composite:test')?.nameEn).toBe(
       'Test composite',
     )
+    expect(buildCompositeMetadataIndex(composites).get('composite:test')).toMatchObject({
+      localityCode: '3720',
+      includedNames: { he: ['מצורף'], en: ['Included locality'] },
+    })
+    expect(buildDisplayMarkers(output).features.at(-1)?.geometry).toEqual({
+      type: 'MultiPoint',
+      coordinates: [
+        [35.01, 32.01],
+        [35.21, 32.21],
+      ],
+    })
+  })
+
+  it('aliases a host result to an active joined-register composite', () => {
+    const geography = {
+      type: 'FeatureCollection',
+      features: [
+        {
+          id: 'composite:joined-k19-567',
+          properties: {
+            id: 'composite:joined-k19-567',
+            isComposite: true,
+            compositeKind: 'joined_polling_register',
+            activeElections: ['K19'],
+            hostLocalityId: 'loc:567',
+            componentLocalityIds: ['loc:567', 'loc:493', 'loc:566'],
+          },
+          geometry: null,
+        },
+      ],
+    }
+    const rows = [
+      { locality_id: 'loc:10' },
+      { locality_id: 'loc:567' },
+    ]
+
+    expect(aliasJoinedCompositeResults(rows, geography, 'K19')).toEqual([
+      { locality_id: 'loc:10' },
+      { locality_id: 'composite:joined-k19-567' },
+    ])
+    expect(aliasJoinedCompositeResults(rows, geography, 'K20')).toEqual(rows)
+    expect(() =>
+      aliasJoinedCompositeResults([...rows, { locality_id: 'loc:493' }], geography, 'K19'),
+    ).toThrow(/would hide standalone result loc:493/)
   })
 
   it('compiles dynamic ballot-letter columns into typed records', () => {
@@ -279,6 +363,7 @@ describe('web data compiler', () => {
       winning_vote_share: '3',
       אמת: '1',
       מחל: '3',
+      פח: '0',
       'ת. עדכון': '12',
     }
     const metadata = new Map([
@@ -306,8 +391,9 @@ describe('web data compiler', () => {
       partyRegistry: registryFor('K18', [
         { sourceColumn: 'אמת', totalVotes: 1, nameHe: 'העבודה' },
         { sourceColumn: 'מחל', totalVotes: 3, nameHe: 'הליכוד' },
+        { sourceColumn: 'פח', totalVotes: 0, nameHe: 'מהפך בחינוך' },
       ]),
-      excludedPartyColumns: ['ת. עדכון'],
+      excludedPartyColumns: ['פח', 'ת. עדכון'],
       validatePartyTotals: true,
     })
 
@@ -319,6 +405,7 @@ describe('web data compiler', () => {
       voteShare: 0.75,
     })
     expect(payload.parties.map((party) => party.id)).not.toContain('ת. עדכון')
+    expect(payload.parties.map((party) => party.id)).not.toContain('פח')
   })
 
   it('keeps source columns distinct from corrected official ballot letters', () => {

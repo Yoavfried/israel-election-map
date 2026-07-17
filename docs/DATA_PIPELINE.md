@@ -1,103 +1,110 @@
 # Data Pipeline
 
-Last updated: 2026-07-15
+Last updated: 2026-07-17
 
-## Run
+## Product Grain
 
-```bash
+The normalized fact table has one row per election result row / ballot subdivision. Statistical-area assignment means the CBS area associated with that ballot's voters. It does not mean the area containing the polling-place building.
+
+## Raw Source Preparation
+
+Election results are fetched normally:
+
+```powershell
+python scripts/fetch_election_results.py
+```
+
+Historical geography is a network preparation step, not a routine rebuild step:
+
+```powershell
+python scripts/fetch_cbs_historical_geography.py
+python scripts/fetch_arcgis_feature_layer.py <FeatureServer-layer-url> <output.geojson>
+```
+
+The CBS downloader enumerates the public catalog, verifies expected byte lengths and file signatures, and writes a SHA-256 manifest. The generic ArcGIS downloader inventories object IDs and requests complete paged GeoJSON rather than trusting a truncated single query.
+
+## Normal Run
+
+```powershell
 python -m pip install -r requirements.txt
 python scripts/run_pipeline.py
 ```
 
-To reuse existing generated geography files while rebuilding every downstream stage:
+Use existing current and historical geography assets:
 
-```bash
+```powershell
 python scripts/run_pipeline.py --skip-geographies
 ```
 
-The pipeline writes generated files under `data/processed/`, which is intentionally gitignored.
+Pipeline order:
 
-## Current Stages
+1. fetch K17-K25 official election-result rows;
+2. build 2022 statistical areas, dissolved localities, composites, and custom geometry;
+3. build 1995, 2008, and 2011 historical statistical geometry;
+4. normalize election results;
+5. normalize polling-place address sources;
+6. build the reviewed locality/handling plan;
+7. build official historical ballot-to-area assignments;
+8. retain address-geocoding inputs and audits as a separate polling-place-location dataset;
+9. build final row-level geography assignments with historical assignments first;
+10. aggregate public statistical-area, locality, custom, envelope, contribution, and unresolved outputs.
 
-1. Fetch K17-K25 official ballot rows from data.gov.il CKAN datastore.
-2. Build 2022 statistical-area, dissolved-locality, reviewed composite-locality, and custom-geometry outputs.
-3. Normalize ballot rows and per-election wide vote files.
-4. Normalize available polling-place address sources.
-5. Build the row-level assignment plan.
-6. Build the geocoding input table.
-7. Deduplicate geocoding input into unique geocoding work units.
-8. Audit normalized address usability and source fidelity.
-9. Build independent row-level locality assignments and statistical-area assignments from reviewed geocodes when available.
-10. Build public/download-oriented statistical-area, locality, custom, and envelope aggregate CSV outputs.
+## Assignment Precedence
 
-Reviewed row-level non-geographic exceptions are stored in `data/manual/polling_place_assignment_overrides.csv`. The current override marks Dimona kalpi 91 at `מחנה עדי` in K22-K25 as envelope votes, so those rows do not enter address geocoding.
+`scripts/build_final_geography_assignments.py` applies:
 
-Direct K17 polling-place scan transcriptions are stored in `data/manual/manual_k17_scanned_place_names.csv`. Reviewed OSM address/stat-area exceptions are stored in `data/manual/manual_osm_address_stat_reviews.csv`; the address lookup validates each record's expected prior status before applying it.
+1. envelope and reviewed non-geographic rules;
+2. reviewed custom geography rules;
+3. official CBS election-specific ballot crosswalk;
+4. unique historical-area locality fallback;
+5. unresolved historical assignment.
 
-Reviewed election-specific composite municipalities are stored in `data/manual/composite_localities.csv`.
+Historical unresolved rows are terminal for election statistical-area mode. They do not fall through to OSM, Photon, or reviewed building coordinates. Address geolocation remains available for polling-place features and QA.
 
-Reviewed historical locality names and election-specific no-result visibility rules are stored in `data/manual/locality_display_overrides.csv`. These rules affect the browser display only and cannot hide a locality that has a result in the same election.
+## Historical Geometry
 
-The checked-in election-specific party/list registry is `data/manual/party_registry.csv`. It contains all 309 real K17-K25 result columns, including 12 zero-vote columns, and separates the source column from the official ballot code. Refreshing it is deliberately outside the normal pipeline because it queries official election sources, Hebrew Wikipedia, and Wikidata:
+`scripts/build_historical_geographies.py`:
 
-```bash
-python scripts/build_party_registry.py
-```
+- reads CBS 1995, 2008, and 2011 geometry;
+- preserves each historical election-area ID and does not treat demographic reference fields as unions;
+- produces stable IDs `stat<vintage>:<combined-code>`;
+- constructs the one missing 1995 Yehud-Newe Efrayim target from the official transition table;
+- adds three exact-ID 2011 geometry supplements from the audited ArcGIS 2015 layer;
+- creates separate display geometry with detailed West Bank footprints where a CBS source is only a tiny proxy;
+- never imports ArcGIS vote totals.
 
-The current snapshot has 165 populated Hebrew party/list URLs and 150 corresponding English URLs after the builder's source and article-type checks. These counts are not a completed editorial audit: every party/list name and link remains reviewable, and blank URLs mean only that the builder did not retain a standalone article candidate. Redirects to people or an election article are rejected automatically.
+Current feature counts are 2,660 for 1995, 3,030 for 2008, and 3,086 for 2011. Display-only detailed replacements number 21, 18, and 118 respectively.
 
-Reviewed party-color rules are stored separately in `web/app/config/party-overrides.json`. `ballotLetterColors` assigns a default to an official ballot letter across elections, while `elections.<election>.<source_column>.color` overrides that default for one election. This table is intentionally incomplete: reviewed defaults currently cover five letters, with a Kadima-specific `כן` override for K17-K19, and all other letters receive deterministic fallback colors keyed only by their official ballot letter.
+`scripts/build_geographies.py` applies the same display-only source policy to current geometry. It writes separate official and `.display` 2022 assets, replaces 115 current locality/statistical proxies, and builds composites from the display geometry. Four West Bank settlements without a detailed source remain markers.
 
-The checked-in locality result-presence exception inventory can be regenerated after public locality outputs change:
+## Crosswalk Rules
 
-```bash
-python scripts/build_locality_result_presence_audit.py
-```
+`scripts/build_historical_ballot_assignments.py`:
 
-The generated inventory identifies the complete partial/no-result feature scope, but the historical explanation and visibility decision for every feature are still under review.
+- reads all nine official CBS ballot tables;
+- interprets K17 tenths encoding;
+- maps later decimal ballot subdivisions through their base ballot;
+- respects cross-locality combined target IDs;
+- preserves exact crosswalk area IDs; `Stat08_Unite` and `Stat11_Ref` are demographic references, not election-area unions;
+- permits a locality fallback only when one historical area exists;
+- emits explicit unresolved and missing-geometry statuses.
 
-## Current Outputs
+After geometry supplements, missing-geometry status is zero in every election.
 
-- `data/processed/manifest/election_result_resources.csv`
+## Main Outputs
+
+- `data/processed/geographies/statistical_areas_1995.geojson`
+- `data/processed/geographies/statistical_areas_2008.geojson`
+- `data/processed/geographies/statistical_areas_2011.geojson`
+- matching `.display.simplified.geojson`, `.metadata.csv`, and `.aliases.csv` files
 - `data/processed/geographies/statistical_areas_2022.simplified.geojson`
+- `data/processed/geographies/statistical_areas_2022.display.simplified.geojson`
 - `data/processed/geographies/localities_2022_dissolved.simplified.geojson`
-- `data/processed/geographies/composite_localities.simplified.geojson`
-- `data/processed/geographies/custom_geographies.geojson`
-- `data/processed/normalized/ballot_rows.csv`
-- `data/processed/addresses/polling_place_addresses.csv`
-- `data/processed/addresses/polling_place_address_quality_rows.csv`
-- `data/processed/addresses/polling_place_address_quality_geocoding_rows.csv`
-- `data/processed/addresses/polling_place_address_quality_units.csv`
-- `data/processed/addresses/polling_place_address_quality_review_queue.csv`
-- `data/processed/addresses/polling_place_address_visual_review_queue.csv`
-- `data/processed/addresses/polling_place_locality_only_no_place_units.csv`
-- `data/processed/addresses/polling_place_address_quality_summary.csv`
-- `data/processed/addresses/polling_place_address_quality_summary.json`
-- `data/processed/assignments/ballot_assignment_plan.csv`
-- `data/processed/geocoding/geocoding_input.csv`
-- `data/processed/geocoding/geocoding_input_summary.csv`
-- `data/processed/geocoding/geocoding_work_units.csv`
-- `data/processed/geocoding/geocoding_work_unit_rows.csv`
-- `data/processed/geocoding/geocoding_address_work_units.csv` filters to plausible street-number-locality queries for the current multi-stat-locality geocoding scope.
-- `data/processed/geocoding/geocoding_address_work_unit_rows.csv`
-- `data/processed/geocoding/geocoding_address_scope_excluded.csv`
-- `data/processed/geocoding/geocoding_manual_queue.csv` flags place-name queries, composite-locality queries, suspicious OCR/address prefixes, and rows without a geocoder query.
-- `data/processed/geocoding/geocoding_spike_sample.csv`
-- `data/processed/geocoding/govmap_spike_results.csv`
-- `data/processed/geocoding/photon_work_unit_results.csv` local Photon candidate output, ignored by git and not a reviewed cache.
-- `data/processed/geocoding/geocode_candidate_locality_validation.csv` locality-polygon validation for candidate geocodes, ignored by git.
-- `data/processed/geocoding/geocode_candidate_source_ags_validation.csv` source-AGS/stat-area validation for candidate geocodes, ignored by git.
-- `data/processed/geocoding/osm_street_stat_lookup.csv` optional OSM street-to-2022-stat-area classification, ignored by git.
-- `data/processed/geocoding/osm_street_stat_geocoding_units.csv` optional per-work-unit OSM street assignment candidates, ignored by git.
-- `data/processed/geocoding/osm_street_stat_summary.json` optional OSM street assignment summary, ignored by git.
-- `data/processed/geocoding/osm_address_stat_geocoding_units.csv` optional exact OSM address-number assignment candidates, ignored by git.
-- `data/processed/geocoding/osm_address_stat_canonical_addresses.csv` optional one-row-per-canonical-address OSM resolution audit, ignored by git.
-- `data/processed/geocoding/osm_address_stat_matches.csv` optional exact OSM address feature matches, ignored by git.
-- `data/processed/geocoding/osm_address_stat_summary.json` optional exact OSM address-number assignment summary, ignored by git.
-- `data/processed/geocoding/osm_street_missing_house_number_lookup.csv` optional no-number locality/street classification, ignored by git.
-- `data/processed/geocoding/unmatched_location_units.csv` one row per unresolved location signature, ignored by git.
-- `data/processed/geocoding/unmatched_location_category_summary.csv` and `unmatched_location_reason_summary.csv` current residual summaries, ignored by git.
+- `data/processed/geographies/localities_2022_dissolved.display.simplified.geojson`
+- `data/processed/assignments/historical_ballot_crosswalk.csv`
+- `data/processed/assignments/historical_ballot_assignments.csv`
 - `data/processed/assignments/ballot_geography_assignments.csv`
+- `data/processed/assignments/unresolved_statistical_area_assignment_rows.csv`
 - `data/processed/public/election_summary.csv`
 - `data/processed/public/statistical_area_results/*.csv`
 - `data/processed/public/locality_results/*.csv`
@@ -105,149 +112,41 @@ The generated inventory identifies the complete partial/no-result feature scope,
 - `data/processed/public/envelope_results/*.csv`
 - `data/processed/public/ballot_contributions/*.csv`
 - `data/processed/public/unmapped_rows/*.csv`
-- `docs/LOCALITY_RESULT_PRESENCE_AUDIT.csv` and `.md` - generated partial/no-standalone-result inventory for 2022 locality display features.
 
-## Latest Verified Run
+The old generated filename `missing_geography_assignment_rows.csv` is retained as a compatibility copy of `unresolved_statistical_area_assignment_rows.csv`.
 
-Verified with `python scripts/run_pipeline.py --skip-geographies` on 2026-07-15. The optional OSM address, normal street, missing-number street, and unmatched-inventory stages were then rebuilt from that exact run.
+## Verified Coverage
 
-Geography:
+Verified from an offline rebuild on 2026-07-17:
 
-| Metric | Count |
-|---|---:|
-| Statistical-area features in FileGDB | 3,857 |
-| Dissolved locality/display-footprint features | 1,387 |
-| Single-stat locality/display-footprint features | 1,242 |
-| Multi-stat localities | 145 |
-| Reviewed composite localities | 4 |
-| Custom geographies | 4 |
+| Election | Vintage | Statistical rows mapped | Pending rows | Mapped voter share | Locality share |
+|---|---:|---:|---:|---:|---:|
+| K25 | 2011 | 10,877 | 822 | 93.88% | 100% |
+| K24 | 2011 | 11,161 | 958 | 94.27% | 100% |
+| K23 | 2011 | 9,930 | 693 | 92.37% | 100% |
+| K22 | 2011 | 9,919 | 612 | 93.63% | 100% |
+| K21 | 2011 | 9,845 | 608 | 94.41% | 100% |
+| K20 | 2011 | 9,478 | 634 | 92.89% | 100% |
+| K19 | 2011 | 9,309 | 566 | 94.06% | 100% |
+| K18 | 2008 | 8,740 | 519 | 94.13% | 100% |
+| K17 | 1995 | 7,853 | 421 | 94.65% | 100% |
 
-The dissolved layer retains 58 CBS polygons whose English locality name is blank, including no-jurisdiction land and the Neve Midbar and Al-Kasom regional-council footprints. They render as neutral, non-selectable land in locality mode. Kinneret is explicitly excluded from the fill layer.
+## Other Reviewed Inputs
 
-Assignment plan:
+- `data/manual/k17_eligible_voters.csv` restores K17 ordinary-register turnout and reconciles to 5,011,053 eligible voters. Envelope turnout remains unavailable.
+- `data/manual/composite_localities.csv` and `joined_locality_composites.csv` control election-specific locality display unions.
+- `data/manual/locality_display_overrides.csv` controls reviewed historical names and visibility.
+- `data/manual/party_registry.csv` covers all election-specific result columns and the published display names are complete; `web/app/config/party-overrides.json` contains the still-partial reviewed color assignments.
 
-| Election | Single-stat rows | Geocode-needed rows | Custom rows | Special rows | Envelope rows | Unresolved rows |
-|---|---:|---:|---:|---:|---:|---:|
-| K25 | 1,819 | 9,817 | 63 | 8 | 838 | 0 |
-| K24 | 1,864 | 10,193 | 62 | 8 | 799 | 0 |
-| K23 | 1,605 | 8,964 | 54 | 8 | 548 | 0 |
-| K22 | 1,599 | 8,878 | 54 | 8 | 362 | 0 |
-| K21 | 1,593 | 8,806 | 54 | 7 | 305 | 0 |
-| K20 | 1,547 | 8,516 | 49 | 7 | 295 | 0 |
-| K19 | 1,517 | 8,313 | 45 | 6 | 228 | 0 |
-| K18 | 1,444 | 7,774 | 41 | 4 | 1 | 0 |
-| K17 | 1,250 | 6,986 | 38 | 3 | 149 | 0 |
+See `docs/HISTORICAL_STATISTICAL_AREA_ASSIGNMENT.md`, `docs/LOCALITY_MODE.md`, and `docs/K17_ELIGIBLE_VOTER_RECOVERY.md` for detailed decisions.
 
-Locality-mode assignment is independent from the geocode-needed column above. All 92,945 geographic-scope rows, representing 34,783,363 actual voters, are assigned in locality mode. This includes 460 reviewed custom-geography rows and the election-specific composite municipalities. The 3,525 official envelope rows and 59 reviewed `special:envelope_votes` rows are combined into one non-map aggregate per election. See `docs/LOCALITY_MODE.md` for the per-election and composite breakdown.
+## Web Build
 
-Geocoding input readiness:
-
-| Election | Ready address rows | Place-only rows | Missing address rows | Missing-address actual voters |
-|---|---:|---:|---:|---:|
-| K25 | 9,817 | 0 | 0 | 0 |
-| K24 | 10,193 | 0 | 0 | 0 |
-| K23 | 8,964 | 0 | 0 | 0 |
-| K22 | 8,878 | 0 | 0 | 0 |
-| K21 | 8,806 | 0 | 0 | 0 |
-| K20 | 8,516 | 0 | 0 | 0 |
-| K19 | 8,307 | 6 | 0 | 0 |
-| K18 | 7,739 | 35 | 0 | 0 |
-| K17 | 6,530 | 456 | 0 | 0 |
-
-Scoped address work units, refreshed on 2026-07-15:
-
-| Metric | Count |
-|---|---:|
-| Geocode-needed rows | 78,247 |
-| Unique geocoding units | 7,190 |
-| Proper street-number-locality address units | 5,663 |
-| Proper street-number-locality address rows | 62,506 |
-| Units with source AGS metadata | 2,367 |
-| Proper address units with source AGS metadata | 2,071 |
-
-The proper-address file is the intended input for the OSM-first address/street pass and any later bulk geocoder fallback:
-
-```bash
-python scripts/run_photon_geocoding_spike.py --input data/processed/geocoding/geocoding_address_work_units.csv --output data/processed/geocoding/photon_address_work_unit_results.csv
+```powershell
+cd web/app
+npm install
+npm run check
+npm run dev
 ```
 
-Address-quality audit, refreshed on 2026-07-15:
-
-| Metric | Count |
-|---|---:|
-| Normalized source rows checked | 93,991 |
-| Missing source-evidence links | 0 |
-| Normalized/source field mismatches | 0 |
-| Address-content review units | 1,525 |
-| PDF/OCR units corroborated by a digital election source | 615 |
-| PDF/OCR units still requiring visual review | 450 |
-| Current locality-only units with no place fallback | 0 |
-
-See `docs/POLLING_PLACE_ADDRESS_QUALITY_AUDIT.md` for definitions and the review-queue contract.
-
-Optional OSM address/street-geometry assignment candidates, refreshed on 2026-07-15:
-
-| Metric | Count |
-|---|---:|
-| Proper address query units checked | 5,663 |
-| Canonical numbered addresses checked | 4,210 |
-| OSM `single_stat_street_buffer` query candidates | 1,044 |
-| Canonical addresses assigned by the street corridor | 762 |
-| Strict exact OSM address-number query candidates | 1,086 |
-| Additional query assignments supplied by the house number | 878 |
-| Street-buffer or strict exact-address query candidates | 1,922 |
-| Canonical addresses assigned by the strict geometry union | 1,346 |
-| Reviewed OSM/component-locality assignments | 9 |
-| Canonical OSM-first assignments after review | 1,355 |
-| Source rows covered by the strict query union | 24,211 |
-| Actual voters covered by the strict query union | 9,463,605 |
-| Canonical numbered-address residual | 2,855 |
-
-Run with:
-
-```bash
-python scripts/build_osm_street_stat_lookup.py
-python scripts/build_osm_address_stat_lookup.py
-python scripts/build_unmatched_location_inventory.py
-```
-
-The resulting analytical inventory assigns 40,048 non-envelope rows to a 2022 statistical area, retains 460 reviewed custom-geography rows, and leaves 4,893 unique unresolved location signatures covering 52,437 ballot rows. These OSM assignments are not yet promoted into the final public output. The public envelope aggregate combines the 3,525 official envelope rows with all 59 reviewed rows targeted to `special:envelope_votes`, so national party totals reconcile without placing those rows on the map. See `docs/GEOGRAPHIC_ASSIGNMENT_STATUS.md` for the category and reason breakdown.
-
-## Current Blockers
-
-- The 450 PDF/OCR-only address-content units without independent digital or reviewed-image corroboration remain a finite visual-decision queue.
-- K17 has 456 place-only geocode-needed rows recovered directly from the scanned polling-place lists; the current locality-only/no-place count is zero.
-- K19 has 6 place-only geocode-needed rows from the PDF extraction.
-- K18 has 35 place-only geocode-needed rows after reviewed OCR corrections moved weak address text into the correct structural category.
-- No reviewed production geocode cache exists yet; candidate provider outputs remain `needs_review`.
-- GovMap approval/token behavior and coordinate/caching terms still need live verification.
-- Photon has a full local candidate run, but candidates must pass point-in-expected-locality validation before promotion. K23 source-AGS/stat-area QA is supplemental diagnostic context only; a polling-place address can serve voters from multiple source AGS values, so even single-source-AGS rows are not a hard building-location truth.
-- OSM street-geometry and exact-address-number assignment candidates exist, but they are not yet promoted into `build_final_geography_assignments.py`.
-- The official CBS 2008 statistical-area archive must still be obtained to implement historical AGS QA.
-
-## Geocode Cache Contract
-
-`scripts/build_final_geography_assignments.py` accepts an optional reviewed geocode cache at:
-
-- `data/processed/geocoding/geocoded_points.csv`
-
-Supported key columns:
-
-- `geocode_key` preferred. Use `geocoding_unit_id` values from `data/processed/geocoding/geocoding_work_units.csv` for deduplicated geocoding.
-- `source_row_uid` is still accepted for row-specific/manual geocodes.
-
-Supported coordinates:
-
-- WGS84: `longitude`/`latitude`, `lon`/`lat`, or `lng`/`lat`.
-- Israel TM: `x_2039`/`y_2039`, `itm_x`/`itm_y`, or `x`/`y`; defaults to `EPSG:2039` unless a single `coordinate_crs` value is present.
-
-Optional provenance columns:
-
-- `geocoder`
-- `geocode_status`
-- `geocode_confidence`
-- `review_status`
-
-Rows with rejected/failed/no-match/ambiguous geocode statuses are not used for map assignment. If `review_status` is present, `needs_review`, `pending`, and `unreviewed` are also ignored; use `approved` only after inspection.
-
-See `docs/GEOCODING_SPIKE.md` for provider spikes, candidate validation, and reviewed cache promotion rules.
+The compiler writes schema-v3 assets under `web/app/public/data/v2/`. Each election declares its statistical-area vintage and mode-specific geometry URLs. The browser does no assignment or aggregation.

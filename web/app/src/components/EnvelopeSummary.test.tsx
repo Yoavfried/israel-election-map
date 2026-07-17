@@ -26,7 +26,7 @@ const envelope: ResultRecord = {
     actualVoters: 100,
     validVotes: 98,
     invalidVotes: 2,
-    turnout: 0,
+    turnout: null,
   },
   winner: {
     partyId: 'A',

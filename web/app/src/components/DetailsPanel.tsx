@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { Info } from 'lucide-react'
 import { formatNumber, formatPercent } from '../domain/format'
 import type { Language, Party, ResultRecord } from '../domain/schemas'
 import { translate } from '../i18n/translations'
@@ -34,6 +35,8 @@ export function DetailsPanel({ language, record, parties }: DetailsPanelProps) {
         right[1] - left[1] || collator.compare(partyName(left[0]), partyName(right[0])),
     )
   const largestPartyVote = Math.max(orderedParties[0]?.[1] ?? 0, 1)
+  const includedNames = record.includedNames?.[language] ?? []
+  const includedLabel = `${translate(language, 'includesLocalities')}: ${includedNames.join(', ')}`
 
   return (
     <aside className="details-panel">
@@ -44,7 +47,17 @@ export function DetailsPanel({ language, record, parties }: DetailsPanelProps) {
               ? translate(language, 'nonGeographicResult')
               : `${translate(language, 'geographyCode')} ${record.code}`}
           </p>
-          <h2>{record.names[language]}</h2>
+          <div className="details-title-row">
+            <h2>{record.names[language]}</h2>
+            {includedNames.length > 0 ? (
+              <span className="included-localities-info" tabIndex={0} aria-label={includedLabel}>
+                <Info size={16} strokeWidth={2} aria-hidden="true" />
+                <span className="included-localities-tooltip" role="tooltip">
+                  {includedLabel}
+                </span>
+              </span>
+            ) : null}
+          </div>
         </div>
         <span
           className="party-swatch party-swatch--large"
@@ -62,17 +75,16 @@ export function DetailsPanel({ language, record, parties }: DetailsPanelProps) {
       </div>
 
       <dl className="metric-grid">
-        {isEnvelope ? (
-          <div>
-            <dt>{translate(language, 'invalidVotes')}</dt>
-            <dd>{formatNumber(record.totals.invalidVotes, language)}</dd>
-          </div>
-        ) : (
+        {!isEnvelope ? (
           <div>
             <dt>{translate(language, 'turnout')}</dt>
-            <dd>{formatPercent(record.totals.turnout, language)}</dd>
+            <dd>
+              {record.totals.turnout === null
+                ? translate(language, 'notAvailable')
+                : formatPercent(record.totals.turnout, language)}
+            </dd>
           </div>
-        )}
+        ) : null}
         <div>
           <dt>{translate(language, 'actualVoters')}</dt>
           <dd>{formatNumber(record.totals.actualVoters, language)}</dd>

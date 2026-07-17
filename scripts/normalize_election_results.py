@@ -7,11 +7,13 @@ from typing import Any
 
 import pandas as pd
 
-from pipeline_common import DATA_DIR, PROCESSED_DIR, int_value, normalize_code, normalize_kalpi, normalize_spaces, read_json, write_csv, write_json
+from pipeline_common import DATA_DIR, MANUAL_DIR, PROCESSED_DIR, int_value, normalize_code, normalize_kalpi, normalize_spaces, read_json, write_csv, write_json
 
 
 MANIFEST_PATH = PROCESSED_DIR / "manifest" / "election_result_resources.json"
 OUT_DIR = PROCESSED_DIR / "normalized"
+K17_ELIGIBLE_OVERRIDES = MANUAL_DIR / "k17_eligible_voters.csv"
+K17_ORDINARY_ELIGIBLE_TOTAL = 5_011_053
 
 LOCALITY_CODE_FIELDS = ["סמל ישוב"]
 LOCALITY_NAME_FIELDS = ["שם ישוב"]
@@ -60,7 +62,9 @@ def party_columns(columns: list[str]) -> list[str]:
     return [column for column in columns if column not in CORE_FIELD_NAMES]
 
 
-def normalize_resource(resource: dict) -> tuple[list[dict], list[dict], list[dict]]:
+def normalize_resource(
+    resource: dict, k17_eligible_overrides: dict[str, tuple[int, int]]
+) -> tuple[list[dict], list[dict], list[dict]]:
     election = resource["election"]
     election_number = int(resource["election_number"])
     path = source_path(resource["local_path"])
@@ -84,6 +88,20 @@ def normalize_resource(resource: dict) -> tuple[list[dict], list[dict], list[dic
             invalid = actual - valid
         source_address = normalize_spaces(first_value(source_row, ADDRESS_FIELDS))
         source_row_uid = f"{election}:{source_row_id}"
+        envelope = is_envelope(locality_code, locality_name)
+        if election == "K17" and not envelope:
+            if source_row_uid not in k17_eligible_overrides:
+                raise ValueError(f"Missing K17 eligible-voter override for {source_row_uid}")
+            eligible, expected_actual = k17_eligible_overrides[source_row_uid]
+            if expected_actual != actual:
+                raise ValueError(
+                    f"{source_row_uid} has {actual} actual voters in the result row but "
+                    f"{expected_actual} in the K17 eligibility override"
+                )
+            if eligible < actual:
+                raise ValueError(
+                    f"{source_row_uid} has {eligible} eligible voters but {actual} actual voters"
+                )
 
         core = {
             "source_row_uid": source_row_uid,
@@ -99,7 +117,7 @@ def normalize_resource(resource: dict) -> tuple[list[dict], list[dict], list[dic
             "valid_votes": valid,
             "invalid_votes": invalid,
             "source_address": source_address,
-            "is_envelope": is_envelope(locality_code, locality_name),
+            "is_envelope": envelope,
         }
         row_index.append(core)
 
@@ -128,6 +146,7 @@ def normalize_resource(resource: dict) -> tuple[list[dict], list[dict], list[dic
             "source_path": str(path.relative_to(DATA_DIR.parent)).replace("\\", "/"),
             "rows": len(df),
             "party_columns": len(parties),
+            "eligible_voters": sum(row["eligible_voters"] for row in row_index),
             "actual_voters": sum(row["actual_voters"] for row in row_index),
             "valid_votes": sum(row["valid_votes"] for row in row_index),
             "invalid_votes": sum(row["invalid_votes"] for row in row_index),
@@ -143,12 +162,13 @@ def main() -> None:
     parser.parse_args()
 
     manifest = read_json(MANIFEST_PATH)
+    k17_eligible_overrides = load_k17_eligible_overrides()
     all_rows: list[dict] = []
     all_parties: list[dict] = []
     summaries: list[dict] = []
 
     for resource in sorted(manifest, key=lambda item: int(item["election_number"]), reverse=True):
-        rows, parties, summary = normalize_resource(resource)
+        rows, parties, summary = normalize_resource(resource, k17_eligible_overrides)
         all_rows.extend(rows)
         all_parties.extend(parties)
         summaries.extend(summary)
@@ -176,6 +196,7 @@ def main() -> None:
         "source_path",
         "rows",
         "party_columns",
+        "eligible_voters",
         "actual_voters",
         "valid_votes",
         "invalid_votes",
@@ -192,9 +213,43 @@ def main() -> None:
     print(f"party_columns={len(all_parties)}")
     for summary in summaries:
         print(
-            f"{summary['election']}: rows={summary['rows']} actual={summary['actual_voters']} "
+            f"{summary['election']}: rows={summary['rows']} eligible={summary['eligible_voters']} actual={summary['actual_voters']} "
             f"envelope_rows={summary['envelope_rows']}"
         )
+
+
+def load_k17_eligible_overrides() -> dict[str, tuple[int, int]]:
+    df = pd.read_csv(K17_ELIGIBLE_OVERRIDES, dtype=str, encoding="utf-8-sig").fillna("")
+    required = {"source_row_uid", "eligible_voters", "actual_voters"}
+    missing_columns = required - set(df.columns)
+    if missing_columns:
+        raise ValueError(
+            f"{K17_ELIGIBLE_OVERRIDES} is missing columns: {sorted(missing_columns)}"
+        )
+
+    overrides: dict[str, tuple[int, int]] = {}
+    for _, row in df.iterrows():
+        source_row_uid = normalize_spaces(row["source_row_uid"])
+        eligible = int_value(row["eligible_voters"])
+        actual = int_value(row["actual_voters"])
+        if not source_row_uid.startswith("K17:"):
+            raise ValueError(f"Invalid K17 eligibility key: {source_row_uid}")
+        if source_row_uid in overrides:
+            raise ValueError(f"Duplicate K17 eligibility key: {source_row_uid}")
+        if eligible < actual:
+            raise ValueError(
+                f"{source_row_uid} has {eligible} eligible voters but {actual} actual voters"
+            )
+        overrides[source_row_uid] = (eligible, actual)
+
+    if len(overrides) != 8_277:
+        raise ValueError(f"Expected 8,277 K17 eligibility overrides, found {len(overrides)}")
+    total = sum(eligible for eligible, _ in overrides.values())
+    if total != K17_ORDINARY_ELIGIBLE_TOTAL:
+        raise ValueError(
+            f"K17 ordinary eligible-voter total is {total}, expected {K17_ORDINARY_ELIGIBLE_TOTAL}"
+        )
+    return overrides
 
 
 if __name__ == "__main__":

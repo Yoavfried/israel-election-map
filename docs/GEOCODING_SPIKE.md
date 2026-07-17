@@ -1,5 +1,7 @@
 # Geocoding Spike
 
+> Historical research note: this evaluates polling-place building geolocation. The production election map now assigns votes from official historical CBS ballot crosswalks, not from these geocoded points.
+
 Last updated: 2026-07-15
 
 ## Goal
@@ -46,7 +48,7 @@ Primary docs:
 - Search result detail docs: https://api.govmap.gov.il/docs/search-functions/get-search-result-data
 - Geocode JS docs: https://api.govmap.gov.il/docs/javascript-functions/geocode
 
-GovMap API keys are domain-approved. The current request is for `yoavfried.com`, so the primary live spike path is the browser page documented in:
+GovMap API keys are domain-approved. The browser spike accepts the approved origin at runtime instead of embedding a contributor-specific deployment domain:
 
 - `docs/GOVMAP_BROWSER_SPIKE.md`
 
@@ -60,7 +62,7 @@ Output:
 
 - `web/geocode-spike/sample.json`
 
-The browser page calls GovMap from the approved domain and exports a CSV with the same review-oriented output contract as the Python spike.
+The browser page calls GovMap from the approved domain and exports a CSV with the same review-oriented output contract as the Python spike. Pass the configured origin as the URL-encoded `approvedOrigin` query parameter.
 
 The current spike script uses the same public service endpoints called by GovMap's published JavaScript API:
 
@@ -162,7 +164,7 @@ Current scoped proper-address work units:
 
 ## OSM Address/Street Assignment Candidates
 
-OSM is the first geographic placement layer. It can assign or narrow addresses before any Photon fallback in two ways:
+Within this historical polling-place-location experiment, OSM is the first placement layer. It can classify or narrow building addresses before any Photon fallback in two ways:
 
 1. Exact OSM address objects with `addr:housenumber` plus `addr:street` or `addr:place`.
 2. Street containment where the street corridor stays inside one 2022 statistical area.
@@ -226,7 +228,7 @@ Outputs:
 - `data/processed/geocoding/osm_street_stat_geocoding_units.csv`
 - `data/processed/geocoding/osm_street_stat_summary.json`
 
-The current run uses a 25m buffer around matching OSM street lines. Only `single_stat_street_buffer` rows are direct assignment candidates. `single_stat_centerline_only_buffer_multi_stat` rows are review candidates because the centerline is in one stat area but nearby buildings may cross a boundary.
+The current run uses a 25m buffer around matching OSM street lines. `single_stat_street_buffer` identifies a building-location candidate only; it is not a voter-result assignment. `single_stat_centerline_only_buffer_multi_stat` remains a review category because nearby buildings may cross a boundary.
 
 Current result:
 
@@ -254,7 +256,7 @@ Caveats: exact OSM address objects are stronger than street-only placement, but 
 
 
 
-The earlier full local Photon run used the pre-visual-correction set of 7,196 deduplicated queries. It found that true `place_only` queries are small enough for manual review: 18 units, 60 ballot rows, and 22,246 actual voters. Broader non-address queries (`place_with_locality` + `place_only`) are larger: 469 units, 4,821 rows, and 1,818,295 actual voters. Address queries are Photon's strongest use case, but acceptance requires point-in-expected-locality validation rather than trusting the first text result. The validation script is `scripts/validate_geocode_candidate_localities.py`, and final assignment rejects reviewed coordinates that fall outside the expected locality with `geocoded_point_outside_expected_locality`.
+The earlier full local Photon run used the pre-visual-correction set of 7,196 deduplicated queries. It found that true `place_only` queries are small enough for manual review: 18 units, 60 ballot rows, and 22,246 actual voters. Broader non-address queries (`place_with_locality` + `place_only`) are larger: 469 units, 4,821 rows, and 1,818,295 actual voters. Address queries are Photon's strongest use case, but building-location acceptance requires point-in-expected-locality validation rather than trusting the first text result. The production election assignment does not consume these candidates.
 
 The first 50-row live Photon spike completed locally with 46 matches and 4 no-matches. The conservative locality check found 36 top results where the expected locality was visible and 10 where it was not. Some of those 10 are spelling/orthography review cases, but several are real wrong-locality matches, especially school/place-name queries.
 

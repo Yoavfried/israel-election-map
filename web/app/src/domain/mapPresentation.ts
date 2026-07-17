@@ -3,7 +3,7 @@ import type { ResultRecord } from './schemas'
 
 const WEST_BANK_LOCALITY_CODE_MIN = 3500
 const WEST_BANK_LOCALITY_CODE_MAX_EXCLUSIVE = 4000
-const KINNERET_GEOGRAPHY_IDS = ['loc:9920', 'stat2022:9920']
+const SPECIAL_POINT_PROXY_LOCALITY_CODES = new Set([1791, 1792, 1793, 1794, 3488])
 
 export function mayHaveDisplayMarker(record: ResultRecord): boolean {
   if (record.geographyType === 'custom') {
@@ -13,8 +13,9 @@ export function mayHaveDisplayMarker(record: ResultRecord): boolean {
   const localityCode = Number(record.localityId?.replace(/^loc:/, '') ?? record.code)
   return (
     Number.isInteger(localityCode) &&
-    localityCode >= WEST_BANK_LOCALITY_CODE_MIN &&
-    localityCode < WEST_BANK_LOCALITY_CODE_MAX_EXCLUSIVE
+    (SPECIAL_POINT_PROXY_LOCALITY_CODES.has(localityCode) ||
+      (localityCode >= WEST_BANK_LOCALITY_CODE_MIN &&
+        localityCode < WEST_BANK_LOCALITY_CODE_MAX_EXCLUSIVE))
   )
 }
 
@@ -41,11 +42,12 @@ export function buildMarkerVisibilityFilter(
 export function buildPolygonVisibilityFilter(
   hiddenGeographyIds: string[],
 ): FilterSpecification {
-  const excludedIds = [...new Set([...KINNERET_GEOGRAPHY_IDS, ...hiddenGeographyIds])].toSorted()
+  const excludedIds = [...new Set(hiddenGeographyIds)].toSorted()
 
   return [
     'all',
     ['!=', ['get', 'displayMode'], 'marker'],
+    ['!=', ['get', 'localityCode'], '9920'],
     ['!', ['in', ['get', 'id'], ['literal', excludedIds]]],
   ]
 }
