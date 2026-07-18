@@ -17,9 +17,11 @@ Assignment precedence is:
 4. direct K23 CEC AGS evidence;
 5. reviewed exact ArcGIS residual reconstruction;
 6. official CBS stable-ballot propagation when all same-vintage evidence agrees;
-7. election-vintage locality fallback only when one area exists;
-8. reviewed custom geography where no historical area is supported;
-9. unresolved.
+7. reviewed K17/K18 composite polling-register evidence identifying the
+   component locality;
+8. election-vintage locality fallback only when one area exists;
+9. reviewed custom geography where no historical area is supported;
+10. unresolved.
 
 No assignment is accepted from a merely similar ballot number, an approximate
 aggregate match, or a polling-place location.
@@ -56,6 +58,21 @@ crosswalk for each K17-K25 election and one stability workbook for each
 transition ending K19-K25. No alternate in-scope ballot-geography workbook is
 listed. Among the archived K20-K25 CEC polling-place reports, only K23 contains
 an AGS field.
+
+The CBS GIS product catalog identifies a nationwide polling-district boundary
+layer named `kalpi_artzi`, but marks it as an internal product that is not
+available for public sale or download. It therefore confirms that more direct
+geometry exists inside CBS without supplying a reproducible public input for
+this project.
+
+The historical geometry builder also publishes a raw-source inventory rather
+than treating every shapefile record as an area. The 1995 archive has 3,210 raw
+records: 2,834 assignable geometry records representing 2,659 unique area IDs,
+175 repeated multipart pieces, and 376 structural or non-area exclusions. The
+2008 source has 3,030 assignable unique areas and 41 structural records. The
+2011 source has 3,083 assignable official areas and 104 structural records,
+before 32 audited exact-ID supplements are added. These counts rule out an
+accidental parser-level loss of positive, identified statistical areas.
 
 The machine-readable inventory is published as
 `metadata/assignment-provenance/election_source_geography_field_audit.*`.
@@ -141,12 +158,32 @@ Tier B/C approval was permission to use defensible evidence, not permission to
 accept a 1-3 vote discrepancy. No tolerance-based Tier B row is published.
 ArcGIS party vectors and vote totals are never copied into election results.
 
+### Composite Polling-Register Evidence
+
+The K17 scan and K18 official polling-place table identify which component
+locality supplied 153 ballot rows published under Carmel City, Shaghur, and
+Baqa-Jatt. The K17 scan identifies another 11 Ma'ale Iron rows as Zalafa,
+Musmus, Musheirifa, or Salem, for 164 reviewed rows in total. The reviewed
+ranges and page-level evidence are preserved in
+`data/manual/historical_composite_ballot_components.csv`.
+
+Component identity is not treated as a statistical-area number. It enables a
+deterministic assignment only when that component has exactly one area in the
+active vintage. Of the 80 K17 component-evidence rows, 49 have such a target
+and 31 remain unresolved in Daliyat al-Karmel or Baqa al-Gharbiyye, which have
+multiple 1995 areas. All 84 K18 rows remain unresolved because the 2008 source
+stores those component identities inside composite-municipality geometry and
+does not publish separate component area IDs. The component evidence remains
+available for a future finer source even where no area link is published now.
+
 ### Single-Area And Custom Rules
 
 A locality fallback is allowed only when the active historical geography has
-exactly one canonical area. This assigns 3,788 rows. K17/K18 tribal and Hebron
-cases retain 92 reviewed custom-marker rows because their active historical
-geometry cannot distinguish the later 2011 areas.
+exactly one canonical area. This assigns 3,845 rows. K17/K18 retain 92 reviewed
+custom-geography rows because their active historical geometry cannot
+distinguish the later 2011 areas: 90 tribal rows use one combined Negev marker,
+while the two Hebron rows use the audited detailed Hebron footprint copied from
+the exact 2011 area geometry.
 
 ## Published Provenance Classes
 
@@ -154,13 +191,13 @@ geometry cannot distinguish the later 2011 areas.
 |---|---:|---|
 | `official_direct_crosswalk` | 83,237 | No |
 | `official_direct_ags` | 74 | No |
-| `deterministic_single_area_locality` | 3,788 | No |
+| `deterministic_single_area_locality` | 3,845 | No |
 | `official_stability_inferred_link` | 134 | Yes |
 | `reviewed_exact_aggregate_inferred_link` | 9 | Yes |
 | `reviewed_cross_election_inferred_link` | 5 | Yes |
 | `reviewed_custom_geography` | 92 | No |
 | `non_geographic` | 3,585 | No |
-| `unresolved` | 5,605 | No |
+| `unresolved` | 5,548 | No |
 | **Total** | **96,529** | |
 
 Every public ballot row carries `assignment_evidence_class`,
@@ -170,12 +207,13 @@ more specific method and source fields.
 ## Current Coverage
 
 Coverage is the share of actual voters in geographic scope with a supported
-statistical-mode target. Reviewed K17/K18 custom markers count as supported map
-targets; envelopes and other non-geographic rows are outside the denominator.
+statistical-mode target. Reviewed K17/K18 custom geographies count as supported
+map targets; envelopes and other non-geographic rows are outside the
+denominator.
 
 | Election | Vintage | Supported rows | Pending rows | Pending actual voters | Supported voter share |
 |---|---:|---:|---:|---:|---:|
-| K17 | 1995 | 7,859 | 415 | 160,216 | 94.68% |
+| K17 | 1995 | 7,916 | 358 | 136,480 | 95.47% |
 | K18 | 2008 | 8,740 | 519 | 189,711 | 94.13% |
 | K19 | 2011 | 9,311 | 564 | 214,251 | 94.08% |
 | K20 | 2011 | 9,521 | 591 | 269,029 | 93.31% |
@@ -185,13 +223,32 @@ targets; envelopes and other non-geographic rows are outside the denominator.
 | K24 | 2011 | 11,248 | 871 | 212,701 | 94.70% |
 | K25 | 2011 | 10,882 | 817 | 263,243 | 93.92% |
 
-The 5,605 pending rows are fully classified:
+The 5,548 pending rows are fully classified:
 
-- 5,349 belong to entire localities omitted from an official crosswalk;
-- 99 belong to localities absent from the active historical geography;
-- 57 are in a K17 historical composite municipality without a crosswalk;
+- 5,278 belong to entire localities omitted from an official crosswalk;
+- 55 use an election locality identity absent from the active historical
+  vintage;
+- 31 are K17 component-locality rows where the component has multiple 1995
+  areas but no component crosswalk;
+- 84 are K18 component-locality rows nested in composite 2008 geometry;
 - 70 are central ballot 990 rows intentionally retained at locality level;
 - 30 are specific ordinary ballots omitted from an otherwise present locality.
+
+These labels describe different failures. An "entire locality omitted" row has
+usable historical geometry, but the public election crosswalk contains no
+ballot keys for that locality. Sixteen such localities recur in all nine
+elections, accounting for 3,409 rows; this pattern is consistent with the
+CBS-documented address-anchoring limitation in many Arab and Druze localities.
+
+"Identity absent" does not mean that the source file dropped a polygon. It
+means the election result uses a locality code or identity that did not exist
+as an independent area in that vintage. This covers 54 K17 rows across 34
+identities and one K18 Tzur Yitzhak row. The transition tables provide no
+1995/2008 predecessor link for them. The K17 identities later appear as one
+2008 area except Kacir and Sansana, which first appear in 2011; K18 Tzur
+Yitzhak also first appears in 2011. Using those later boundaries as historical
+areas would be an explicitly labeled proxy, not a recovered official
+assignment, so the pipeline does not do it silently.
 
 Every specific omission was checked against normalized crosswalk keys, K23 AGS,
 stable-ballot components, and applicable ArcGIS evidence. The remaining gaps
@@ -205,21 +262,51 @@ and separate display geometry.
 
 | Vintage | Canonical features | Use |
 |---:|---:|---|
-| 1995 | 2,660 | K17 |
+| 1995 | 2,661 | K17 |
 | 2008 | 3,030 | K18 |
 | 2011 | 3,115 | K19-K25 |
 | 2022 | 3,857 | Future direct-crosswalk election and independent analysis |
 
-Canonical geometry is official CBS geometry except for 33 documented targets:
+Canonical geometry is official CBS geometry except for 34 documented targets:
 
 - `stat1995:9400008` is an official 1995-to-2008 transition-key union;
+- `stat1995:3797001` is reconstructed as the union of all eight 2008
+  Modi'in Illit targets named by the official 1995-to-2008 transition key;
 - 32 2011 targets absent from the downloaded CBS FileGDB use exact-ID geometry
   from the audited ArcGIS layers.
 
 Detailed West Bank ArcGIS footprints otherwise remain display derivatives.
-Replacement footprints are clipped against historical neighbors; K17/K18
-preserve shared boundaries, and materially overlapping non-exclusive
-supplements render as markers. Election votes never come from geometry files.
+Replacement footprints are clipped against historical neighbors. The tribal
+footprints are a deliberate exception to polygon reuse: although their exact
+2011 IDs are useful assignment keys, the derivative geometries materially
+overlap surrounding official areas and cannot be interpreted as exclusive
+boundaries. All K17-K25 tribal results therefore render through one combined
+marker. For K19-K25 this is only a web presentation aggregate; exact tribe IDs,
+ballot assignments, and statistical-area totals remain separate in the public
+data package. `data/manual/statistical_area_display_groups.csv` records every
+component, and the web build rejects the group unless all voter totals and every
+party column equal the source components exactly.
+
+Ganei Modi'in uses its detailed footprint from K21, while its standalone proxy
+is hidden in K19/K20. Hebron's exact 2011 footprint is reused as the K17/K18
+custom display polygon without changing its reviewed custom assignment ID.
+
+Marker assets can retain source proxies, but the web map displays a marker only
+when the selected election has a result for that exact ID. This suppresses the
+resultless K17/K18 West Bank proxies, the two Umm al-Fahm points, the Yavne-area
+facility point, and other source artifacts. Reviewed confirmation places the
+K17 `stat1995:9400008` result on the non-conflicting `stat1995:1062001`
+component polygon between Or Yehuda area 4 and Yehud area 3. The duplicate
+source feature is hidden, and the election-specific map name is `Yehud`; the
+official transition assignment ID and source name remain intact in published
+canonical data. Rotem and Maskiyot remain markers only in elections where they
+have standalone results and no accepted detailed boundary. Election votes
+never come from geometry files.
+
+The 16 evacuated Gaza localities present in the canonical 1995 source package
+are hidden in K17 by `statistical_area_display_overrides.csv`. They remain in
+the downloadable canonical package so that the source vintage is not silently
+rewritten.
 
 The polygon audit reports zero assigned IDs without geometry and zero
 unassigned detailed K20/K21 ArcGIS polygons carrying an official electorate
@@ -242,7 +329,9 @@ Working audit outputs include:
 - `data/processed/audits/stable_ballot_*`
 - `data/processed/audits/arcgis_assignment_reconstruction_*`
 - `data/processed/audits/historical_assignment_gap_*`
+- `data/processed/audits/historical_crosswalk_locality_omission_recurrence.csv`
 - `data/processed/audits/historical_polygon_*`
+- `data/processed/geographies/historical_geography_build_summary.json`
 - `data/processed/assignments/ballot_geography_assignments.csv`
 - `data/processed/assignments/unresolved_statistical_area_assignment_rows.csv`
 

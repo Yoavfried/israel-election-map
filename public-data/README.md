@@ -37,13 +37,13 @@ metadata. Every feature exposes `properties.geography_id`.
 
 | Package | Features | Archive | Metadata only |
 |---|---:|---|---|
-| 1995 statistical areas | 2,660 | [ZIP](v1/geographies/statistical_areas_1995.zip?raw=1) | [CSV](v1/geographies/statistical_areas_1995.csv?raw=1) |
+| 1995 statistical areas | 2,661 | [ZIP](v1/geographies/statistical_areas_1995.zip?raw=1) | [CSV](v1/geographies/statistical_areas_1995.csv?raw=1) |
 | 2008 statistical areas | 3,030 | [ZIP](v1/geographies/statistical_areas_2008.zip?raw=1) | [CSV](v1/geographies/statistical_areas_2008.csv?raw=1) |
 | 2011 statistical areas | 3,115 | [ZIP](v1/geographies/statistical_areas_2011.zip?raw=1) | [CSV](v1/geographies/statistical_areas_2011.csv?raw=1) |
 | 2022 statistical areas | 3,857 | [ZIP](v1/geographies/statistical_areas_2022.zip?raw=1) | [CSV](v1/geographies/statistical_areas_2022.csv?raw=1) |
 | 2022 locality footprints | 1,387 | [ZIP](v1/geographies/localities_2022.zip?raw=1) | [CSV](v1/geographies/localities_2022.csv?raw=1) |
-| Historical/reviewed locality composites | 100 | [ZIP](v1/geographies/composite_localities.zip?raw=1) | [CSV](v1/geographies/composite_localities.csv?raw=1) |
-| Reviewed custom geographies | 4 | [ZIP](v1/geographies/custom_geographies.zip?raw=1) | [CSV](v1/geographies/custom_geographies.csv?raw=1) |
+| Historical/reviewed locality composites | 104 | [ZIP](v1/geographies/composite_localities.zip?raw=1) | [CSV](v1/geographies/composite_localities.csv?raw=1) |
+| Reviewed custom geographies | 2 | [ZIP](v1/geographies/custom_geographies.zip?raw=1) | [CSV](v1/geographies/custom_geographies.csv?raw=1) |
 
 Use [`metadata/geographies.csv`](v1/metadata/geographies.csv?raw=1) as the
 combined lookup from any `geography_id` to its geometry archive.
@@ -97,7 +97,7 @@ audit are under
 - [`metadata/coverage.csv`](v1/metadata/coverage.csv?raw=1) reports mapped and
   pending coverage by election.
 - [`metadata/assignment-provenance`](v1/metadata/assignment-provenance/)
-  contains 25 source, decision, conflict, gap, and polygon-audit artifacts.
+  contains 28 source, decision, conflict, gap, and polygon-audit artifacts.
 - [`manifest.csv`](v1/manifest.csv?raw=1) and
   [`manifest.json`](v1/manifest.json?raw=1) contain file sizes, row counts, and
   SHA-256 checksums.
@@ -113,6 +113,12 @@ This release publishes election facts, reviewed party/list metadata, assignment
 provenance, and geometry. It deliberately excludes map colors, concise UI label
 overrides, layout, and interaction configuration. Those are presentation choices
 owned by the map application under `web/app/`.
+
+The map groups the K19-K25 tribal statistical-area results into one combined
+tribal marker because the available derivative footprints overlap surrounding
+areas and cannot be treated as exclusive geography. The release tables do not
+collapse those records: exact tribe statistical-area identifiers, results, and
+assignment provenance remain available for analysis.
 
 Original project software and documentation are available under the
 [MIT License](../LICENSE). Official and third-party source data retain their

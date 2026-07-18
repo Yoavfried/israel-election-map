@@ -60,13 +60,13 @@ handling.
 |---|---:|---|
 | `official_direct_crosswalk` | 83,237 | Direct election-specific CBS crosswalk, including supported base subdivisions. |
 | `official_direct_ags` | 74 | Direct AGS from the official K23 CEC report. |
-| `deterministic_single_area_locality` | 3,788 | The active historical locality has exactly one canonical area. |
+| `deterministic_single_area_locality` | 3,845 | The active historical locality has exactly one canonical area; reviewed composite-component evidence may first identify that locality. |
 | `official_stability_inferred_link` | 134 | Official CBS stable-ballot evidence has a unanimous same-vintage target. |
 | `reviewed_exact_aggregate_inferred_link` | 9 | Reviewed unique exact K21 ArcGIS residual partition. |
 | `reviewed_cross_election_inferred_link` | 5 | Reviewed correction supported by independent same-vintage evidence. |
-| `reviewed_custom_geography` | 92 | Supported custom marker where historical geometry cannot represent the target. |
+| `reviewed_custom_geography` | 92 | Supported custom geography where historical geometry cannot represent the target; the tribal bucket is a marker and Hebron uses a detailed polygon. K19-K25 ballots retain their exact tribe/statistical-area IDs in this package even though the web map combines those results into the same marker. |
 | `non_geographic` | 3,585 | Envelope or other reviewed non-geographic row. |
-| `unresolved` | 5,605 | No defensible historical area under the current evidence. |
+| `unresolved` | 5,548 | No defensible historical area under the current evidence. |
 
 The three inferred classes total 148 rows and 40,752 actual voters. Filter
 `assignment_is_synthetic_link=false` when an analysis requires only direct or
@@ -76,6 +76,9 @@ deterministic links.
 
 - `official_cbs_ballot_crosswalk*` methods are direct crosswalk assignments.
 - `official_cec_k23_ags` is direct official AGS.
+- `reviewed_composite_component_evidence` identifies a K17/K18 component
+  locality from a polling-register source. It supports an area link only when
+  that component has one area in the active historical vintage.
 - `cbs_stable_ballot_*` methods are high-confidence inferred links. Conflicting
   stability components are withheld.
 - `arcgis_residual_partition_tier_a` covers three exact Ar'ara-BaNegev rows.
@@ -146,7 +149,7 @@ as a fabricated K25 conversion.
 ## Assignment Audit Package
 
 [`v1/metadata/assignment-provenance`](v1/metadata/assignment-provenance/)
-contains 25 inspectable artifacts:
+contains 28 inspectable artifacts:
 
 - official normalized crosswalk and final assignment summary;
 - source-field inventory;

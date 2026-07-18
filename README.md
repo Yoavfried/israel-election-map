@@ -51,13 +51,21 @@ Statistical-area assignment precedence is:
 4. direct K23 CEC AGS evidence;
 5. reviewed exact ArcGIS residual reconstruction;
 6. official CBS stable-ballot propagation when all same-vintage evidence agrees;
-7. historical locality fallback only when that locality has one published area;
-8. reviewed custom geography where no supported historical area exists;
-9. explicit unresolved status.
+7. reviewed K17/K18 polling-register evidence identifying a composite's
+   component locality;
+8. historical locality fallback only when that locality has one published area;
+9. reviewed custom geography where no supported historical area exists;
+10. explicit unresolved status.
 
 Statistical mode uses 1995 areas for K17, 2008 for K18, and 2011 for K19-K25.
 K25 remains on 2011 because its official crosswalk targets that vintage;
 forcing those results onto 2022 areas would invent precision.
+
+The public CBS crosswalks consistently omit some localities and individual
+ballots. The release keeps these rows explicit rather than assigning them from
+polling-place addresses. Source inventories, recurring-omission tables, and
+component-locality evidence are included under
+`public-data/v1/metadata/assignment-provenance/`.
 
 ## Run Locally
 

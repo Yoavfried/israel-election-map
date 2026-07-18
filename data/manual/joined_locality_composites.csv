@@ -1,97 +1,101 @@
-joined_composite_id,election,host_locality_code,host_kalpi,component_locality_codes,evidence_status,evidence_method,note,display_mode
-composite:joined-k19-13,K19,13,1,13|1053|1187,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.
-composite:joined-k19-23,K19,23,,23|1368|1369,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.
-composite:joined-k19-47,K19,47,2,47|371,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.
-composite:joined-k19-107,K19,107,,107|1376,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.
-composite:joined-k19-198,K19,198,2,198|1076,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.
-composite:joined-k19-247,K19,247,,247|1324,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.
-composite:joined-k19-274,K19,274,1,274|1339,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.
-composite:joined-k19-363,K19,363,,363|1371,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.
-composite:joined-k19-382,K19,382,1,382|1318,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.
-composite:joined-k19-387,K19,387,1,387|897,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.
-composite:joined-k19-390,K19,390,,390|1143,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.
-composite:joined-k19-405,K19,405,,405|1134,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.
-composite:joined-k19-440,K19,440,,440|1372,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.
-composite:joined-k19-442,K19,442,,442|833,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.
-composite:joined-k19-465,K19,465,1,465|886,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.
-composite:joined-k19-553,K19,553,1,553|392,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.
-composite:joined-k19-567,K19,567,1,567|493|566,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.
-composite:joined-k19-578,K19,578,,578|1213,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.
-composite:joined-k19-585,K19,585,1,585|1322,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.
-composite:joined-k19-689,K19,689,,689|212,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.
-composite:joined-k19-827,K19,827,1,827|2006,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.
-composite:joined-k19-885,K19,885,,885|1340,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.
-composite:joined-k19-1024,K19,1024,1,1024|412,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.
-composite:joined-k19-1084,K19,1084,1,1084|88,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.
-composite:joined-k19-1137,K19,1137,2,1137|2039,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.
-composite:joined-k19-1140,K19,1140,1,1140|1373,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.
-composite:joined-k19-1156,K19,1156,,1156|1248,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.
-composite:joined-k19-1172,K19,1172,,1172|1185,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.
-composite:joined-k19-1188,K19,1188,1,1188|1276,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.
-composite:joined-k19-1197,K19,1197,1,1197|1266|1267|1279,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.
-composite:joined-k19-1233,K19,1233,,1233|3724,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.
-composite:joined-k19-1258,K19,1258,1,1258|1225,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.
-composite:joined-k19-1261,K19,1261,1,1261|1196,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.
-composite:joined-k19-1280,K19,1280,1,1280|328|1278,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.
-composite:joined-k19-1291,K19,1291,,1291|1195,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.
-composite:joined-k19-1366,K19,1366,,1366|1364,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.
-composite:joined-k19-2053,K19,2053,1,2053|1117,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.
-composite:joined-k19-2300,K19,2300,8,2300|882,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.
-composite:joined-k19-3000,K19,3000,322,3000|1056,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.
-composite:joined-k19-3599,K19,3599,,3599|3782|3785,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.
-composite:joined-k19-3601,K19,3601,1,3601|3786,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.
-composite:joined-k19-3619,K19,3619,,3619|3646,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.
-composite:joined-k19-4201,K19,4201,,4201|4502,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.
-composite:joined-k19-4301,K19,4301,,4301|4019,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.
-composite:joined-k19-7800,K19,7800,,7800|926,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.
-composite:joined-k19-9200,K19,9200,17,9200|1154,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.
-composite:joined-k20-13,K20,13,,13|1053|1187,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.
-composite:joined-k20-47,K20,47,,47|371,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.
-composite:joined-k20-159,K20,159,,159|1336,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.
-composite:joined-k20-198,K20,198,,198|1076,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.
-composite:joined-k20-234,K20,234,,234|2006,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.
-composite:joined-k20-247,K20,247,,247|1324,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.
-composite:joined-k20-382,K20,382,,382|1318,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.
-composite:joined-k20-387,K20,387,,387|897,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.
-composite:joined-k20-390,K20,390,,390|1143,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.
-composite:joined-k20-405,K20,405,,405|1134,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.
-composite:joined-k20-442,K20,442,,442|833,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.
-composite:joined-k20-465,K20,465,,465|886,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.
-composite:joined-k20-553,K20,553,,553|392,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.
-composite:joined-k20-567,K20,567,,567|493|566,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.
-composite:joined-k20-578,K20,578,,578|1213,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.
-composite:joined-k20-585,K20,585,,585|1322,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.
-composite:joined-k20-689,K20,689,,689|212,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.
-composite:joined-k20-889,K20,889,,889|890,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.
-composite:joined-k20-1024,K20,1024,,1024|412,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.
-composite:joined-k20-1084,K20,1084,,1084|88,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.
-composite:joined-k20-1114,K20,1114,,1114|1325,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.
-composite:joined-k20-1137,K20,1137,,1137|2039,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.
-composite:joined-k20-1140,K20,1140,,1140|1373,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.
-composite:joined-k20-1156,K20,1156,,1156|1248,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.
-composite:joined-k20-1172,K20,1172,,1172|1185,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.
-composite:joined-k20-1177,K20,1177,,1177|1341,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.
-composite:joined-k20-1188,K20,1188,,1188|1276,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.
-composite:joined-k20-1195,K20,1195,,1195|328,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.
-composite:joined-k20-1197,K20,1197,,1197|1266|1267|1279,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.
-composite:joined-k20-1233,K20,1233,,1233|1365,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.
-composite:joined-k20-1258,K20,1258,,1258|1225,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.
-composite:joined-k20-1261,K20,1261,,1261|1196,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.
-composite:joined-k20-1291,K20,1291,,1291|1278,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.
-composite:joined-k20-1366,K20,1366,,1366|1364,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.
-composite:joined-k20-2011,K20,2011,,2011|1339,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.
-composite:joined-k20-2053,K20,2053,,2053|1117,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.
-composite:joined-k20-2300,K20,2300,,2300|882,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.
-composite:joined-k20-3000,K20,3000,,3000|1056,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.
-composite:joined-k20-3599,K20,3599,,3599|3782|3785,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.
-composite:joined-k20-3601,K20,3601,,3601|3786,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.
-composite:joined-k20-3619,K20,3619,,3619|3646,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.
-composite:joined-k20-4201,K20,4201,,4201|4502,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.
-composite:joined-k20-4301,K20,4301,,4301|4019,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.
-composite:joined-k20-7800,K20,7800,,7800|926,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.
-composite:joined-k20-9200,K20,9200,,9200|1154,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.
-composite:joined-k25-567,K25,567,1,567|493|566,strong,under_100_host_delta,The under-100 K25 register is consistent with the reviewed nearby host station eligible-voter delta.
-composite:joined-k25-1177,K25,1177,1,1177|1378,strong,under_100_host_delta,The under-100 K25 register is consistent with the reviewed nearby host station eligible-voter delta.
-composite:joined-k25-2011,K25,2011,1,2011|1339,strong,under_100_host_delta,The under-100 K25 register is consistent with the reviewed nearby host station eligible-voter delta.
+﻿joined_composite_id,election,host_locality_code,host_kalpi,component_locality_codes,evidence_status,evidence_method,note,display_mode
+composite:joined-k19-13,K19,13,1,13|1053|1187,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.,
+composite:joined-k19-23,K19,23,,23|1368|1369,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.,
+composite:joined-k19-47,K19,47,2,47|371,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.,
+composite:joined-k19-107,K19,107,,107|1376,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.,
+composite:joined-k19-198,K19,198,2,198|1076,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.,
+composite:joined-k19-247,K19,247,,247|1324,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.,
+composite:joined-k19-274,K19,274,1,274|1339,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.,
+composite:joined-k19-363,K19,363,,363|1371,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.,
+composite:joined-k19-382,K19,382,1,382|1318,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.,
+composite:joined-k19-387,K19,387,1,387|897,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.,
+composite:joined-k19-390,K19,390,,390|1143,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.,
+composite:joined-k19-405,K19,405,,405|1134,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.,
+composite:joined-k19-440,K19,440,,440|1372,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.,
+composite:joined-k19-442,K19,442,,442|833,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.,
+composite:joined-k19-465,K19,465,1,465|886,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.,
+composite:joined-k19-553,K19,553,1,553|392,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.,
+composite:joined-k19-567,K19,567,1,567|493|566,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.,
+composite:joined-k19-578,K19,578,,578|1213,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.,
+composite:joined-k19-585,K19,585,1,585|1322,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.,
+composite:joined-k19-689,K19,689,,689|212,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.,
+composite:joined-k19-827,K19,827,1,827|2006,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.,
+composite:joined-k19-885,K19,885,,885|1340,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.,
+composite:joined-k19-1024,K19,1024,1,1024|412,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.,
+composite:joined-k19-1084,K19,1084,1,1084|88,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.,
+composite:joined-k19-1137,K19,1137,2,1137|2039,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.,
+composite:joined-k19-1140,K19,1140,1,1140|1373,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.,
+composite:joined-k19-1156,K19,1156,,1156|1248,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.,
+composite:joined-k19-1172,K19,1172,,1172|1185,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.,
+composite:joined-k19-1188,K19,1188,1,1188|1276,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.,
+composite:joined-k19-1197,K19,1197,1,1197|1266|1267|1279,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.,
+composite:joined-k19-1233,K19,1233,,1233|3724,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.,
+composite:joined-k19-1258,K19,1258,1,1258|1225,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.,
+composite:joined-k19-1261,K19,1261,1,1261|1196,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.,
+composite:joined-k19-1280,K19,1280,1,1280|328|1278,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.,
+composite:joined-k19-1291,K19,1291,,1291|1195,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.,
+composite:joined-k19-1366,K19,1366,,1366|1364,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.,
+composite:joined-k19-2053,K19,2053,1,2053|1117,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.,
+composite:joined-k19-2300,K19,2300,8,2300|882,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.,
+composite:joined-k19-3000,K19,3000,322,3000|1056,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.,
+composite:joined-k19-3599,K19,3599,,3599|3782|3785,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.,
+composite:joined-k19-3601,K19,3601,1,3601|3786,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.,
+composite:joined-k19-3619,K19,3619,,3619|3646,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.,
+composite:joined-k19-4201,K19,4201,,4201|4502,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.,
+composite:joined-k19-4301,K19,4301,,4301|4019,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.,
+composite:joined-k19-7800,K19,7800,,7800|926,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.,
+composite:joined-k19-9200,K19,9200,17,9200|1154,confirmed,exact_eligible_arithmetic,Archived polling registers exactly reconcile to the published host eligible-voter total.,
+composite:joined-k20-13,K20,13,,13|1053|1187,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.,
+composite:joined-k20-47,K20,47,,47|371,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.,
+composite:joined-k20-159,K20,159,,159|1336,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.,
+composite:joined-k20-198,K20,198,,198|1076,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.,
+composite:joined-k20-234,K20,234,,234|2006,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.,
+composite:joined-k20-247,K20,247,,247|1324,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.,
+composite:joined-k20-382,K20,382,,382|1318,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.,
+composite:joined-k20-387,K20,387,,387|897,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.,
+composite:joined-k20-390,K20,390,,390|1143,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.,
+composite:joined-k20-405,K20,405,,405|1134,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.,
+composite:joined-k20-442,K20,442,,442|833,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.,
+composite:joined-k20-465,K20,465,,465|886,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.,
+composite:joined-k20-553,K20,553,,553|392,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.,
+composite:joined-k20-567,K20,567,,567|493|566,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.,
+composite:joined-k20-578,K20,578,,578|1213,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.,
+composite:joined-k20-585,K20,585,,585|1322,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.,
+composite:joined-k20-689,K20,689,,689|212,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.,
+composite:joined-k20-889,K20,889,,889|890,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.,
+composite:joined-k20-1024,K20,1024,,1024|412,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.,
+composite:joined-k20-1084,K20,1084,,1084|88,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.,
+composite:joined-k20-1114,K20,1114,,1114|1325,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.,
+composite:joined-k20-1137,K20,1137,,1137|2039,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.,
+composite:joined-k20-1140,K20,1140,,1140|1373,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.,
+composite:joined-k20-1156,K20,1156,,1156|1248,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.,
+composite:joined-k20-1172,K20,1172,,1172|1185,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.,
+composite:joined-k20-1177,K20,1177,,1177|1341,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.,
+composite:joined-k20-1188,K20,1188,,1188|1276,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.,
+composite:joined-k20-1195,K20,1195,,1195|328,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.,
+composite:joined-k20-1197,K20,1197,,1197|1266|1267|1279,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.,
+composite:joined-k20-1233,K20,1233,,1233|1365,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.,
+composite:joined-k20-1258,K20,1258,,1258|1225,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.,
+composite:joined-k20-1261,K20,1261,,1261|1196,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.,
+composite:joined-k20-1291,K20,1291,,1291|1278,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.,
+composite:joined-k20-1366,K20,1366,,1366|1364,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.,
+composite:joined-k20-2011,K20,2011,,2011|1339,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.,
+composite:joined-k20-2053,K20,2053,,2053|1117,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.,
+composite:joined-k20-2300,K20,2300,,2300|882,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.,
+composite:joined-k20-3000,K20,3000,,3000|1056,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.,
+composite:joined-k20-3599,K20,3599,,3599|3782|3785,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.,
+composite:joined-k20-3601,K20,3601,,3601|3786,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.,
+composite:joined-k20-3619,K20,3619,,3619|3646,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.,
+composite:joined-k20-4201,K20,4201,,4201|4502,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.,
+composite:joined-k20-4301,K20,4301,,4301|4019,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.,
+composite:joined-k20-7800,K20,7800,,7800|926,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.,
+composite:joined-k20-9200,K20,9200,,9200|1154,confirmed,explicit_source_location,The official K20 polling-location row explicitly places each attached register in the host locality.,
+composite:joined-k17-3797,K17,3797,,3797|3823,confirmed,official_historical_municipal_membership,Ganne Modi'in was part of Modi'in Illit in this election; the host result is shown once for the historical municipality.,
+composite:joined-k18-3797,K18,3797,,3797|3823,confirmed,official_historical_municipal_membership,Ganne Modi'in was part of Modi'in Illit in this election; the host result is shown once for the historical municipality.,
+composite:joined-k19-3797,K19,3797,,3797|3823,confirmed,official_historical_municipal_membership,Ganne Modi'in was part of Modi'in Illit in this election; the host result is shown once for the historical municipality.,
+composite:joined-k20-3797,K20,3797,,3797|3823,confirmed,official_historical_municipal_membership,Ganne Modi'in remained part of Modi'in Illit until the end of 2015; the host result is shown once for the historical municipality.,
+composite:joined-k25-567,K25,567,1,567|493|566,strong,under_100_host_delta,The under-100 K25 register is consistent with the reviewed nearby host station eligible-voter delta.,
+composite:joined-k25-1177,K25,1177,1,1177|1378,strong,under_100_host_delta,The under-100 K25 register is consistent with the reviewed nearby host station eligible-voter delta.,
+composite:joined-k25-2011,K25,2011,1,2011|1339,strong,under_100_host_delta,The under-100 K25 register is consistent with the reviewed nearby host station eligible-voter delta.,
 composite:joined-k25-3607,K25,3607,1,3607|3825,strong,under_100_host_delta,The under-100 K25 register is consistent with the reviewed nearby host station eligible-voter delta.,marker
-composite:joined-k25-4303,K25,4303,1,4303|4035,strong,under_100_host_delta,The under-100 K25 register is consistent with the reviewed nearby host station eligible-voter delta.
+composite:joined-k25-4303,K25,4303,1,4303|4035,strong,under_100_host_delta,The under-100 K25 register is consistent with the reviewed nearby host station eligible-voter delta.,

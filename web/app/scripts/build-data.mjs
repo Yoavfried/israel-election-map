@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto'
 import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises'
 import { dirname, isAbsolute, relative, resolve } from 'node:path'
 import {
+  applyStatisticalDisplayGroups,
   aliasJoinedCompositeResults,
   buildCoverage,
   buildCompositeMetadataIndex,
@@ -37,6 +38,8 @@ async function main() {
       partyOverrideConfig,
       partyRegistryRows,
       localityDisplayOverrideRows,
+      statisticalAreaDisplayOverrideRows,
+      statisticalAreaDisplayGroupRows,
       summaryRows,
       geographySummary,
       statisticalMetadataRows,
@@ -51,6 +54,12 @@ async function main() {
       readJson(resolve(APP_ROOT, 'config', 'party-overrides.json')),
       readCsv(resolve(REPOSITORY_ROOT, 'data', 'manual', 'party_registry.csv')),
       readCsv(resolve(REPOSITORY_ROOT, 'data', 'manual', 'locality_display_overrides.csv')),
+      readCsv(
+        resolve(REPOSITORY_ROOT, 'data', 'manual', 'statistical_area_display_overrides.csv'),
+      ),
+      readCsv(
+        resolve(REPOSITORY_ROOT, 'data', 'manual', 'statistical_area_display_groups.csv'),
+      ),
       readCsv(resolve(sourceRoot, 'public', 'election_summary.csv')),
       readJson(resolve(sourceRoot, 'geographies', 'geography_build_summary.json')),
       readCsv(resolve(sourceRoot, 'geographies', 'statistical_areas_2022.metadata.csv')),
@@ -109,7 +118,18 @@ async function main() {
       electionConfig,
       localityMetadata,
     )
+    const statisticalAreaDisplayOverrides = buildStatisticalAreaDisplayOverrideIndex(
+      statisticalAreaDisplayOverrideRows,
+      electionConfig,
+      statisticalMetadataByVintage,
+    )
     const customMetadata = buildCustomMetadataIndex(customGeographies)
+    const statisticalAreaDisplayGroups = buildStatisticalAreaDisplayGroupIndex(
+      statisticalAreaDisplayGroupRows,
+      electionConfig,
+      statisticalMetadataByVintage,
+      customMetadata,
+    )
     const coverageByElection = new Map(
       electionConfig.map((election) => [
         election.id,
@@ -212,6 +232,11 @@ async function main() {
       ])
       const coverageByMode = coverageByElection.get(election.id)
       const displayOverrides = localityDisplayOverrides.get(election.id) ?? new Map()
+      const statisticalDisplayOverrides =
+        statisticalAreaDisplayOverrides.get(election.id) ?? new Map()
+      const configuredHiddenStatisticalIds = [...statisticalDisplayOverrides]
+        .filter(([, override]) => override.visibility === 'hidden')
+        .map(([statAreaId]) => statAreaId)
       const hiddenLocalityIds = [
         ...new Set([
           ...buildHiddenLocalityIds(prunedLocalities, election.id),
@@ -220,9 +245,13 @@ async function main() {
             .map(([localityId]) => localityId),
         ]),
       ].toSorted()
-      const electionLocalityMetadata = applyLocalityNameOverrides(
+      const electionLocalityMetadata = applyMetadataNameOverrides(
         localityMetadata,
         displayOverrides,
+      )
+      const electionStatisticalMetadata = applyMetadataNameOverrides(
+        statisticalMetadata,
+        statisticalDisplayOverrides,
       )
       const displayedLocalityRows = aliasJoinedCompositeResults(
         localityRows,
@@ -235,6 +264,18 @@ async function main() {
       const localityCustomRows = customRows.filter(
         (row) => !row.geography_mode || row.geography_mode === 'locality',
       )
+      const statisticalDisplay = applyStatisticalDisplayGroups({
+        electionId: election.id,
+        primaryRows: statisticalRows,
+        customRows,
+        groups: statisticalAreaDisplayGroups.get(election.id),
+      })
+      const hiddenStatisticalIds = [
+        ...new Set([
+          ...configuredHiddenStatisticalIds,
+          ...statisticalDisplay.hiddenGeographyIds,
+        ]),
+      ].toSorted()
       const overrides = partyOverrideConfig.elections[election.id] ?? {}
       const partyRegistry = partyRegistryByElection.get(election.id)
       const excludedPartyColumns = Object.keys(
@@ -243,12 +284,13 @@ async function main() {
       const statisticalPayload = buildResultPayload({
         electionId: election.id,
         mode: 'statistical-area',
-        primaryRows: statisticalRows,
-        customRows: statisticalCustomRows,
+        primaryRows: statisticalDisplay.primaryRows,
+        customRows: [...statisticalCustomRows, ...statisticalDisplay.displayRows],
         envelopeRows,
-        metadataById: statisticalMetadata,
+        metadataById: electionStatisticalMetadata,
         customMetadataById: customMetadata,
         coverage: coverageByMode['statistical-area'],
+        hiddenGeographyIds: hiddenStatisticalIds,
         partyRegistry,
         partyColorsByBallotLetter: partyOverrideConfig.ballotLetterColors,
         partyOverrides: overrides,
@@ -472,14 +514,135 @@ function buildLocalityDisplayOverrideIndex(rows, elections, localityMetadata) {
   return byElection
 }
 
-function applyLocalityNameOverrides(localityMetadata, overrides) {
-  const output = new Map(localityMetadata)
-  for (const [localityId, override] of overrides) {
+function buildStatisticalAreaDisplayOverrideIndex(rows, elections, metadataByVintage) {
+  const electionById = new Map(elections.map((election) => [election.id, election]))
+  const byElection = new Map(elections.map((election) => [election.id, new Map()]))
+
+  for (const row of rows) {
+    const statAreaId = String(row.stat_area_id ?? '').trim()
+    const electionIds = String(row.elections ?? '')
+      .split('|')
+      .map((value) => value.trim())
+      .filter(Boolean)
+    const visibility = String(row.visibility ?? '').trim()
+    const nameHe = String(row.name_he ?? '').trim()
+    const nameEn = String(row.name_en ?? '').trim()
+    const note = String(row.note ?? '').trim()
+
+    if (
+      !statAreaId ||
+      !['default', 'hidden'].includes(visibility) ||
+      electionIds.length === 0 ||
+      (visibility === 'default' && !nameHe && !nameEn)
+    ) {
+      throw new Error(`Invalid statistical-area display override: ${statAreaId || '(blank ID)'}`)
+    }
+    for (const electionId of electionIds) {
+      const election = electionById.get(electionId)
+      if (!election) {
+        throw new Error(`${statAreaId} has an unknown display-override election: ${electionId}`)
+      }
+      const metadata = metadataByVintage.get(Number(election.statisticalAreaVintage))
+      if (!metadata?.has(statAreaId)) {
+        throw new Error(`${electionId} display override references unavailable area ${statAreaId}`)
+      }
+      const electionOverrides = byElection.get(electionId)
+      if (electionOverrides.has(statAreaId)) {
+        throw new Error(`Duplicate statistical-area display override: ${electionId}.${statAreaId}`)
+      }
+      electionOverrides.set(statAreaId, { visibility, nameHe, nameEn, note })
+    }
+  }
+
+  return byElection
+}
+
+function buildStatisticalAreaDisplayGroupIndex(
+  rows,
+  elections,
+  metadataByVintage,
+  customMetadata,
+) {
+  const electionById = new Map(elections.map((election) => [election.id, election]))
+  const groupsByElection = new Map(
+    elections.map((election) => [election.id, new Map()]),
+  )
+  const componentOwnersByElection = new Map(
+    elections.map((election) => [election.id, new Map()]),
+  )
+
+  for (const row of rows) {
+    const displayGeographyId = String(row.display_geography_id ?? '').trim()
+    const componentStatAreaId = String(row.component_stat_area_id ?? '').trim()
+    const electionIds = String(row.elections ?? '')
+      .split('|')
+      .map((value) => value.trim())
+      .filter(Boolean)
+    const note = String(row.note ?? '').trim()
+
+    if (!customMetadata.has(displayGeographyId)) {
+      throw new Error(
+        `Unknown statistical display-group target: ${displayGeographyId || '(blank ID)'}`,
+      )
+    }
+    if (!componentStatAreaId || electionIds.length === 0) {
+      throw new Error(`Invalid statistical display-group component: ${componentStatAreaId}`)
+    }
+
+    for (const electionId of electionIds) {
+      const election = electionById.get(electionId)
+      if (!election) {
+        throw new Error(
+          `${componentStatAreaId} has an unknown display-group election: ${electionId}`,
+        )
+      }
+      const metadata = metadataByVintage.get(Number(election.statisticalAreaVintage))
+      if (!metadata?.has(componentStatAreaId)) {
+        throw new Error(
+          `${electionId} display group references unavailable area ${componentStatAreaId}`,
+        )
+      }
+
+      const componentOwners = componentOwnersByElection.get(electionId)
+      const existingOwner = componentOwners.get(componentStatAreaId)
+      if (existingOwner) {
+        throw new Error(
+          `${electionId} display component ${componentStatAreaId} is already assigned to ${existingOwner}`,
+        )
+      }
+      componentOwners.set(componentStatAreaId, displayGeographyId)
+
+      const electionGroups = groupsByElection.get(electionId)
+      const group = electionGroups.get(displayGeographyId) ?? {
+        displayGeographyId,
+        componentIds: [],
+        note,
+      }
+      group.componentIds.push(componentStatAreaId)
+      electionGroups.set(displayGeographyId, group)
+    }
+  }
+
+  return new Map(
+    [...groupsByElection].map(([electionId, groups]) => [
+      electionId,
+      [...groups.values()]
+        .map((group) => ({ ...group, componentIds: group.componentIds.toSorted() }))
+        .toSorted((left, right) =>
+          left.displayGeographyId.localeCompare(right.displayGeographyId),
+        ),
+    ]),
+  )
+}
+
+function applyMetadataNameOverrides(metadataById, overrides) {
+  const output = new Map(metadataById)
+  for (const [id, override] of overrides) {
     if (!override.nameHe && !override.nameEn) {
       continue
     }
-    const metadata = output.get(localityId)
-    output.set(localityId, {
+    const metadata = output.get(id)
+    output.set(id, {
       ...metadata,
       nameHe: override.nameHe || metadata.nameHe,
       nameEn: override.nameEn || metadata.nameEn,

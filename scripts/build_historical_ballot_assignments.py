@@ -266,6 +266,7 @@ def main() -> None:
             "source_row_uid",
             "target_locality_code",
             "assignment_method",
+            "assignment_source",
             "target_geography_type",
             "custom_geography_id",
         ]
@@ -432,6 +433,9 @@ def main() -> None:
                     single_stat = candidates[0]
                     single_method = "single_historical_stat_locality_name_fallback"
             if single_stat:
+                single_source = f"statistical_areas_{vintage}.metadata.csv"
+                if row.get("assignment_source", "") == "reviewed_composite_component_evidence":
+                    single_source += ";data/manual/historical_composite_ballot_components.csv"
                 election_output.append(
                     assigned_output(
                         row,
@@ -440,7 +444,7 @@ def main() -> None:
                         single_stat,
                         "single_historical_stat_assigned",
                         single_method,
-                        f"statistical_areas_{vintage}.metadata.csv",
+                        single_source,
                     )
                 )
             else:

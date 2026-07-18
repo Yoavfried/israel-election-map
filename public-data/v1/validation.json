@@ -2,7 +2,7 @@
   "schema_version": 2,
   "total_ballot_rows": 96529,
   "aggregate_joins": {
-    "geographic_aggregate_rows": 34016,
+    "geographic_aggregate_rows": 34024,
     "missing_aggregate_geometry_ids": 0
   },
   "elections": [
@@ -11,15 +11,15 @@
       "rows": 8426,
       "party_columns": 31,
       "stat_area_vintage": 1995,
-      "statistically_mapped_rows": 7815,
+      "statistically_mapped_rows": 7872,
       "reconstructed_stat_assignment_rows": 0,
       "reconstructed_stat_assignment_actual_voters": 0,
       "synthetic_assignment_rows": 0,
       "synthetic_assignment_actual_voters": 0,
       "assignment_evidence_classes": {
         "official_direct_crosswalk": 6117,
-        "deterministic_single_area_locality": 1698,
-        "unresolved": 415,
+        "deterministic_single_area_locality": 1755,
+        "unresolved": 358,
         "non_geographic": 152,
         "reviewed_custom_geography": 44
       },

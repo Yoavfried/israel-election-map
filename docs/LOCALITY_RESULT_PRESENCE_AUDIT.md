@@ -14,7 +14,7 @@ The structural exclusion was checked against the official 2022 CBS locality work
 
 ## Review Status
 
-The 36 features with no standalone K17-K25 result now have evidence-level explanations. The 80 partial-presence features still require historical and election-specific review. A `none` value in the reviewed-display column means that no explicit visibility decision has been recorded; it does not mean the explanation audit is missing.
+The 36 features with no standalone K17-K25 result now have evidence-level explanations. Of the 80 partial-presence features, Ganei Modi'in now has a supported explanation for every missing election and the other 79 still require historical and election-specific review. A `none` value in the reviewed-display column means that no explicit visibility decision has been recorded; it does not mean the explanation audit is missing.
 
 A joined polling area cannot be split back into locality-specific party totals. The published host row contains one secret-ballot aggregate for the host and every attached register, so moving the whole result to an attached locality would be incorrect.
 
@@ -30,13 +30,15 @@ The locality map substitutes reviewed host-plus-attached polygon unions only in 
 
 | Election | Combined polygons | Attached 2022 polygons | Evidence |
 |---|---|---|---|
-| K19 | 46 | 53 | exact host-level eligible-voter arithmetic |
-| K20 | 45 | 50 | official polling rows explicitly name the host |
+| K17 | 1 | 1 | official historical municipal membership |
+| K18 | 1 | 1 | official historical municipal membership |
+| K19 | 47 | 54 | exact host-level arithmetic or historical membership |
+| K20 | 46 | 51 | official polling rows or historical membership |
 | K25 | 5 | 6 | reviewed under-100 host-delta inference |
 
-Across elections, 33 of the 36 never-present meaningful polygons participate in at least one supported host union; the other 3 are the institution/place cases with no ordinary polling-list row. The unions also include 28 of the 80 partial-presence polygons where the source identifies their host.
+Across elections, 33 of the 36 never-present meaningful polygons participate in at least one supported host union; the other 3 are the institution/place cases with no ordinary polling-list row. The unions also include 29 of the 80 partial-presence polygons where the source identifies their host, including Ganei Modi'in with Modi'in Illit in K17-K20.
 
-K17-K18 and K21-K24 currently have no joined-polygon display rules because the available source rows do not establish the host relationship. 52 partial-presence polygons have no joined election yet, and all 80 partial histories still contain at least one missing election without a supported host rule.
+K21-K24 currently have no joined-polygon display rules because the available source rows do not establish the host relationship. Fifty-one partial-presence polygons have no joined election yet. Seventy-nine partial histories still contain at least one missing election without a supported host rule; Ganei Modi'in is now explained for every election in which it lacks a standalone result.
 
 ## Counts
 

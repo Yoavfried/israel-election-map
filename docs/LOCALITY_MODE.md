@@ -7,10 +7,15 @@ Last updated: 2026-07-15
 Locality result-row assignment and aggregation are complete for the current
 K17-K25 geographic scope. The 36 features with no standalone K17-K25 result
 have evidence-level explanations. Source-backed host/component unions are
-implemented for K19, K20, and five K25 cases; the remaining partial-presence
+implemented for K17-K20 and five K25 cases; the remaining partial-presence
 elections and most other visibility decisions are not yet reviewed.
 
-Current display geometry replaces 115 tiny West Bank proxies with audited ArcGIS footprints. Rotem, Maskiyot, Avnat, and Mavo'ot Yeriho remain fixed markers. Sha'ar Shomron uses its component-polygon union; the K25 Yitav/Mavo'ot joined result uses two marker points.
+Current display geometry replaces 115 tiny West Bank proxies with audited
+ArcGIS footprints. Rotem, Maskiyot, Avnat, and Mavo'ot Yeriho remain
+marker-capable because no accepted detailed boundary is available, but a
+marker is rendered only when the selected election has a result for its exact
+ID. Sha'ar Shomron uses its component-polygon union; the K25 Yitav/Mavo'ot
+joined result uses two marker points.
 
 Each ordinary ballot row already identifies an election locality. The reviewed locality crosswalk maps that identity directly to either:
 
@@ -29,14 +34,19 @@ Official envelope rows and reviewed special non-geographic rows are outside loca
 | K24 | 12,119 | 4,010,014 | 100% | 807 | 426,351 |
 | K23 | 10,623 | 4,284,014 | 100% | 556 | 331,121 |
 | K22 | 10,531 | 4,181,911 | 100% | 370 | 283,257 |
-| K21 | 10,453 | 4,098,687 | 100% | 312 | 241,566 |
+| K21 | 10,452 | 4,098,524 | 100% | 313 | 241,729 |
 | K20 | 10,112 | 4,019,324 | 100% | 302 | 235,414 |
 | K19 | 9,875 | 3,617,176 | 100% | 234 | 216,470 |
 | K18 | 9,259 | 3,229,261 | 100% | 5 | 187,326 |
 | K17 | 8,274 | 3,011,950 | 100% | 152 | 174,789 |
-| **Total** | **92,945** | **34,783,363** | **100%** | **3,584** | **2,559,861** |
+| **Total** | **92,944** | **34,783,200** | **100%** | **3,585** | **2,560,024** |
 
-The 92,945-row geographic scope includes 460 rows assigned to the four reviewed custom geographies. The remaining 59 rows, representing 6,317 actual voters, are reviewed special non-geographic rows and are not rendered as locality results.
+The 92,944-row geographic scope includes 525 rows assigned to the two reviewed
+custom geographies: the combined Negev tribal bucket and Hebron. The 3,585-row
+envelope/non-geographic total consists of 3,525 official envelope source rows
+plus 60 reviewed special rows representing 6,480 actual voters. Those special
+rows are included in the displayed envelope aggregate and are not rendered as
+locality results.
 
 ## Composite Municipalities
 
@@ -66,11 +76,18 @@ When an election source establishes that one or more 2022 localities were counte
 
 | Election | Combined host features | Attached 2022 polygons | Evidence |
 |---|---:|---:|---|
-| K19 | 46 | 53 | Exact polling-register arithmetic at host level |
-| K20 | 45 | 50 | Official ballot-register rows explicitly name the host |
+| K17 | 1 | 1 | Official historical municipal membership |
+| K18 | 1 | 1 | Official historical municipal membership |
+| K19 | 47 | 54 | Exact polling-register arithmetic or official historical membership |
+| K20 | 46 | 51 | Official ballot-register rows or historical membership |
 | K25 | 5 | 6 | Reviewed under-100 host-delta inference |
 
-The reviewed source of truth is `data/manual/joined_locality_composites.csv`. K17, K18, and K21-K24 currently have no joined-polygon rules because the available sources do not establish the host strongly enough. Historical attached registers that have no 2022 polygon remain part of the evidence and arithmetic but cannot add geometry or a name component.
+The reviewed source of truth is `data/manual/joined_locality_composites.csv`.
+Ganei Modi'in is joined to Modi'in Illit in K17-K20 because it remained part of
+that municipality until 2016. K21-K24 currently have no joined-polygon rules
+because the available sources do not establish a host strongly enough.
+Historical attached registers that have no 2022 polygon remain part of the
+evidence and arithmetic but cannot add geometry or a name component.
 
 Canonical `data/processed/public/locality_results/*.csv` rows remain under the published host locality. During the web build, the compiler aliases that one host result to the combined display feature and hides all of its component geometries for that election. It rejects a union if an attached component has its own standalone result or if two unions claim the same host, preventing duplicated votes.
 
@@ -84,9 +101,14 @@ The reviewed source of truth for historical names and no-result visibility is `d
 
 The compiler rejects a display rule that hides a locality in an election where that locality has a result row. Joined-register rules use the separate aliasing contract above: they replace the one host result with one combined-feature result, never copy it onto multiple components.
 
+Statistical-area presentation has a separate reviewed table,
+`data/manual/statistical_area_display_overrides.csv`. It hides the standalone
+Ganei Modi'in display proxy in K19 and K20, when its geometry and result belong
+with Modi'in Illit, without changing or deleting the canonical source feature.
+
 The reproducible result-presence audit is `docs/LOCALITY_RESULT_PRESENCE_AUDIT.md`, with the complete 116-row exception inventory in `docs/LOCALITY_RESULT_PRESENCE_AUDIT.csv`. Of 1,227 meaningful locality/institution features, 1,111 have standalone results in all nine elections, 80 in some elections, and 36 in none. A separate 160 source features are structural facility, regional-council, or no-jurisdiction display footprints rather than candidate election localities.
 
-The 36 no-standalone-result features are now reviewed at the evidence level: 28 are exact joined-register matches, two explicitly locate the attached register at its host, three are strong under-100 host inferences, and three have no ordinary polling-list row in the available K17-K25 sources. Across elections, 33 of those 36 participate in at least one supported host union. Joined-register display rules also cover at least one missing election for 28 of the 80 partial-presence polygons when the K19 or K20 source establishes their host. The other 52 have no joined election yet, and all 80 still have at least one unresolved election gap. `נירן`/`נערן`, `אבנת`, `מבואות יריחו`, the historical composite municipalities, and the supported joined-register unions record the display decisions reviewed so far. A row without a display rule remains visible or neutral by default; that is not a final visibility decision.
+The 36 no-standalone-result features are now reviewed at the evidence level: 28 are exact joined-register matches, two explicitly locate the attached register at its host, three are strong under-100 host inferences, and three have no ordinary polling-list row in the available K17-K25 sources. Across elections, 33 of those 36 participate in at least one supported host union. Joined-register display rules also cover at least one missing election for 29 of the 80 partial-presence polygons, using K19/K20 source evidence or Ganei Modi'in's historical municipal membership. Fifty-one have no joined election yet, and 79 still have at least one unresolved election gap. `נירן`/`נערן`, `אבנת`, `מבואות יריחו`, the historical composite municipalities, and the supported joined-register unions record the display decisions reviewed so far. A row without a display rule remains visible or neutral by default; that is not a final visibility decision.
 
 ## Envelope Results
 
@@ -106,6 +128,11 @@ Locality and statistical-area assignment are independent products:
   ballot-to-area evidence exists for it.
 
 The final assignment table exposes this distinction through `locality_assignment_status`, `locality_geography_type`, `locality_geography_id`, `locality_result_code`, `locality_result_name`, and `is_locality_mapped` alongside the existing statistical-area assignment fields.
+
+The neutral backdrop is also independent of results. All detailed West Bank
+locality footprints are cut out of that backdrop before historical geometry is
+drawn, preventing current Ma'ale Adumim, Ariel, Beitar Illit, and Modi'in Illit
+shapes from appearing underneath election-vintage polygons.
 
 ## Web Data Contract
 

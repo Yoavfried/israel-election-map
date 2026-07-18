@@ -57,9 +57,10 @@ python scripts/run_pipeline.py --skip-geographies
 4. direct official K23 CEC AGS;
 5. approved exact ArcGIS residual reconstruction;
 6. official CBS stable-ballot propagation with same-vintage consensus;
-7. a locality fallback only when one historical area exists;
-8. reviewed custom geography where no supported historical area exists;
-9. unresolved historical assignment.
+7. reviewed K17/K18 composite polling-register component evidence;
+8. a locality fallback only when one historical area exists;
+9. reviewed custom geography where no supported historical area exists;
+10. unresolved historical assignment.
 
 The output adds three general provenance fields:
 
@@ -108,11 +109,21 @@ Only reviewed, unique, exact residual partitions are staged. The current result
 is nine K21 rows and zero K20 rows. No ArcGIS party or vote value enters the
 official election fact table.
 
+### Composite Polling Registers
+
+`scripts/build_assignment_plan.py` validates the reviewed station ranges in
+`data/manual/historical_composite_ballot_components.csv` against exact expected
+row counts and rejects overlaps. The evidence identifies 164 K17/K18 rows with
+their component locality. It supports an area link only when that component has
+one canonical area in the active historical vintage; otherwise the component
+identity is retained without inventing an area number.
+
 ### Gap And Polygon Audit
 
-`scripts/audit_historical_assignment_gaps.py` classifies all 5,605 pending rows,
+`scripts/audit_historical_assignment_gaps.py` classifies all 5,548 pending rows,
 compares K20/K21 detailed ArcGIS polygons where applicable, and writes
-election-level polygon coverage and cross-election persistence tables.
+election-level polygon coverage, recurring crosswalk-locality omission, and
+cross-election persistence tables.
 Demographic population is labeled as a proxy and never treated as an
 election-specific eligibility count.
 
@@ -124,15 +135,24 @@ election-specific eligibility count.
 - preserves distinct election-area IDs and ignores demographic reference fields
   as union instructions;
 - produces stable IDs `stat<vintage>:<combined-code>`;
-- constructs one 1995 target from the official transition key;
+- constructs two 1995 targets from official transition keys, including the
+  reverse-transition union for Modi'in Illit;
 - adds 32 exact-ID 2011 geometry supplements from audited ArcGIS layers;
 - creates separate display geometry with detailed footprints where canonical
   shapes are schematic;
-- clips historical replacements against neighbors and uses markers for
-  materially overlapping non-exclusive supplements;
+- clips ordinary historical replacements against neighbors;
+- marks all derivative tribal components as non-exclusive and combines them
+  into one presentation-only marker in the web map, while retaining every exact
+  component ID and result in the published data tables;
+- preserves the reviewed detailed Ganei Modi'in overlay from K21;
+- reuses the exact detailed Hebron footprint for the K17/K18 custom target and
+  renders K17 Yehud statistical area 8 on the reviewed historical Newe Efrayim
+  component polygon without changing its official transition assignment ID;
 - never imports ArcGIS election totals.
 
-Canonical feature counts are 2,660 for 1995, 3,030 for 2008, and 3,115 for
+The build summary separately inventories raw records, assignable IDs, multipart
+pieces, structural exclusions, and supplements. Canonical feature counts are
+2,661 for 1995, 3,030 for 2008, and 3,115 for
 2011. `scripts/build_geographies.py` separately builds the 3,857-feature 2022
 package for current locality display and future direct-crosswalk elections.
 
@@ -149,7 +169,9 @@ package for current locality display and future direct-crosswalk elections.
 - `data/processed/audits/stable_ballot_*`
 - `data/processed/audits/arcgis_assignment_reconstruction_*`
 - `data/processed/audits/historical_assignment_gap_*`
+- `data/processed/audits/historical_crosswalk_locality_omission_recurrence.csv`
 - `data/processed/audits/historical_polygon_*`
+- `data/processed/geographies/historical_geography_build_summary.json`
 - `data/processed/public/<mode>/*.csv`
 
 The curated repository release is written separately:
@@ -173,7 +195,7 @@ Verified from the offline rebuild on 2026-07-18:
 
 | Election | Vintage | Supported rows | Pending rows | Supported voter share | Locality share |
 |---|---:|---:|---:|---:|---:|
-| K17 | 1995 | 7,859 | 415 | 94.68% | 100% |
+| K17 | 1995 | 7,916 | 358 | 95.47% | 100% |
 | K18 | 2008 | 8,740 | 519 | 94.13% | 100% |
 | K19 | 2011 | 9,311 | 564 | 94.08% | 100% |
 | K20 | 2011 | 9,521 | 591 | 93.31% | 100% |
@@ -192,6 +214,14 @@ Verified from the offline rebuild on 2026-07-18:
   locality display unions.
 - `data/manual/locality_display_overrides.csv` controls reviewed historical
   names and visibility.
+- `data/manual/statistical_area_display_overrides.csv` controls reviewed
+  election-specific statistical-area visibility and names without changing
+  canonical geometry or assignment identifiers.
+- `data/manual/statistical_area_display_groups.csv` records presentation-only
+  result grouping and marker treatment for component areas whose available
+  footprints cannot be displayed as exclusive geography.
+- `data/manual/historical_composite_ballot_components.csv` preserves reviewed
+  K17/K18 polling-register ranges and component-locality evidence.
 - `data/manual/historical_stat_area_overrides.csv` records five reviewed K19
   target corrections.
 - `data/manual/arcgis_assignment_reconstruction_reviews.csv` records approved

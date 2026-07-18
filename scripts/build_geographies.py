@@ -13,7 +13,7 @@ import geopandas as gpd
 import pandas as pd
 from pyproj import Transformer
 from shapely import union_all
-from shapely.geometry import Point
+from shapely.geometry import GeometryCollection, MultiPolygon, Point, Polygon
 from shapely.ops import transform
 
 from pipeline_common import MANUAL_DIR, PROCESSED_DIR, RAW_DIR, ensure_dir, write_csv, write_json
@@ -38,42 +38,29 @@ CUSTOM_GEOGRAPHIES = [
     {
         "custom_id": "custom:tribal_negev",
         "custom_key": "TRIBE",
-        "name_he": "שבטים / פזורה בנגב",
+        "name_he": "\u05e9\u05d1\u05d8\u05d9\u05dd / \u05e4\u05d6\u05d5\u05e8\u05d4 \u05d1\u05e0\u05d2\u05d1",
         "name_en": "Negev tribal/dispersed-settlement bucket",
+        "geometry_kind": "reviewed_buffer",
         "lon": 34.93,
         "lat": 31.22,
         "radius_m": 3500,
+        "display_mode": "marker",
+        "geometry_source": "reviewed_synthetic_buffer",
         "note": "Synthetic point-size polygon for reviewed tribal/dispersed-settlement rows.",
     },
     {
         "custom_id": "custom:hebron",
         "custom_key": "HEBRON",
-        "name_he": "חברון",
+        "name_he": "\u05d7\u05d1\u05e8\u05d5\u05df",
         "name_en": "Hebron custom bucket",
-        "lon": 35.0998,
-        "lat": 31.5326,
-        "radius_m": 2500,
-        "note": "Synthetic point-size polygon for reviewed Hebron rows.",
-    },
-    {
-        "custom_id": "custom:northern_samaria_evacuated_localities",
-        "custom_key": "N.S.",
-        "name_he": "יישובי צפון השומרון שפונו",
-        "name_en": "Northern Samaria evacuated localities bucket",
-        "lon": 35.18,
-        "lat": 32.43,
-        "radius_m": 3000,
-        "note": "Synthetic point-size polygon for reviewed Northern Samaria evacuated-locality rows.",
-    },
-    {
-        "custom_id": "custom:gaza_evacuated_localities",
-        "custom_key": "GAZA",
-        "name_he": "יישובי גוש קטיף / רצועת עזה שפונו",
-        "name_en": "Gaza evacuated localities bucket",
-        "lon": 34.36,
-        "lat": 31.35,
-        "radius_m": 4500,
-        "note": "Synthetic point-size polygon for reviewed Gaza evacuated-locality rows.",
+        "geometry_kind": "arcgis_exact_id",
+        "source_path": "elections2015_statistical_areas.geojson",
+        "source_id_field": "YeshuvStat",
+        "source_id": 34000001,
+        "source_stat_area_id": "stat2011:34000001",
+        "display_mode": "polygon",
+        "geometry_source": "arcgis_systematics_elections2015_exact_id_reuse",
+        "note": "Detailed Hebron footprint reused from the audited 2011 exact-ID geometry.",
     },
 ]
 
@@ -444,9 +431,39 @@ def custom_geographies() -> gpd.GeoDataFrame:
 
     features = []
     for item in CUSTOM_GEOGRAPHIES:
-        point_itm = transform(to_itm.transform, Point(item["lon"], item["lat"]))
-        polygon_wgs84 = transform(to_wgs84.transform, point_itm.buffer(item["radius_m"], quad_segs=48))
-        features.append({**item, "geometry": polygon_wgs84})
+        record = dict(item)
+        geometry_kind = record.pop("geometry_kind")
+        if geometry_kind == "reviewed_buffer":
+            point_itm = transform(
+                to_itm.transform,
+                Point(record["lon"], record["lat"]),
+            )
+            geometry = transform(
+                to_wgs84.transform,
+                point_itm.buffer(record["radius_m"], quad_segs=48),
+            )
+        elif geometry_kind == "arcgis_exact_id":
+            source_path = ARCGIS_DIR / str(record.pop("source_path"))
+            source_id_field = str(record.pop("source_id_field"))
+            source_id = int(record.pop("source_id"))
+            if not source_path.exists():
+                raise FileNotFoundError(
+                    f"Missing custom-geometry source: {source_path}"
+                )
+            source = gpd.read_file(source_path, engine="pyogrio")
+            source_ids = pd.to_numeric(
+                source[source_id_field], errors="coerce"
+            ).round().astype("Int64")
+            matches = source[source_ids == source_id]
+            if len(matches) != 1:
+                raise ValueError(
+                    f"Expected one {source_id_field}={source_id} feature in "
+                    f"{source_path.name}, found {len(matches)}"
+                )
+            geometry = matches.to_crs("EPSG:4326").geometry.iloc[0]
+        else:
+            raise ValueError(f"Unknown custom geometry kind: {geometry_kind}")
+        features.append({**record, "geometry": geometry})
 
     return gpd.GeoDataFrame(features, geometry="geometry", crs="EPSG:4326")
 
@@ -457,19 +474,44 @@ def simplify(gdf: gpd.GeoDataFrame, tolerance: float) -> gpd.GeoDataFrame:
     return simplified
 
 
+def polygonal_geometry(geometry: Any) -> Polygon | MultiPolygon:
+    if isinstance(geometry, (Polygon, MultiPolygon)):
+        return geometry
+    if isinstance(geometry, GeometryCollection):
+        parts = [
+            polygonal_geometry(part)
+            for part in geometry.geoms
+            if isinstance(part, (Polygon, MultiPolygon, GeometryCollection))
+        ]
+        polygonal = [part for part in parts if not part.is_empty]
+        return union_all(polygonal) if polygonal else Polygon()
+    return Polygon()
+
+
+def simplify_polygonal(
+    gdf: gpd.GeoDataFrame, tolerance: float
+) -> gpd.GeoDataFrame:
+    simplified = simplify(gdf, tolerance)
+    simplified["geometry"] = simplified.geometry.map(polygonal_geometry)
+    if simplified.geometry.is_empty.any():
+        raise ValueError("Polygon simplification removed all polygonal geometry")
+    return simplified
+
+
 def build_statistical_area_land_backdrop(
     localities: gpd.GeoDataFrame,
 ) -> gpd.GeoDataFrame:
     projected = localities.to_crs("EPSG:2039").copy()
     locality_codes = pd.to_numeric(projected["locality_code"], errors="coerce").astype("Int64")
-    proxy_codes = WEST_BANK_DETAIL_CODES | SPECIAL_POINT_PROXY_LOCALITY_CODES
-    point_proxy = locality_codes.isin(proxy_codes) & (
+    west_bank_locality = locality_codes.isin(WEST_BANK_DETAIL_CODES)
+    point_proxy = locality_codes.isin(SPECIAL_POINT_PROXY_LOCALITY_CODES) & (
         projected.geometry.area < POINT_PROXY_MAX_AREA_M2
     )
-    included = projected[(locality_codes != 9920) & ~point_proxy]
+    included = projected[(locality_codes != 9920) & ~west_bank_locality & ~point_proxy]
     coverage = union_all(included.geometry.to_numpy())
     if not coverage.is_valid:
         coverage = gpd.GeoSeries([coverage], crs=projected.crs).make_valid().iloc[0]
+    coverage = polygonal_geometry(coverage)
     if coverage.is_empty:
         raise ValueError("Could not build the statistical-area land backdrop")
 
@@ -548,7 +590,10 @@ def main() -> None:
             OUT_DIR / "localities_2022_dissolved.display.simplified.geojson",
         )
         write_geojson(
-            simplify(statistical_area_land_backdrop, args.simplify_tolerance * 10),
+            simplify_polygonal(
+                statistical_area_land_backdrop,
+                args.simplify_tolerance * 10,
+            ),
             OUT_DIR / "statistical_area_land_backdrop.simplified.geojson",
         )
         write_geojson(

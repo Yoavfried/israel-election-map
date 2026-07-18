@@ -48,9 +48,10 @@ Production stages:
   the unique historical-area locality fallback.
 - `audit_arcgis_assignment_reconstruction.py` emits K20/K21 unique exact
   partition candidates, checks valid/invalid totals per residual area, and
-  attaches the reviewed Tier A decisions.
+  attaches the reviewed decisions. The published approvals are one Tier A and
+  one Tier C K21 partition; no tolerance-based Tier B decision is accepted.
 - `build_final_geography_assignments.py` writes independent locality and
-  statistical-area assignment fields and applies only current reviewed Tier A
+  statistical-area assignment fields and applies only approved exact
   reconstructions after official crosswalk assignments.
 - `build_public_outputs.py` writes aggregates, contributions, coverage, and
   pending rows.

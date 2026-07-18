@@ -132,6 +132,10 @@ def normalized_code(value: Any) -> str:
         return ""
 
 
+def normalized_name(value: Any) -> str:
+    return " ".join(str(value or "").strip().split())
+
+
 def truthy(value: Any) -> bool:
     return str(value).strip().lower() in {"true", "1", "yes"}
 
@@ -302,6 +306,7 @@ def effective_locality_code(row: pd.Series) -> str:
 def gap_reason(
     row: pd.Series,
     metadata_localities: dict[int, set[str]],
+    metadata_locality_names: dict[int, dict[str, set[str]]],
     crosswalk_localities: set[tuple[str, str]],
 ) -> tuple[str, str, str, str]:
     election = str(row["election"])
@@ -315,6 +320,26 @@ def gap_reason(
             "intentionally_locality_only",
             "high",
             "Ballot 990 is a central ballot for voters registered in the locality without a supported area-level allocation; in this multi-area locality no statistical-area assignment is defensible.",
+        )
+    component_evidence = (
+        str(row.get("final_assignment_source", ""))
+        == "reviewed_composite_component_evidence"
+    )
+    if component_evidence and locality_code:
+        target_name = normalized_name(row.get("locality_name", ""))
+        active_names = metadata_locality_names[vintage].get(locality_code, set())
+        if locality_code not in metadata_localities[vintage] or target_name not in active_names:
+            return (
+                "component_locality_nested_in_historical_composite_geography",
+                "component_identity_only_with_current_sources",
+                "high",
+                "The polling-place register identifies the component locality, but the active historical layer stores that land only under the election-time composite municipality. No ballot-to-area crosswalk separates the component within that parent geography.",
+            )
+        return (
+            "component_locality_multiple_areas_without_crosswalk",
+            "component_identity_only_with_current_sources",
+            "high",
+            "The polling-place register identifies the component locality, but that component contains multiple areas in the active vintage and no ballot-to-area crosswalk supports a unique one.",
         )
     if not locality_code:
         if election == "K17" and row.get("source_locality_name", "") in {
@@ -336,10 +361,10 @@ def gap_reason(
         )
     if locality_code not in metadata_localities[vintage]:
         return (
-            "locality_absent_from_historical_geography",
+            "locality_identity_absent_from_active_historical_vintage",
             "irreducible_with_current_sources",
             "high",
-            "The election locality has no polygon in the compatible historical statistical-area vintage; a later-vintage polygon is not substituted.",
+            "No statistical-area identity exists for this independent locality in the active historical vintage. Its land may be present under an older parent or surrounding locality, but a later-vintage boundary is not silently substituted.",
         )
     if (election, locality_code) not in crosswalk_localities:
         return (
@@ -390,13 +415,29 @@ def build_gap_rows(
         )
         for vintage in set(ELECTION_VINTAGES.values())
     }
+    metadata_locality_names: dict[int, dict[str, set[str]]] = {}
+    for vintage in set(ELECTION_VINTAGES.values()):
+        vintage_rows = metadata[metadata["stat_area_vintage"] == str(vintage)]
+        metadata_locality_names[vintage] = {
+            str(code): {
+                normalized_name(value)
+                for value in group["locality_name_he"]
+                if normalized_name(value)
+            }
+            for code, group in vintage_rows.groupby("locality_code")
+        }
     crosswalk_localities = {
         (str(row["election"]), normalized_code(row["locality_code"]))
         for row in crosswalk.to_dict("records")
         if normalized_code(row["locality_code"])
     }
     reasons = pending.apply(
-        lambda row: gap_reason(row, metadata_localities, crosswalk_localities),
+        lambda row: gap_reason(
+            row,
+            metadata_localities,
+            metadata_locality_names,
+            crosswalk_localities,
+        ),
         axis=1,
         result_type="expand",
     )
@@ -533,6 +574,59 @@ def build_election_summary(gaps: pd.DataFrame) -> pd.DataFrame:
     totals = totals[grouped.columns]
     return pd.concat([grouped, totals], ignore_index=True).sort_values(
         ["election", "gap_reason_code"], kind="stable"
+    )
+
+
+def build_crosswalk_omission_recurrence(gaps: pd.DataFrame) -> pd.DataFrame:
+    omitted = gaps[
+        gaps["gap_reason_code"] == "entire_locality_omitted_from_official_crosswalk"
+    ].copy()
+    columns = [
+        "effective_locality_code",
+        "effective_locality_name",
+        "omitted_elections",
+        "omitted_election_count",
+        "pending_ballot_rows",
+        "pending_eligible_voters",
+        "pending_actual_voters",
+        "recurrence_class",
+    ]
+    if omitted.empty:
+        return pd.DataFrame(columns=columns)
+    recurrence = (
+        omitted.groupby("effective_locality_code", as_index=False)
+        .agg(
+            effective_locality_name=(
+                "effective_locality_name",
+                lambda values: next((value for value in values if value), ""),
+            ),
+            omitted_elections=(
+                "election",
+                lambda values: "|".join(
+                    sorted(set(values), key=lambda value: int(str(value)[1:]))
+                ),
+            ),
+            omitted_election_count=("election", lambda values: len(set(values))),
+            pending_ballot_rows=("source_row_uid", "count"),
+            pending_eligible_voters=("eligible_voters", "sum"),
+            pending_actual_voters=("actual_voters", "sum"),
+        )
+    )
+    recurrence["recurrence_class"] = recurrence["omitted_election_count"].map(
+        lambda count: (
+            "all_nine_elections"
+            if count == len(ELECTION_VINTAGES)
+            else "seven_or_eight_elections"
+            if count >= 7
+            else "four_to_six_elections"
+            if count >= 4
+            else "one_to_three_elections"
+        )
+    )
+    return recurrence[columns].sort_values(
+        ["omitted_election_count", "effective_locality_code"],
+        ascending=[False, True],
+        kind="stable",
     )
 
 
@@ -964,6 +1058,117 @@ def build_polygon_summary(coverage: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+def build_municipality_assignment_audit(coverage: pd.DataFrame) -> pd.DataFrame:
+    """Summarize ballot and polygon gaps in municipalities with some assignment."""
+    rows: list[dict[str, Any]] = []
+    for (election, locality_code), group in coverage.groupby(
+        ["election", "locality_code"], sort=True
+    ):
+        assigned = group[group["assigned_ballot_rows"] > 0]
+        if assigned.empty:
+            continue
+        empty = group[group["assigned_ballot_rows"] == 0]
+        first = group.iloc[0]
+        pending_rows = integer(first["locality_pending_ballot_rows"])
+        actionable_pending_rows = integer(
+            first["locality_actionable_pending_ballot_rows"]
+        )
+        empty_positive_population = empty[empty["population_proxy"] > 0]
+        empty_official_electorate = empty[
+            empty["arcgis_eligible_voters"] > 0
+        ]
+        intentionally_locality_only_rows = pending_rows - actionable_pending_rows
+        if actionable_pending_rows and len(empty):
+            review_status = "unassigned_ballots_and_empty_polygons"
+        elif actionable_pending_rows:
+            review_status = "unassigned_ballots_only"
+        elif len(empty):
+            review_status = "empty_polygons_only"
+        else:
+            review_status = "complete_within_available_evidence"
+        rows.append(
+            {
+                "election": election,
+                "stat_area_vintage": first["stat_area_vintage"],
+                "locality_code": locality_code,
+                "locality_name_he": first["locality_name_he"],
+                "locality_name_en": first["locality_name_en"],
+                "review_status": review_status,
+                "locality_ballot_rows": integer(first["locality_ballot_rows"]),
+                "assigned_ballot_rows": int(assigned["assigned_ballot_rows"].sum()),
+                "unassigned_ballot_rows": pending_rows,
+                "actionable_unassigned_ballot_rows": actionable_pending_rows,
+                "intentionally_locality_only_ballot_rows": (
+                    intentionally_locality_only_rows
+                ),
+                "locality_eligible_voters": integer(first["locality_eligible_voters"]),
+                "assigned_eligible_voters": int(
+                    assigned["assigned_eligible_voters"].sum()
+                ),
+                "unassigned_eligible_voters": integer(
+                    first["locality_pending_eligible_voters"]
+                ),
+                "actionable_unassigned_eligible_voters": integer(
+                    first["locality_actionable_pending_eligible_voters"]
+                ),
+                "intentionally_locality_only_eligible_voters": (
+                    integer(first["locality_pending_eligible_voters"])
+                    - integer(first["locality_actionable_pending_eligible_voters"])
+                ),
+                "locality_actual_voters": integer(first["locality_actual_voters"]),
+                "assigned_actual_voters": int(
+                    assigned["assigned_actual_voters"].sum()
+                ),
+                "unassigned_actual_voters": integer(
+                    first["locality_pending_actual_voters"]
+                ),
+                "actionable_unassigned_actual_voters": integer(
+                    first["locality_actionable_pending_actual_voters"]
+                ),
+                "intentionally_locality_only_actual_voters": (
+                    integer(first["locality_pending_actual_voters"])
+                    - integer(first["locality_actionable_pending_actual_voters"])
+                ),
+                "statistical_area_polygons": len(group),
+                "polygons_with_assigned_ballots": len(assigned),
+                "empty_polygons": len(empty),
+                "empty_polygons_with_positive_population_proxy": len(
+                    empty_positive_population
+                ),
+                "empty_positive_population_proxy": int(
+                    empty_positive_population["population_proxy"].sum()
+                ),
+                "empty_positive_age_20_plus_population_proxy": int(
+                    empty_positive_population["age_20_plus_population_proxy"].sum()
+                ),
+                "empty_polygons_with_official_arcgis_electorate": len(
+                    empty_official_electorate
+                ),
+                "empty_polygon_arcgis_eligible_voters": int(
+                    empty_official_electorate["arcgis_eligible_voters"].sum()
+                ),
+                "empty_polygon_arcgis_actual_voters": int(
+                    empty_official_electorate["arcgis_actual_voters"].sum()
+                ),
+                "gap_reason_codes": first["locality_gap_reason_codes"],
+            }
+        )
+    result = pd.DataFrame(rows)
+    if result.empty:
+        return result
+    return result.sort_values(
+        [
+            "election",
+            "unassigned_actual_voters",
+            "empty_polygons_with_positive_population_proxy",
+            "empty_polygons",
+            "locality_code",
+        ],
+        ascending=[True, False, False, False, True],
+        kind="stable",
+    )
+
+
 def main() -> None:
     sys.stdout.reconfigure(encoding="utf-8")
     assignments = read_csv(ASSIGNMENTS)
@@ -983,11 +1188,15 @@ def main() -> None:
     )
     locality_summary = build_locality_summary(gaps)
     election_summary = build_election_summary(gaps)
+    omission_recurrence = build_crosswalk_omission_recurrence(gaps)
     polygon_coverage = build_polygon_coverage(
         assignments, gaps, metadata, population, arcgis_totals
     )
     polygon_persistence = build_polygon_persistence(polygon_coverage)
     polygon_summary = build_polygon_summary(polygon_coverage)
+    municipality_assignment_audit = build_municipality_assignment_audit(
+        polygon_coverage
+    )
 
     expected_pending = assignments[
         assignments["geography_assignment_status"].isin(PENDING_STATUSES)
@@ -1004,12 +1213,20 @@ def main() -> None:
     write_frame(
         OUT_DIR / "historical_assignment_gap_summary.csv", election_summary
     )
+    write_frame(
+        OUT_DIR / "historical_crosswalk_locality_omission_recurrence.csv",
+        omission_recurrence,
+    )
     write_frame(OUT_DIR / "historical_polygon_coverage.csv", polygon_coverage)
     write_frame(
         OUT_DIR / "historical_polygon_assignment_persistence.csv",
         polygon_persistence,
     )
     write_frame(OUT_DIR / "historical_polygon_coverage_summary.csv", polygon_summary)
+    write_frame(
+        OUT_DIR / "historical_municipality_assignment_audit.csv",
+        municipality_assignment_audit,
+    )
 
     reason_counts = (
         gaps.groupby(["election", "gap_reason_code"], as_index=False)
@@ -1034,6 +1251,17 @@ def main() -> None:
                 ).sum()
             ),
             "reason_counts": reason_counts,
+            "crosswalk_localities_omitted_in_all_nine_elections": int(
+                (
+                    omission_recurrence["omitted_election_count"]
+                    == len(ELECTION_VINTAGES)
+                ).sum()
+            ),
+            "crosswalk_omission_context": (
+                "CBS methodology documents incomplete residential address anchoring "
+                "in 36 of 38 Arab and Druze statistical-area localities. The recurrence "
+                "table is an observed source-coverage audit, not an ethnicity classifier."
+            ),
             "polygon_summary": polygon_summary.to_dict("records"),
             "polygon_persistence_status_counts": {
                 str(key): int(value)

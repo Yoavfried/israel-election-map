@@ -15,14 +15,20 @@ describe('map presentation rules', () => {
     ).toBe(true)
     expect(mayHaveDisplayMarker(record('loc:1791', 'locality', 'loc:1791', '1791'))).toBe(true)
     expect(mayHaveDisplayMarker(record('loc:3488', 'locality', 'loc:3488', '3488'))).toBe(true)
+    expect(
+      mayHaveDisplayMarker(
+        record('stat1995:9400008', 'statistical-area', 'loc:9400', '9400008'),
+      ),
+    ).toBe(true)
     expect(mayHaveDisplayMarker(record('loc:3000', 'locality', 'loc:3000', '3000'))).toBe(false)
   })
 
-  it('includes custom markers only with data and excludes election-hidden markers', () => {
+  it('includes only markers with data and excludes election-hidden markers', () => {
     const filter = buildMarkerVisibilityFilter(
       [
         record('custom:hebron', 'custom', null, 'HEBRON'),
         record('loc:3616', 'locality', 'loc:3616', '3616'),
+        record('loc:3000', 'locality', 'loc:3000', '3000'),
       ],
       ['loc:3778', 'loc:3720'],
     )
@@ -30,20 +36,29 @@ describe('map presentation rules', () => {
     expect(filter).toEqual([
       'all',
       ['!', ['in', ['get', 'id'], ['literal', ['loc:3720', 'loc:3778']]]],
+      ['in', ['get', 'id'], ['literal', ['custom:hebron', 'loc:3616']]],
+    ])
+  })
+
+  it('keeps Kinneret, hidden areas, and inactive custom polygons out of the fill layer', () => {
+    expect(
+      buildPolygonVisibilityFilter(
+        ['loc:628', 'loc:9920'],
+        [
+          record('custom:hebron', 'custom', null, 'HEBRON'),
+          record('stat2011:34000001', 'statistical-area', 'loc:3400', '1'),
+        ],
+      ),
+    ).toEqual([
+      'all',
+      ['!=', ['get', 'displayMode'], 'marker'],
+      ['!=', ['get', 'localityCode'], '9920'],
+      ['!', ['in', ['get', 'id'], ['literal', ['loc:628', 'loc:9920']]]],
       [
         'any',
         ['!=', ['get', 'geographyType'], 'custom'],
         ['in', ['get', 'id'], ['literal', ['custom:hebron']]],
       ],
-    ])
-  })
-
-  it('keeps Kinneret and election-hidden locality polygons out of the fill layer', () => {
-    expect(buildPolygonVisibilityFilter(['loc:628', 'loc:9920'])).toEqual([
-      'all',
-      ['!=', ['get', 'displayMode'], 'marker'],
-      ['!=', ['get', 'localityCode'], '9920'],
-      ['!', ['in', ['get', 'id'], ['literal', ['loc:628', 'loc:9920']]]],
     ])
   })
 })

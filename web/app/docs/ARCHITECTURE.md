@@ -49,7 +49,7 @@ Zod-validated browser data client
 MapLibre feature state + React detail panels
 ```
 
-The browser loads the catalog first, then only the selected election/mode result file. Each election carries `geographiesByMode`, so statistical geometry changes with the election: K17 loads 1995, K18 loads 2008, and K19-K25 load 2011. Locality mode uses dissolved 2022 geometry. Statistical assets also declare a simplified, non-interactive 2022 land backdrop; MapLibre paints it neutral grey below the historical result polygons so changing vintage does not turn uncovered Israeli land into background. The compiler removes source-only fields and rounds web coordinates to six decimal places. Each geography asset also has marker GeoJSON for custom buckets and remaining point-like proxies; detailed settlement footprints remain polygonal.
+The browser loads the catalog first, then only the selected election/mode result file. Each election carries `geographiesByMode`, so statistical geometry changes with the election: K17 loads 1995, K18 loads 2008, and K19-K25 load 2011. Locality mode uses dissolved 2022 geometry. Statistical assets also declare a simplified, non-interactive 2022 land backdrop; MapLibre paints it neutral grey below the historical result polygons so changing vintage does not turn uncovered Israeli land into background. The compiler removes source-only fields and rounds web coordinates to six decimal places. Each geography asset also has marker GeoJSON for marker-capable custom buckets and point-like proxies. The marker layer filters that asset to exact IDs present in the selected result payload, while reviewed detailed settlement and custom footprints remain polygonal.
 
 Locality geometry retains CBS no-jurisdiction and regional-council display footprints even when they have no election result. MapLibre renders these features with the neutral unmapped fill and does not make them selectable. Both the statistical-area and locality IDs for Kinneret are filtered from polygon rendering, leaving water and non-polygon background areas unfilled.
 
@@ -101,7 +101,7 @@ Cross-election lineage is intentionally not inferred. A shared ballot-letter col
 
 ## Geometry strategy
 
-The compiler publishes separate pruned GeoJSON assets for 1995, 2008, 2011, and 2022 statistical areas plus current localities. `scripts/build_geographies.py` also dissolves the visible locality footprints into a compact land backdrop, excluding Kinneret and unresolved tiny point proxies. Schema version 3 keeps the result contract stable while allowing an election to select its own geometry, marker, and optional backdrop URLs.
+The compiler publishes separate pruned GeoJSON assets for 1995, 2008, 2011, and 2022 statistical areas plus current localities. `scripts/build_geographies.py` also dissolves the visible locality footprints into a compact land backdrop, excluding Kinneret, every detailed West Bank locality footprint, and unresolved tiny point proxies. Polygon-only normalization after simplification prevents stray geometry collections. Schema version 3 keeps the result contract stable while allowing an election to select its own geometry, marker, and optional backdrop URLs.
 
 The migration boundary for production is intentionally narrow: replace each catalog `geometryUrl` with a PMTiles/vector-tile source and adapt only `MapCanvas`. Result contracts, controls, localization, feature IDs, and panels remain unchanged.
 
@@ -125,14 +125,14 @@ Move to tiles before public launch if any of these remain true after compression
 - The UI never interprets an absent polygon result as zero votes.
 - Mapped coverage is shown for every election and is prominent while it remains partial.
 - Coverage is mode-specific: locality result-row coverage is complete;
-  historical statistical coverage ranges from 92.37% to 99.30% by election.
+  historical statistical coverage ranges from 93.06% to 95.47% by election.
   The partial-presence locality audit remains open.
 - Envelope votes are excluded from polygon coverage and remain visible through the separate national result control.
 - Active composite localities hide their 2022 component features; inactive composites are hidden. A joined-register union replaces exactly one published host result and is rejected if another union claims that host or an attached component has a standalone result. Its visible title/code remain the host's, and attached polygon names are exposed separately through the details-panel info tooltip. Other hidden-result conflicts remain fatal.
-- `data/manual/locality_display_overrides.csv` can preserve an election-time name on 2022 geometry or hide a reviewed feature that has no standalone result. The geometry remains canonical and the same hidden-result rejection applies.
+- `data/manual/locality_display_overrides.csv` can preserve an election-time name on 2022 geometry or hide a reviewed feature that has no standalone result. The geometry remains canonical and the same hidden-result rejection applies. `data/manual/statistical_area_display_overrides.csv` independently hides reviewed election-vintage display proxies, including standalone Ganei Modi'in in K19/K20 and the evacuated Gaza features in K17, without changing assignment geometry.
 - Custom geometries remain in the canonical geometry asset but are filtered out of rendering and hit-testing unless the selected result asset contains their ID.
 - Custom result aggregates are tagged by geography mode. A row can therefore use a real historical statistical polygon while retaining its reviewed custom grouping in locality mode without being omitted or counted twice.
-- Custom buckets and remaining point-like proxies render as fixed-size markers. Multi-part proxy results use `MultiPoint`; audited detailed West Bank display footprints render as polygons.
+- Marker-capable custom buckets and point-like proxies render as fixed-size markers only when their exact ID has a selected-election result. Multi-part proxy results use `MultiPoint`. The K17/K18 Hebron custom target and Ganei Modi'in from K21 use audited detailed polygons. Tribal results use one combined marker in every election. For K19-K25 the compiler replaces the exact tribal map records with the verified custom aggregate and hides the component features; it fails if any additive total or party column differs. This changes presentation only, while public ballot and statistical-area tables retain the exact component IDs.
 - Compiler errors are fatal for missing metadata, duplicate result IDs, invalid numbers, or missing required output files.
 
 ## Project Tracking

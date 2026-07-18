@@ -179,6 +179,155 @@ describe('generated web data', () => {
     expect(yitavJoin?.geometry?.coordinates).toHaveLength(2)
   })
 
+  it('uses one combined tribal marker and shows only result-bearing statistical markers', async () => {
+    const catalog = AppCatalogSchema.parse(await readJson(resolve(dataRoot, 'catalog.json')))
+    const tribalAreaIds = [
+      'stat2011:9390001',
+      'stat2011:9560001',
+      'stat2011:9570001',
+      'stat2011:9580001',
+      'stat2011:9600001',
+      'stat2011:9610001',
+      'stat2011:9630001',
+      'stat2011:9640001',
+      'stat2011:9650001',
+      'stat2011:9660001',
+      'stat2011:9670001',
+      'stat2011:9680001',
+      'stat2011:9690001',
+      'stat2011:9700001',
+      'stat2011:9720001',
+      'stat2011:9760001',
+      'stat2011:9860001',
+      'stat2011:10410001',
+      'stat2011:11690001',
+      'stat2011:11700001',
+      'stat2011:12340001',
+    ]
+    const evacuatedGazaAreaIds = [
+      'stat1995:5405001',
+      'stat1995:5407001',
+      'stat1995:5408001',
+      'stat1995:5410001',
+      'stat1995:5423001',
+      'stat1995:5424001',
+      'stat1995:5425001',
+      'stat1995:5426001',
+      'stat1995:5427001',
+      'stat1995:5428001',
+      'stat1995:5429001',
+      'stat1995:5431001',
+      'stat1995:5432001',
+      'stat1995:5433001',
+      'stat1995:5434001',
+      'stat1995:5435001',
+    ]
+    const expectedActiveMarkers: Record<string, string[]> = {
+      K17: ['custom:tribal_negev'],
+      K18: ['custom:tribal_negev'],
+      K19: ['custom:tribal_negev'],
+      K20: ['custom:tribal_negev'],
+      K21: ['custom:tribal_negev'],
+      K22: ['custom:tribal_negev', 'stat2011:37850001'],
+      K23: ['custom:tribal_negev', 'stat2011:37850001'],
+      K24: ['custom:tribal_negev', 'stat2011:37820001', 'stat2011:37850001'],
+      K25: ['custom:tribal_negev', 'stat2011:37820001', 'stat2011:37850001'],
+    }
+
+    for (const election of catalog.elections) {
+      const asset = election.geographiesByMode['statistical-area']
+      const geometry = (await readJson(resolve(dataRoot, asset.geometryUrl))) as {
+        features: Array<{
+          id?: string
+          properties?: { displayMode?: string }
+        }>
+      }
+      const markers = (await readJson(resolve(dataRoot, asset.markerGeometryUrl))) as {
+        features: Array<{ id?: string }>
+      }
+      const payload = ElectionResultsSchema.parse(
+        await readJson(resolve(dataRoot, election.resultUrls['statistical-area'])),
+      )
+      const featuresById = new Map(geometry.features.map((feature) => [feature.id, feature]))
+      const markerIds = new Set(markers.features.map((feature) => feature.id))
+      const resultIds = new Set(payload.records.map((record) => record.id))
+      const activeMarkerIds = [...markerIds]
+        .filter((id): id is string => Boolean(id))
+        .filter((id) => resultIds.has(id) && !payload.hiddenGeographyIds.includes(id))
+        .toSorted()
+
+      expect(activeMarkerIds, election.id).toEqual(expectedActiveMarkers[election.id])
+      expect(featuresById.get('custom:hebron')?.properties?.displayMode, election.id).toBe(
+        'polygon',
+      )
+      expect(markerIds.has('custom:hebron'), election.id).toBe(false)
+      expect(featuresById.get('custom:tribal_negev')?.properties?.displayMode, election.id).toBe(
+        'marker',
+      )
+      expect(markerIds.has('custom:tribal_negev'), election.id).toBe(true)
+      expect(resultIds.has('custom:tribal_negev'), election.id).toBe(true)
+
+      if (Number(election.id.slice(1)) <= 18) {
+        expect(resultIds.has('custom:hebron'), election.id).toBe(true)
+      } else {
+        expect(resultIds.has('custom:hebron'), election.id).toBe(false)
+        expect(featuresById.get('stat2011:38230001')?.properties?.displayMode).toBe('polygon')
+        expect(markerIds.has('stat2011:38230001'), election.id).toBe(false)
+        for (const id of tribalAreaIds) {
+          expect(featuresById.get(id)?.properties?.displayMode, `${election.id}/${id}`).toBe('marker')
+          expect(markerIds.has(id), `${election.id}/${id}`).toBe(true)
+          expect(resultIds.has(id), `${election.id}/${id}`).toBe(false)
+          expect(payload.hiddenGeographyIds, `${election.id}/${id}`).toContain(id)
+        }
+      }
+      if (election.id === 'K17') {
+        for (const id of evacuatedGazaAreaIds) {
+          expect(payload.hiddenGeographyIds, id).toContain(id)
+          expect(resultIds.has(id), id).toBe(false)
+        }
+      }
+    }
+  })
+
+  it('renders K17 Yehud area 8 on the reviewed historical component polygon', async () => {
+    const catalog = AppCatalogSchema.parse(await readJson(resolve(dataRoot, 'catalog.json')))
+    const election = catalog.elections.find((candidate) => candidate.id === 'K17')
+    if (!election) {
+      throw new Error('Missing K17 catalog entry')
+    }
+    const geometry = (await readJson(
+      resolve(dataRoot, 'geographies', 'statistical-areas-1995.geojson'),
+    )) as {
+      features: Array<{
+        id?: string
+        properties?: { displayMode?: string }
+        geometry?: { type?: string; coordinates?: unknown }
+      }>
+    }
+    const markers = (await readJson(
+      resolve(dataRoot, 'geographies', 'statistical-area-markers-1995.geojson'),
+    )) as {
+      features: Array<{ id?: string }>
+    }
+    const payload = ElectionResultsSchema.parse(
+      await readJson(resolve(dataRoot, election.resultUrls['statistical-area'])),
+    )
+    const component = geometry.features.find((feature) => feature.id === 'stat1995:1062001')
+    const target = geometry.features.find((feature) => feature.id === 'stat1995:9400008')
+    const markerIds = new Set(markers.features.map((feature) => feature.id))
+    const result = payload.records.find((record) => record.id === 'stat1995:9400008')
+
+    expect(target?.properties?.displayMode).toBe('polygon')
+    expect(target?.geometry?.type).toMatch(/Polygon/)
+    expect(target?.geometry).toEqual(component?.geometry)
+    expect(component?.properties?.displayMode).toBe('marker')
+    expect(markerIds.has('stat1995:9400008')).toBe(false)
+    expect(markerIds.has('stat1995:1062001')).toBe(true)
+    expect(payload.hiddenGeographyIds).toContain('stat1995:1062001')
+    expect(result?.names.he).toBe('יהוד · אזור סטטיסטי 8')
+    expect(result?.names.en).toBe('Yehud · Statistical area 8')
+  })
+
   it('applies reviewed election-specific locality display rules', async () => {
     const catalog = AppCatalogSchema.parse(await readJson(resolve(dataRoot, 'catalog.json')))
     const geometry = (await readJson(
@@ -243,6 +392,38 @@ describe('generated web data', () => {
     const k21 = payloads.get('K21')
     expect(k21?.records.some((record) => record.id.startsWith('composite:joined-'))).toBe(false)
     expect(k21?.records.some((record) => record.id === 'loc:567')).toBe(true)
+  })
+
+  it('keeps Ganne Modiin inside Modiin Illit through K20', async () => {
+    const catalog = AppCatalogSchema.parse(await readJson(resolve(dataRoot, 'catalog.json')))
+
+    for (const election of catalog.elections) {
+      const localityPayload = ElectionResultsSchema.parse(
+        await readJson(resolve(dataRoot, election.resultUrls.locality)),
+      )
+      const statisticalPayload = ElectionResultsSchema.parse(
+        await readJson(resolve(dataRoot, election.resultUrls['statistical-area'])),
+      )
+      const historicalElection = Number(election.id.slice(1)) <= 20
+      const compositeId = `composite:joined-${election.id.toLowerCase()}-3797`
+
+      if (historicalElection) {
+        expect(localityPayload.records.find((record) => record.id === compositeId)).toMatchObject({
+          code: '3797',
+          includedNames: { he: ['גני מודיעין'], en: ["GANNE MODI'IN"] },
+        })
+        expect(localityPayload.hiddenGeographyIds).toContain('loc:3797')
+        expect(localityPayload.hiddenGeographyIds).toContain('loc:3823')
+      } else {
+        expect(localityPayload.records.some((record) => record.id === compositeId)).toBe(false)
+      }
+
+      if (election.id === 'K19' || election.id === 'K20') {
+        expect(statisticalPayload.hiddenGeographyIds).toContain('stat2011:38230001')
+      } else {
+        expect(statisticalPayload.hiddenGeographyIds).not.toContain('stat2011:38230001')
+      }
+    }
   })
 
   it('keeps reviewed party colors scoped away from reused ballot letters', async () => {
@@ -489,7 +670,6 @@ async function readAndValidateGeography(asset: {
   }
   return ids
 }
-
 async function readJson(path: string): Promise<unknown> {
   return JSON.parse(await readFile(path, 'utf8'))
 }

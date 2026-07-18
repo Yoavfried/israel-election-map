@@ -1,6 +1,14 @@
 import Papa from 'papaparse'
 
 const RESULT_CORE_LAST_COLUMN = 'winning_vote_share'
+const ADDITIVE_RESULT_COLUMNS = [
+  'contributing_rows',
+  'contributing_kalpis',
+  'eligible_voters',
+  'actual_voters',
+  'valid_votes',
+  'invalid_votes',
+]
 const DEFAULT_PARTY_SATURATION = 58
 const DEFAULT_PARTY_LIGHTNESS = 46
 const POINT_PROXY_MAX_VERTICES = 12
@@ -294,6 +302,10 @@ export function pruneGeography(
     if (!id) {
       throw new Error('Custom geography feature is missing custom_id')
     }
+    const displayMode = String(properties.display_mode || 'marker').trim()
+    if (!['polygon', 'marker'].includes(displayMode)) {
+      throw new Error(`${id} has invalid custom display mode: ${displayMode}`)
+    }
     features.push({
       type: 'Feature',
       id,
@@ -303,7 +315,7 @@ export function pruneGeography(
         customKey: properties.custom_key || id,
         nameHe: properties.name_he || id,
         nameEn: properties.name_en || properties.name_he || id,
-        displayMode: 'marker',
+        displayMode,
       },
       geometry: roundGeometry(feature.geometry),
     })
@@ -565,6 +577,97 @@ export function buildResultPayload({
     records,
     envelope,
     hiddenGeographyIds: [...hiddenIds].toSorted(),
+  }
+}
+
+export function applyStatisticalDisplayGroups({
+  electionId,
+  primaryRows,
+  customRows,
+  groups = [],
+}) {
+  if (groups.length === 0) {
+    return { primaryRows, displayRows: [], hiddenGeographyIds: [] }
+  }
+
+  const primaryRowsById = new Map()
+  for (const row of primaryRows) {
+    const id = String(row.stat_area_id ?? '').trim()
+    if (!id) {
+      throw new Error(`${electionId} statistical display grouping found a row without an ID`)
+    }
+    const rows = primaryRowsById.get(id) ?? []
+    rows.push(row)
+    primaryRowsById.set(id, rows)
+  }
+
+  const claimedComponentIds = new Set()
+  const hiddenGeographyIds = new Set()
+  const displayRows = []
+  const partyColumns = inferPartyColumns(primaryRows)
+
+  for (const group of groups) {
+    const displayGeographyId = String(group.displayGeographyId ?? '').trim()
+    const componentIds = [...new Set(group.componentIds ?? [])]
+    if (!displayGeographyId || componentIds.length === 0) {
+      throw new Error(`${electionId} has an invalid statistical display group`)
+    }
+
+    for (const componentId of componentIds) {
+      if (claimedComponentIds.has(componentId)) {
+        throw new Error(`${electionId} statistical display component is reused: ${componentId}`)
+      }
+      claimedComponentIds.add(componentId)
+      hiddenGeographyIds.add(componentId)
+    }
+
+    const sourceRows = componentIds.flatMap((componentId) => {
+      const rows = primaryRowsById.get(componentId) ?? []
+      if (rows.length > 1) {
+        throw new Error(`${electionId} has duplicate statistical result ${componentId}`)
+      }
+      return rows
+    })
+    if (sourceRows.length === 0) {
+      throw new Error(`${electionId} display group ${displayGeographyId} has no source results`)
+    }
+
+    const targetRows = customRows.filter(
+      (row) =>
+        (row.custom_geography_id || row.geography_id) === displayGeographyId &&
+        (!row.geography_mode || row.geography_mode === 'locality'),
+    )
+    if (targetRows.length !== 1) {
+      throw new Error(
+        `${electionId} display group ${displayGeographyId} requires exactly one locality aggregate`,
+      )
+    }
+    const targetRow = targetRows[0]
+
+    const mismatches = []
+    for (const column of [...ADDITIVE_RESULT_COLUMNS, ...partyColumns]) {
+      const sourceTotal = sourceRows.reduce(
+        (sum, row) => sum + numberValue(row[column], `${row.stat_area_id}.${column}`),
+        0,
+      )
+      const targetTotal = numberValue(targetRow[column], `${displayGeographyId}.${column}`)
+      if (sourceTotal !== targetTotal) {
+        mismatches.push(`${column}=${sourceTotal}/${targetTotal}`)
+      }
+    }
+    if (mismatches.length > 0) {
+      throw new Error(
+        `${electionId} display group ${displayGeographyId} does not equal its components: ${mismatches.join(', ')}`,
+      )
+    }
+
+    displayRows.push({ ...targetRow, geography_mode: 'statistical-area' })
+  }
+
+  return {
+    primaryRows: primaryRows.filter((row) => !claimedComponentIds.has(row.stat_area_id)),
+    displayRows,
+    hiddenGeographyIds: [...hiddenGeographyIds].toSorted(),
   }
 }
 

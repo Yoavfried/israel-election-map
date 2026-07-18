@@ -16,7 +16,14 @@ if LOCAL_AUDIT_PYTHON.exists():
 import geopandas as gpd
 import pandas as pd
 
-from pipeline_common import PROCESSED_DIR, RAW_DIR, ensure_dir, write_csv, write_json
+from pipeline_common import (
+    MANUAL_DIR,
+    PROCESSED_DIR,
+    RAW_DIR,
+    ensure_dir,
+    write_csv,
+    write_json,
+)
 from geography_display_helpers import (
     apply_detailed_display_geometries,
     load_arcgis_detail_by_locality,
@@ -27,6 +34,9 @@ SOURCE_DIR = RAW_DIR / "cbs_historical_geography"
 EXTRACTED_DIR = SOURCE_DIR / "extracted"
 OUT_DIR = PROCESSED_DIR / "geographies"
 ARCGIS_DIR = RAW_DIR / "arcgis"
+STATISTICAL_DISPLAY_GROUPS_PATH = (
+    MANUAL_DIR / "statistical_area_display_groups.csv"
+)
 ARCGIS_2011_SUPPLEMENT_IDS = {
     9390001,
     9560001,
@@ -87,23 +97,23 @@ TRANSITION_1995_TARGETS = {
         "locality_name_en": "YEHUD-NEWE EFRAYIM",
     }
 }
+REVERSE_TRANSITION_1995_SOURCES = {
+    (3797, 1): {
+        "locality_name_he": "\u05de\u05d5\u05d3\u05d9\u05e2\u05d9\u05df \u05e2\u05d9\u05dc\u05d9\u05ea",
+        "locality_name_en": "MODI'IN ILLIT",
+    }
+}
 NON_EXCLUSIVE_DISPLAY_MARKERS = {
-    1995: {"stat1995:9400008"},
+    1995: {"stat1995:1062001"},
     2011: {
-        "stat2011:9390001",
-        "stat2011:9560001",
-        "stat2011:9580001",
-        "stat2011:9610001",
-        "stat2011:9650001",
-        "stat2011:9660001",
-        "stat2011:9670001",
-        "stat2011:9690001",
-        "stat2011:11690001",
-        "stat2011:11700001",
         "stat2011:14110001",
         "stat2011:27100001",
     },
 }
+DISPLAY_GEOMETRY_REPRESENTATIVE_SOURCES = {
+    1995: {"stat1995:9400008": "stat1995:1062001"},
+}
+DISPLAY_DETAIL_OVERLAY_CODES = {2011: {3823}}
 UNSIMPLIFIED_DISPLAY_VINTAGES = {1995, 2008}
 
 VINTAGES = {
@@ -173,11 +183,48 @@ def preferred_text(values: pd.Series) -> str:
     return str(modes.iloc[0] if not modes.empty else cleaned.iloc[0])
 
 
+def clean_text(value: Any) -> str:
+    if value is None or pd.isna(value):
+        return ""
+    return str(value).strip()
+
+
+def load_display_group_marker_ids() -> dict[int, set[str]]:
+    if not STATISTICAL_DISPLAY_GROUPS_PATH.exists():
+        raise FileNotFoundError(
+            f"Missing display-group policy: {STATISTICAL_DISPLAY_GROUPS_PATH}"
+        )
+    rows = pd.read_csv(STATISTICAL_DISPLAY_GROUPS_PATH, dtype=str).fillna("")
+    required = {"component_stat_area_id", "component_display_mode"}
+    missing_columns = required - set(rows.columns)
+    if missing_columns:
+        raise ValueError(
+            f"Display-group policy is missing columns: {sorted(missing_columns)}"
+        )
+
+    marker_ids_by_vintage: dict[int, set[str]] = {}
+    marker_rows = rows[rows["component_display_mode"].str.strip() == "marker"]
+    for raw_id in marker_rows["component_stat_area_id"]:
+        stat_area_id = clean_text(raw_id)
+        prefix, separator, _ = stat_area_id.partition(":")
+        vintage_text = prefix.removeprefix("stat")
+        if separator != ":" or not vintage_text.isdigit():
+            raise ValueError(
+                f"Invalid display-group statistical-area ID: {stat_area_id}"
+            )
+        marker_ids_by_vintage.setdefault(int(vintage_text), set()).add(
+            stat_area_id
+        )
+    return marker_ids_by_vintage
+
+
 def valid_geometry(geometry: Any, crs: Any) -> Any:
     return gpd.GeoSeries([geometry], crs=crs).make_valid().iloc[0]
 
 
-def read_vintage(vintage: int) -> tuple[gpd.GeoDataFrame, list[dict[str, Any]]]:
+def read_vintage(
+    vintage: int,
+) -> tuple[gpd.GeoDataFrame, list[dict[str, Any]], dict[str, Any]]:
     config = VINTAGES[vintage]
     archive = SOURCE_DIR / str(config["archive"])
     gdb = EXTRACTED_DIR / str(config["gdb"])
@@ -189,19 +236,44 @@ def read_vintage(vintage: int) -> tuple[gpd.GeoDataFrame, list[dict[str, Any]]]:
     stats["locality_code"] = integer_series(stats["locality_code"])
     stats["stat_area_number"] = integer_series(stats["stat_area_number"])
     stats["yishuv_stat"] = integer_series(stats["yishuv_stat"])
-    stats = stats[
+    usable_geometry = stats.geometry.notna() & ~stats.geometry.is_empty
+    assignable = (
         stats["locality_code"].notna()
         & (stats["locality_code"] > 0)
         & stats["stat_area_number"].notna()
         & stats["yishuv_stat"].notna()
-        & stats.geometry.notna()
-        & ~stats.geometry.is_empty
-    ].copy()
+        & usable_geometry
+    )
+    excluded = stats[~assignable].copy()
+    exclusion_reason = pd.Series("assignable", index=stats.index, dtype="object")
+    exclusion_reason.loc[~usable_geometry] = "missing_geometry"
+    exclusion_reason.loc[
+        usable_geometry
+        & (stats["locality_code"].isna() | (stats["locality_code"] <= 0))
+    ] = "missing_or_nonpositive_locality_code"
+    exclusion_reason.loc[
+        usable_geometry
+        & stats["locality_code"].notna()
+        & (stats["locality_code"] > 0)
+        & stats["stat_area_number"].isna()
+    ] = "missing_stat_area_number"
+    exclusion_reason.loc[
+        usable_geometry
+        & stats["locality_code"].notna()
+        & (stats["locality_code"] > 0)
+        & stats["stat_area_number"].notna()
+        & stats["yishuv_stat"].isna()
+    ] = "missing_combined_area_id"
+    excluded["exclusion_reason"] = exclusion_reason.loc[excluded.index]
+    stats = stats[assignable].copy()
     for column in ["locality_code", "stat_area_number", "yishuv_stat"]:
         stats[column] = stats[column].astype("int64")
     stats["source_stat_area_number"] = stats["stat_area_number"]
     stats["source_yishuv_stat"] = stats["yishuv_stat"]
+    corrected_source_ids = 0
     if vintage == 1995:
+        recomputed_ids = stats["locality_code"] * 1000 + stats["stat_area_number"]
+        corrected_source_ids = int((stats["source_yishuv_stat"] != recomputed_ids).sum())
         stats["source_yishuv_stat"] = (
             stats["locality_code"] * 1000 + stats["source_stat_area_number"]
         )
@@ -281,7 +353,42 @@ def read_vintage(vintage: int) -> tuple[gpd.GeoDataFrame, list[dict[str, Any]]]:
         raise ValueError(
             f"CBS {vintage} layer has duplicate statistical-area IDs: {duplicates[:10]}"
         )
-    return stats, alias_rows
+    excluded_positive = excluded[
+        excluded["locality_code"].notna() & (excluded["locality_code"] > 0)
+    ].copy()
+    excluded_positive_rows = []
+    for row in excluded_positive.itertuples(index=False):
+        excluded_positive_rows.append(
+            {
+                "locality_code": int(row.locality_code),
+                "locality_name_he": clean_text(
+                    getattr(row, "locality_name_he", "")
+                ),
+                "locality_name_en": clean_text(
+                    getattr(row, "locality_name_en", "")
+                ),
+                "exclusion_reason": str(row.exclusion_reason),
+            }
+        )
+    source_inventory = {
+        "archive": str(config["archive"]),
+        "gdb": str(config["gdb"]),
+        "layer": str(config["layer"]),
+        "raw_feature_rows": int(len(raw)),
+        "assignable_source_geometry_rows": int(assignable.sum()),
+        "unique_assignment_area_ids_before_supplements": int(stats["stat_area_id"].nunique()),
+        "additional_geometry_rows_sharing_an_area_id": int(
+            assignable.sum() - stats["stat_area_id"].nunique()
+        ),
+        "excluded_source_rows": int((~assignable).sum()),
+        "exclusion_reason_counts": {
+            str(reason): int(count)
+            for reason, count in excluded["exclusion_reason"].value_counts().to_dict().items()
+        },
+        "excluded_positive_locality_rows": excluded_positive_rows,
+        "corrected_malformed_source_area_ids": corrected_source_ids,
+    }
+    return stats, alias_rows, source_inventory
 
 
 def identity_alias(vintage: int, row: pd.Series, reason: str) -> dict[str, Any]:
@@ -360,6 +467,95 @@ def add_1995_transition_unions(
         additions.append(addition)
         aliases.append(
             identity_alias(1995, addition.iloc[0], "official_cbs_transition_union")
+        )
+    if additions:
+        stats = gpd.GeoDataFrame(
+            pd.concat([stats, *additions], ignore_index=True),
+            geometry="geometry",
+            crs=stats.crs,
+        )
+    return stats, aliases
+
+
+def add_1995_reverse_transition_unions(
+    stats: gpd.GeoDataFrame,
+    target_2008: gpd.GeoDataFrame,
+) -> tuple[gpd.GeoDataFrame, list[dict[str, Any]]]:
+    path = SOURCE_DIR / "statistical_area_conversion_key_1995.xls"
+    if not path.exists():
+        raise FileNotFoundError(f"Missing CBS 1995 transition key: {path}")
+    transition = pd.read_excel(
+        path, sheet_name="\u05de\u05e4\u05ea\u05d7 1995", dtype=str
+    ).fillna("")
+    transition["source_locality_code"] = integer_series(
+        transition["LocalityCode1995"]
+    )
+    transition["source_stat_area_number"] = integer_series(
+        transition["StatAreaCode1995"]
+    )
+    transition["target_locality_code"] = integer_series(
+        transition["LocalityCode2008"]
+    )
+    transition["target_stat_area_number"] = integer_series(
+        transition["StatAreaCode2008"]
+    )
+    target_2008 = target_2008.to_crs(stats.crs)
+
+    additions: list[gpd.GeoDataFrame] = []
+    aliases: list[dict[str, Any]] = []
+    for (
+        locality_code,
+        stat_area_number,
+    ), names in REVERSE_TRANSITION_1995_SOURCES.items():
+        yishuv_stat = locality_code * 1000 + stat_area_number
+        stat_area_id = f"stat1995:{yishuv_stat}"
+        if (stats["stat_area_id"] == stat_area_id).any():
+            continue
+        links = transition[
+            (transition["source_locality_code"] == locality_code)
+            & (transition["source_stat_area_number"] == stat_area_number)
+            & transition["target_locality_code"].notna()
+            & transition["target_stat_area_number"].notna()
+        ][["target_locality_code", "target_stat_area_number"]].drop_duplicates()
+        target_keys = {
+            (int(row.target_locality_code), int(row.target_stat_area_number))
+            for row in links.itertuples(index=False)
+        }
+        parts = target_2008[
+            [
+                (int(row.locality_code), int(row.stat_area_number)) in target_keys
+                for row in target_2008.itertuples(index=False)
+            ]
+        ]
+        found_keys = {
+            (int(row.locality_code), int(row.stat_area_number))
+            for row in parts.itertuples(index=False)
+        }
+        if not target_keys or found_keys != target_keys:
+            missing = sorted(target_keys - found_keys)
+            raise ValueError(
+                f"CBS reverse transition union {stat_area_id} is missing 2008 targets: {missing}"
+            )
+        record = {
+            "locality_code": locality_code,
+            "locality_name_he": names["locality_name_he"],
+            "locality_name_en": names["locality_name_en"],
+            "stat_area_number": stat_area_number,
+            "yishuv_stat": yishuv_stat,
+            "stat_area_vintage": 1995,
+            "locality_id": f"loc:{locality_code}",
+            "stat_area_id": stat_area_id,
+            "geometry_source": "official_cbs_1995_transition_reconstructed_from_2008_targets",
+            "geometry": valid_geometry(parts.geometry.union_all(), stats.crs),
+        }
+        addition = gpd.GeoDataFrame([record], geometry="geometry", crs=stats.crs)
+        additions.append(addition)
+        aliases.append(
+            identity_alias(
+                1995,
+                addition.iloc[0],
+                "official_cbs_reverse_transition_union",
+            )
         )
     if additions:
         stats = gpd.GeoDataFrame(
@@ -575,6 +771,28 @@ def validate_supplement_overlap_markers(
         )
 
 
+def apply_display_geometry_representatives(
+    display: gpd.GeoDataFrame,
+    representatives: dict[str, str],
+) -> tuple[gpd.GeoDataFrame, dict[str, str]]:
+    display = display.copy()
+    applied: dict[str, str] = {}
+    for target_id, source_id in representatives.items():
+        target_indices = display.index[display["stat_area_id"] == target_id].tolist()
+        source_rows = display[display["stat_area_id"] == source_id]
+        if len(target_indices) != 1 or len(source_rows) != 1:
+            raise ValueError(
+                f"Display geometry representative {target_id} -> {source_id} "
+                f"resolved to {len(target_indices)} targets and {len(source_rows)} sources"
+            )
+        display.at[target_indices[0], "geometry"] = source_rows.geometry.iloc[0]
+        display.at[target_indices[0], "display_geometry_source"] = (
+            f"representative_component:{source_id}"
+        )
+        applied[target_id] = source_id
+    return display, applied
+
+
 def write_geojson(stats: gpd.GeoDataFrame, path: Path) -> None:
     ensure_dir(path.parent)
     stats.to_file(path, driver="GeoJSON", encoding="utf-8", index=False)
@@ -618,22 +836,52 @@ def main() -> None:
         "display_detail_localities_available": len(detailed_by_locality),
         "vintages": {},
     }
+    source_vintages = {
+        vintage: read_vintage(vintage) for vintage in sorted(VINTAGES)
+    }
+    display_group_marker_ids = load_display_group_marker_ids()
     for vintage in sorted(VINTAGES):
-        official, alias_rows = read_vintage(vintage)
+        official, alias_rows, source_inventory = source_vintages[vintage]
+        official = official.copy()
+        alias_rows = list(alias_rows)
         supplements: list[dict[str, Any]] = []
         if vintage == 1995:
             official, supplements = add_1995_transition_unions(official)
+            official, reverse_supplements = add_1995_reverse_transition_unions(
+                official,
+                source_vintages[2008][0],
+            )
+            supplements.extend(reverse_supplements)
         elif vintage == 2011:
             official, supplements = add_2011_arcgis_exact_id_supplements(official)
         alias_rows.extend(supplements)
         validate_vintage(official, vintage)
         official_wgs84 = official.to_crs("EPSG:4326")
         display, replacements, rejected_codes = apply_detailed_display_geometries(
-            official, detailed_by_locality, "official_cbs"
+            official,
+            detailed_by_locality,
+            "official_cbs",
+            DISPLAY_DETAIL_OVERLAY_CODES.get(vintage, set()),
+        )
+        display, geometry_representatives = apply_display_geometry_representatives(
+            display,
+            DISPLAY_GEOMETRY_REPRESENTATIVE_SOURCES.get(vintage, {}),
         )
         display["display_mode"] = ""
-        marker_ids = NON_EXCLUSIVE_DISPLAY_MARKERS.get(vintage, set())
-        validate_supplement_overlap_markers(official, vintage, marker_ids)
+        marker_ids = set(NON_EXCLUSIVE_DISPLAY_MARKERS.get(vintage, set())) | set(
+            display_group_marker_ids.get(vintage, set())
+        )
+        missing_marker_ids = marker_ids - set(official["stat_area_id"])
+        if missing_marker_ids:
+            raise ValueError(
+                f"{vintage} display policy references missing areas: "
+                f"{sorted(missing_marker_ids)}"
+            )
+        validate_supplement_overlap_markers(
+            official,
+            vintage,
+            marker_ids,
+        )
         display.loc[display["stat_area_id"].isin(marker_ids), "display_mode"] = "marker"
         official_public = public_columns(official_wgs84)
         display_public = public_columns(display)
@@ -672,7 +920,9 @@ def main() -> None:
             "display_geometry_replacements": replacements,
             "display_geometry_rejected_codes": sorted(set(rejected_codes)),
             "non_exclusive_display_markers": sorted(marker_ids),
+            "display_geometry_representative_sources": geometry_representatives,
             "display_geometry_simplified": vintage not in UNSIMPLIFIED_DISPLAY_VINTAGES,
+            "source_inventory_audit": source_inventory,
             "bounds_wgs84": {
                 "min_lon": float(official_wgs84.total_bounds[0]),
                 "min_lat": float(official_wgs84.total_bounds[1]),

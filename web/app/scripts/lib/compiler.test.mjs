@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  applyStatisticalDisplayGroups,
   aliasJoinedCompositeResults,
   buildCompositeMetadataIndex,
   buildDisplayMarkers,
@@ -47,6 +48,87 @@ describe('web data compiler', () => {
     expect(parseCsv('\ufeffid,name\n1,שלום\n')).toEqual([{ id: '1', name: 'שלום' }])
   })
 
+  it('collapses non-exclusive statistical components only when every total matches', () => {
+    const resultRow = (id, eligible, actual, valid, invalid, partyA, partyB) => ({
+      election: 'K21',
+      stat_area_id: id,
+      contributing_rows: '1',
+      contributing_kalpis: '1',
+      eligible_voters: String(eligible),
+      actual_voters: String(actual),
+      valid_votes: String(valid),
+      invalid_votes: String(invalid),
+      winning_ballot_letter: 'a',
+      winning_votes: String(partyA),
+      runner_up_votes: String(partyB),
+      margin_votes: String(partyA - partyB),
+      winning_vote_share: String(partyA / valid),
+      a: String(partyA),
+      b: String(partyB),
+    })
+    const primaryRows = [
+      resultRow('stat2011:1', 100, 40, 39, 1, 30, 9),
+      resultRow('stat2011:2', 120, 50, 49, 1, 29, 20),
+      resultRow('stat2011:ordinary', 80, 30, 30, 0, 20, 10),
+    ]
+    const customRow = {
+      election: 'K21',
+      geography_mode: 'locality',
+      custom_geography_id: 'custom:tribal',
+      geography_id: 'custom:tribal',
+      contributing_rows: '2',
+      contributing_kalpis: '2',
+      eligible_voters: '220',
+      actual_voters: '90',
+      valid_votes: '88',
+      invalid_votes: '2',
+      winning_ballot_letter: 'a',
+      winning_votes: '59',
+      runner_up_votes: '29',
+      margin_votes: '30',
+      winning_vote_share: String(59 / 88),
+      a: '59',
+      b: '29',
+    }
+    const groups = [
+      {
+        displayGeographyId: 'custom:tribal',
+        componentIds: ['stat2011:1', 'stat2011:2', 'stat2011:zero-result'],
+      },
+    ]
+
+    const grouped = applyStatisticalDisplayGroups({
+      electionId: 'K21',
+      primaryRows,
+      customRows: [customRow],
+      groups,
+    })
+
+    expect(grouped.primaryRows.map((row) => row.stat_area_id)).toEqual([
+      'stat2011:ordinary',
+    ])
+    expect(grouped.displayRows).toEqual([
+      expect.objectContaining({
+        custom_geography_id: 'custom:tribal',
+        geography_mode: 'statistical-area',
+      }),
+    ])
+    expect(grouped.hiddenGeographyIds).toEqual([
+      'stat2011:1',
+      'stat2011:2',
+      'stat2011:zero-result',
+    ])
+
+    expect(() =>
+      applyStatisticalDisplayGroups({
+        electionId: 'K21',
+        primaryRows,
+        customRows: [{ ...customRow, actual_voters: '91' }],
+        groups,
+      }),
+    ).toThrow(/does not equal its components: actual_voters=90\/91/)
+  })
+
   it('adds stable feature IDs and custom geometries', () => {
     const source = {
       type: 'FeatureCollection',
@@ -79,6 +161,19 @@ describe('web data compiler', () => {
             coordinates: [[[34.3, 31.3], [34.4, 31.3], [34.4, 31.4], [34.3, 31.3]]],
           },
         },
+        {
+          type: 'Feature',
+          properties: {
+            custom_id: 'custom:polygon',
+            name_he: 'פוליגון',
+            name_en: 'Polygon',
+            display_mode: 'polygon',
+          },
+          geometry: {
+            type: 'Polygon',
+            coordinates: [[[34.5, 31.3], [34.6, 31.3], [34.6, 31.4], [34.5, 31.3]]],
+          },
+        },
       ],
     }
 
@@ -86,10 +181,12 @@ describe('web data compiler', () => {
     expect(output.features.map((feature) => feature.id)).toEqual([
       'stat2022:100001',
       'custom:test',
+      'custom:polygon',
     ])
     expect(output.features.map((feature) => feature.properties.displayMode)).toEqual([
       'marker',
       'marker',
+      'polygon',
     ])
 
     const markers = buildDisplayMarkers(output)
@@ -152,19 +249,19 @@ describe('web data compiler', () => {
     expect(buildDisplayMarkers(output).features).toHaveLength(0)
   })
 
-  it('honors an explicit marker override for a non-exclusive historical area', () => {
+  it('honors an explicit marker override for a suppressed overlapping source feature', () => {
     const source = {
       type: 'FeatureCollection',
       features: [
         {
           type: 'Feature',
           properties: {
-            stat_area_id: 'stat1995:9400008',
-            locality_id: 'loc:9400',
-            locality_code: 9400,
-            locality_name_he: '9400',
-            locality_name_en: 'YEHUD-NEWE EFRAYIM',
-            stat_area_number: 8,
+            stat_area_id: 'stat1995:1062001',
+            locality_id: 'loc:1062',
+            locality_code: 1062,
+            locality_name_he: 'נווה אפרים',
+            locality_name_en: 'NEWE EFRAYIM',
+            stat_area_number: 1,
             stat_area_vintage: 1995,
             display_mode: 'marker',
           },

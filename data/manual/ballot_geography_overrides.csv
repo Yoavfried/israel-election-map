@@ -1,52 +1,15 @@
 ﻿source_row_uid,election,source_locality_code,source_kalpi,assignment_method,target_geography_type,target_locality_code,target_locality_name,target_stat_area_id,custom_geography_id,review_notes
-K17:1133,K17,,,historical_stat_area_pending,statistical_area_pending,490,דייר אל-אסד,,,Reviewed component-locality target; historical area assignment remains pending.
-K17:1134,K17,,,historical_stat_area_pending,statistical_area_pending,490,דייר אל-אסד,,,Reviewed component-locality target; historical area assignment remains pending.
-K17:1135,K17,,,historical_stat_area_pending,statistical_area_pending,490,דייר אל-אסד,,,Reviewed component-locality target; historical area assignment remains pending.
-K17:1136,K17,,,historical_stat_area_pending,statistical_area_pending,490,דייר אל-אסד,,,Reviewed component-locality target; historical area assignment remains pending.
-K17:1137,K17,,,historical_stat_area_pending,statistical_area_pending,490,דייר אל-אסד,,,Reviewed component-locality target; historical area assignment remains pending.
-K17:1138,K17,,,historical_stat_area_pending,statistical_area_pending,490,דייר אל-אסד,,,Reviewed component-locality target; historical area assignment remains pending.
-K17:1139,K17,,,historical_stat_area_pending,statistical_area_pending,490,דייר אל-אסד,,,Reviewed component-locality target; historical area assignment remains pending.
-K17:1140,K17,,2010,single_stat_locality,statistical_area,483,בענה,stat2022:4830001,,Reviewed single-area locality assignment.
-K17:1141,K17,,2020,single_stat_locality,statistical_area,483,בענה,stat2022:4830001,,Reviewed single-area locality assignment.
-K17:1142,K17,,2030,single_stat_locality,statistical_area,483,בענה,stat2022:4830001,,Reviewed single-area locality assignment.
-K17:1143,K17,,2040,single_stat_locality,statistical_area,483,בענה,stat2022:4830001,,Reviewed single-area locality assignment.
-K17:1144,K17,,2050,single_stat_locality,statistical_area,483,בענה,stat2022:4830001,,Reviewed single-area locality assignment.
 K17:2296,K17,,,historical_stat_area_pending,statistical_area_pending,1247,חריש,,,Reviewed component-locality target; historical area assignment remains pending.
 K17:2297,K17,,,single_stat_locality,statistical_area,1243,קציר,stat2022:12430001,,Reviewed single-area locality assignment.
 K17:2298,K17,,,single_stat_locality,statistical_area,1243,קציר,stat2022:12430001,,Reviewed single-area locality assignment.
 K17:2483,K17,,10,single_stat_locality,statistical_area,8600,רמת גן,stat2022:86000423,,Reviewed single-area locality assignment.
 K17:3845,K17,,10,single_stat_locality,statistical_area,3640,קרני שומרון,stat2022:36400004,,Reviewed single-area locality assignment.
 K18:5202,K18,,,single_stat_locality,statistical_area,3640,קרני שומרון,stat2022:36400004,,Reviewed single-area locality assignment.
-K18:6139,K18,,,historical_stat_area_pending,statistical_area_pending,534,עספיא,,,Reviewed component-locality target; historical area assignment remains pending.
 K18:6834,K18,,,historical_stat_area_pending,statistical_area_pending,1247,חריש,,,Reviewed component-locality target; historical area assignment remains pending.
 K18:6835,K18,,,single_stat_locality,statistical_area,1243,קציר,stat2022:12430001,,Reviewed single-area locality assignment.
 K18:6836,K18,,,single_stat_locality,statistical_area,1243,קציר,stat2022:12430001,,Reviewed single-area locality assignment.
 K18:6837,K18,,,single_stat_locality,statistical_area,1243,קציר,stat2022:12430001,,Reviewed single-area locality assignment.
 K18:8172,K18,,,single_stat_locality,statistical_area,8600,רמת גן,stat2022:86000423,,Reviewed single-area locality assignment.
-K18:8370,K18,,,historical_stat_area_pending,statistical_area_pending,516,מג'ד אל-כרום,,,Reviewed component-locality target; historical area assignment remains pending.
-K18:8371,K18,,,historical_stat_area_pending,statistical_area_pending,516,מג'ד אל-כרום,,,Reviewed component-locality target; historical area assignment remains pending.
-K18:8372,K18,,,historical_stat_area_pending,statistical_area_pending,516,מג'ד אל-כרום,,,Reviewed component-locality target; historical area assignment remains pending.
-K18:8374,K18,,,historical_stat_area_pending,statistical_area_pending,516,מג'ד אל-כרום,,,Reviewed component-locality target; historical area assignment remains pending.
-K18:8375,K18,,,historical_stat_area_pending,statistical_area_pending,516,מג'ד אל-כרום,,,Reviewed component-locality target; historical area assignment remains pending.
-K18:8376,K18,,,historical_stat_area_pending,statistical_area_pending,516,מג'ד אל-כרום,,,Reviewed component-locality target; historical area assignment remains pending.
-K18:8377,K18,,,historical_stat_area_pending,statistical_area_pending,516,מג'ד אל-כרום,,,Reviewed component-locality target; historical area assignment remains pending.
-K18:8378,K18,,,historical_stat_area_pending,statistical_area_pending,516,מג'ד אל-כרום,,,Reviewed component-locality target; historical area assignment remains pending.
-K18:8379,K18,,,historical_stat_area_pending,statistical_area_pending,516,מג'ד אל-כרום,,,Reviewed component-locality target; historical area assignment remains pending.
-K18:8381,K18,,,historical_stat_area_pending,statistical_area_pending,516,מג'ד אל-כרום,,,Reviewed component-locality target; historical area assignment remains pending.
-K18:8384,K18,,,historical_stat_area_pending,statistical_area_pending,490,דייר אל-אסד,,,Reviewed component-locality target; historical area assignment remains pending.
-K18:8385,K18,,,historical_stat_area_pending,statistical_area_pending,490,דייר אל-אסד,,,Reviewed component-locality target; historical area assignment remains pending.
-K18:8386,K18,,,historical_stat_area_pending,statistical_area_pending,490,דייר אל-אסד,,,Reviewed component-locality target; historical area assignment remains pending.
-K18:8387,K18,,,historical_stat_area_pending,statistical_area_pending,490,דייר אל-אסד,,,Reviewed component-locality target; historical area assignment remains pending.
-K18:8390,K18,,,historical_stat_area_pending,statistical_area_pending,490,דייר אל-אסד,,,Reviewed component-locality target; historical area assignment remains pending.
-K18:8391,K18,,,single_stat_locality,statistical_area,483,בענה,stat2022:4830001,,Reviewed single-area locality assignment.
-K18:890,K18,,,historical_stat_area_pending,statistical_area_pending,6000,באקה אל-גרביה,,,Reviewed component-locality target; historical area assignment remains pending.
-K18:907,K18,,,historical_stat_area_pending,statistical_area_pending,6000,באקה אל-גרביה,,,Reviewed component-locality target; historical area assignment remains pending.
-K18:910,K18,,,historical_stat_area_pending,statistical_area_pending,628,ג'ת,,,Reviewed component-locality target; historical area assignment remains pending.
-K18:912,K18,,,historical_stat_area_pending,statistical_area_pending,628,ג'ת,,,Reviewed component-locality target; historical area assignment remains pending.
-K18:914,K18,,,historical_stat_area_pending,statistical_area_pending,628,ג'ת,,,Reviewed component-locality target; historical area assignment remains pending.
-K18:915,K18,,,historical_stat_area_pending,statistical_area_pending,628,ג'ת,,,Reviewed component-locality target; historical area assignment remains pending.
-K18:916,K18,,,historical_stat_area_pending,statistical_area_pending,628,ג'ת,,,Reviewed component-locality target; historical area assignment remains pending.
-K18:917,K18,,,historical_stat_area_pending,statistical_area_pending,628,ג'ת,,,Reviewed component-locality target; historical area assignment remains pending.
 K19:5859,K19,,,single_stat_locality,statistical_area,3640,קרני שומרון,stat2022:36400004,,Reviewed single-area locality assignment.
 K19:8998,K19,,,single_stat_locality,statistical_area,8600,רמת גן,stat2022:86000423,,Reviewed single-area locality assignment.
 K20:6065,K20,,,single_stat_locality,statistical_area,3640,קרני שומרון,stat2022:36400004,,Reviewed single-area locality assignment.

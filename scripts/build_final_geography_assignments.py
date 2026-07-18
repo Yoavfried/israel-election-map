@@ -27,6 +27,9 @@ HISTORICAL_ASSIGNMENTS = (
 STAT_AREA_METADATA = (
     PROCESSED_DIR / "geographies" / "statistical_areas_2022.metadata.csv"
 )
+LOCALITIES_2022_METADATA = (
+    PROCESSED_DIR / "geographies" / "localities_2022.metadata.csv"
+)
 HISTORICAL_STAT_AREA_METADATA = (
     PROCESSED_DIR / "geographies" / "statistical_areas_2011.metadata.csv"
 )
@@ -162,6 +165,28 @@ def split_locality_codes(value: Any) -> list[str]:
 
 
 @cache
+def load_current_locality_name_index() -> dict[str, dict[str, str]]:
+    rows = read_csv(LOCALITIES_2022_METADATA)
+    index: dict[str, dict[str, str]] = {}
+    ambiguous: set[str] = set()
+    for row in rows:
+        key = normalize_spaces(row.get("locality_name_he", ""))
+        locality_code = normalize_locality_code(row.get("locality_code", ""))
+        if not key or not locality_code:
+            continue
+        if key in index and index[key]["locality_code"] != locality_code:
+            ambiguous.add(key)
+            continue
+        index[key] = {
+            "locality_code": locality_code,
+            "locality_name_he": row.get("locality_name_he", ""),
+        }
+    for key in ambiguous:
+        index.pop(key, None)
+    return index
+
+
+@cache
 def load_composite_locality_index() -> dict[tuple[str, str], dict[str, str]]:
     rows = read_csv(COMPOSITE_LOCALITIES)
     if not rows:
@@ -235,6 +260,21 @@ def locality_assignment(row: dict[str, str]) -> dict[str, Any]:
             "locality_result_name": composite["name_he"],
             "is_locality_mapped": True,
         }
+
+    if row.get("assignment_source", "") == "reviewed_composite_component_evidence":
+        current_locality = load_current_locality_name_index().get(
+            normalize_spaces(row.get("source_locality_name", ""))
+        )
+        if current_locality:
+            locality_code = current_locality["locality_code"]
+            return {
+                "locality_assignment_status": "source_locality_name_assigned",
+                "locality_geography_type": "locality",
+                "locality_geography_id": f"loc:{locality_code}",
+                "locality_result_code": locality_code,
+                "locality_result_name": current_locality["locality_name_he"],
+                "is_locality_mapped": True,
+            }
 
     target_codes = split_locality_codes(row.get("target_locality_code", ""))
     if len(target_codes) == 1:

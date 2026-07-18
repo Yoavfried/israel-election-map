@@ -144,6 +144,11 @@ AGGREGATE_EXPORTS = [
 
 PROVENANCE_TABLES = [
     (
+        MANUAL_DIR / "historical_composite_ballot_components.csv",
+        "historical_composite_ballot_components.csv",
+        "Reviewed K17/K18 polling-register ranges that identify historical composite components.",
+    ),
+    (
         MANUAL_DIR / "historical_stat_area_overrides.csv",
         "historical_stat_area_overrides.csv",
         "Reviewed replacements for contradicted direct crosswalk rows.",
@@ -229,6 +234,11 @@ PROVENANCE_TABLES = [
         "Unresolved assignment totals by election and reason.",
     ),
     (
+        AUDIT_DIR / "historical_crosswalk_locality_omission_recurrence.csv",
+        "historical_crosswalk_locality_omission_recurrence.csv",
+        "Cross-election recurrence of entire-locality omissions in official ballot crosswalks.",
+    ),
+    (
         AUDIT_DIR / "historical_polygon_coverage.csv",
         "historical_polygon_coverage.csv",
         "Election-by-polygon assignment, source-comparison, and population-proxy audit.",
@@ -246,6 +256,7 @@ PROVENANCE_TABLES = [
 ]
 
 PROVENANCE_JSON = [
+    (GEOGRAPHY_DIR / "historical_geography_build_summary.json", "historical_geography_build_summary.json"),
     (AUDIT_DIR / "election_source_geography_field_audit.json", "election_source_geography_field_audit.json"),
     (AUDIT_DIR / "arcgis_assignment_reconstruction_summary.json", "arcgis_reconstruction_summary.json"),
     (AUDIT_DIR / "k23_cec_ags_assignment_summary.json", "k23_cec_ags_assignment_summary.json"),

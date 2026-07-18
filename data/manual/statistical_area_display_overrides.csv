@@ -1,0 +1,20 @@
+stat_area_id,elections,visibility,name_he,name_en,note
+stat2011:38230001,K19|K20,hidden,,,Ganne Modi'in was still part of Modi'in Illit; suppress its separate 2011 display proxy for these elections.
+stat1995:1062001,K17,hidden,,,Reviewed placement uses this historical component as the displayed geometry for Yehud statistical area 8; hide the duplicate source feature.
+stat1995:9400008,K17,default,יהוד,Yehud,Reviewed 2006 display name; the canonical transition identifier and source name remain unchanged in the downloadable data.
+stat1995:5405001,K17,hidden,,,Kfar Darom was evacuated before K17; retain the historical source geometry but do not display it for this election.
+stat1995:5407001,K17,hidden,,,Morag was evacuated before K17; retain the historical source geometry but do not display it for this election.
+stat1995:5408001,K17,hidden,,,Netzarim was evacuated before K17; retain the historical source geometry but do not display it for this election.
+stat1995:5410001,K17,hidden,,,Netzer Hazani was evacuated before K17; retain the historical source geometry but do not display it for this election.
+stat1995:5423001,K17,hidden,,,Katif was evacuated before K17; retain the historical source geometry but do not display it for this election.
+stat1995:5424001,K17,hidden,,,Ganne Tal was evacuated before K17; retain the historical source geometry but do not display it for this election.
+stat1995:5425001,K17,hidden,,,Bene Azmon was evacuated before K17; retain the historical source geometry but do not display it for this election.
+stat1995:5426001,K17,hidden,,,Nisanit was evacuated before K17; retain the historical source geometry but do not display it for this election.
+stat1995:5427001,K17,hidden,,,Newe Deqalim was evacuated before K17; retain the historical source geometry but do not display it for this election.
+stat1995:5428001,K17,hidden,,,Ele Sinay was evacuated before K17; retain the historical source geometry but do not display it for this election.
+stat1995:5429001,K17,hidden,,,Gadid was evacuated before K17; retain the historical source geometry but do not display it for this election.
+stat1995:5431001,K17,hidden,,,Gan Or was evacuated before K17; retain the historical source geometry but do not display it for this election.
+stat1995:5432001,K17,hidden,,,Bedolah was evacuated before K17; retain the historical source geometry but do not display it for this election.
+stat1995:5433001,K17,hidden,,,Rafiah Yam was evacuated before K17; retain the historical source geometry but do not display it for this election.
+stat1995:5434001,K17,hidden,,,Selaw was evacuated before K17; retain the historical source geometry but do not display it for this election.
+stat1995:5435001,K17,hidden,,,Dugit was evacuated before K17; retain the historical source geometry but do not display it for this election.

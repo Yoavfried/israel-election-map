@@ -74,6 +74,22 @@ stable-ballot workbook for each transition ending K19-K25.
 lengths, and SHA-256 hashes in
 `data/raw/cbs_historical_geography/manifest.json`.
 
+The official [2008 GIS download page](https://www.cbs.gov.il/he/cbsNewBrand/Pages/%D7%A9%D7%9B%D7%91%D7%95%D7%AA-%D7%9E%D7%9E%D7%92-%D7%9E%D7%A2%D7%A8%D7%9B%D7%AA-%D7%9E%D7%99%D7%93%D7%A2-%D7%92%D7%90%D7%95%D7%92%D7%A8%D7%A4%D7%99%D7%AA-GIS-%D7%9E%D7%A4%D7%A7%D7%93-2008.aspx),
+[transition-key page](https://www.cbs.gov.il/he/cbsNewBrand/Pages/%D7%9E%D7%99%D7%93%D7%A2-%D7%92%D7%90%D7%95%D7%92%D7%A8%D7%A4%D7%99-%D7%9E%D7%A4%D7%A7%D7%93-2008.aspx),
+and [geographic-layer catalog](https://www.cbs.gov.il/he/Pages/geo-layers.aspx)
+were checked for alternate geometry and crosswalk products. The CBS GIS
+[`product_gis` catalog](https://www.cbs.gov.il/he/subjects/Documents/product_gis.pdf)
+names a nationwide polling-district boundary layer,
+`kalpi_artzi`, but classifies it as internal and unavailable for public sale or
+download. No second public K17/K18 detailed crosswalk was found.
+
+`historical_geography_build_summary.json` audits the downloaded geometry before
+normalization. The 1995 archive contains 2,659 unique assignable IDs before two
+official transition-key unions, the 2008 source contains 3,030, and the 2011
+source contains 3,083 before 32 exact-ID supplements. Multipart pieces and
+structural records without valid area IDs are counted separately. This audit
+found no parser-level loss of a positive, fully identified statistical area.
+
 The archived K20-K25 CEC polling-place workbooks were inspected separately.
 Only K23 contains an AGS field. Its direct AGS evidence adds 74 assignments
 after 6,775 of 6,776 comparable existing targets agree and the one conflict is
@@ -88,9 +104,36 @@ merged. After classifying those dissolved locality totals correctly, the audit
 accepts only nine exact K21 links and no K20 links. They never replace official
 ballot or vote values.
 
+Display-only reuse is recorded separately from assignment evidence. The exact
+Hebron footprint is reused for the two reviewed K17/K18 custom assignments, and
+Ganei Modi'in uses a detailed footprint from K21. The ArcGIS tribal footprints
+are not accepted as exclusive boundaries: they come from the derivative,
+explicitly non-official election layers and materially overlap surrounding
+areas. The map therefore uses one combined tribal marker in every election.
+Exact tribe IDs and statistical-area assignments remain separate in the
+downloadable ballot and aggregate tables. None of these display choices creates
+or reallocates votes.
+
 `scripts/audit_election_source_geography_fields.py` publishes the complete
 source-schema inventory. The recovered catalog contains no second in-scope
 crosswalk or stability workbook for these elections.
+
+Recurring crosswalk omissions are published in
+`historical_crosswalk_locality_omission_recurrence.csv`. Sixteen localities are
+absent from all nine public crosswalks. This is consistent with the CBS
+[methodological note on address anchoring](https://www.cbs.gov.il/he/publications/doclib/2021/socio_eco17_1832/intro_h.pdf),
+which documents substantially more limited residential-address anchoring in
+Arab and Druze localities. It is evidence of a public-source limitation, not
+proof that residents or historical polygons are absent.
+
+For K17 and K18, reviewed polling-register scans and tables identify 153 rows
+inside three historical composite municipalities and another 11 Ma'ale Iron
+rows with their component locality. The exact ranges and page evidence are
+committed in
+`data/manual/historical_composite_ballot_components.csv`. These identities are
+kept even when the historical source does not expose a component statistical
+area. A polling-place address locates the station and may corroborate the
+component locality; it does not establish the residential area of its voters.
 
 See `docs/HISTORICAL_STATISTICAL_AREA_ASSIGNMENT.md` for the exact precedence,
 vintage rules, supplement IDs, audit results, and current coverage.
@@ -130,7 +173,11 @@ Relevant source fields:
 `data/manual/composite_localities.csv` defines four election-time composite
 municipalities. `data/manual/joined_locality_composites.csv` defines
 source-backed host/result unions for elections where a small register was
-published under a nearby host result.
+published under a nearby host result. Ganei Modi'in is joined to Modi'in Illit
+in K17-K20, matching its historical municipal status before its 2016
+[independence](https://www.cbs.gov.il/he/mediarelease/DocLib/2016/304/01_16_304b.pdf);
+the separate statistical-area display proxy is hidden in K19 and K20 without
+deleting its canonical geometry.
 
 ## Locality Classification Evidence
 

@@ -165,7 +165,10 @@ export default function MapCanvas({
       promoteId: 'id',
     })
 
-    const polygonVisibilityFilter = buildPolygonVisibilityFilter(hiddenGeographyIds)
+    const polygonVisibilityFilter = buildPolygonVisibilityFilter(
+      hiddenGeographyIds,
+      [...recordsByIdRef.current.values()],
+    )
 
     const fillLayer: FillLayerSpecification = {
       id: FILL_LAYER_ID,
@@ -296,11 +299,19 @@ export default function MapCanvas({
       !mapReady ||
       !map.getSource(SOURCE_ID) ||
       !map.getSource(MARKER_SOURCE_ID) ||
+      !map.getLayer(FILL_LAYER_ID) ||
+      !map.getLayer(LINE_LAYER_ID) ||
       !map.getLayer(MARKER_LAYER_ID)
     ) {
       return
     }
 
+    const polygonVisibilityFilter = buildPolygonVisibilityFilter(
+      hiddenGeographyIds,
+      records,
+    )
+    map.setFilter(FILL_LAYER_ID, polygonVisibilityFilter)
+    map.setFilter(LINE_LAYER_ID, polygonVisibilityFilter)
     map.setFilter(MARKER_LAYER_ID, buildMarkerVisibilityFilter(records, hiddenGeographyIds))
 
     const applyFeatureStates = () => {

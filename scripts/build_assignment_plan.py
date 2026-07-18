@@ -5,6 +5,7 @@ import csv
 import re
 import sys
 from collections import Counter
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any
 
@@ -15,6 +16,7 @@ BALLOT_ROWS = PROCESSED_DIR / "normalized" / "ballot_rows.csv"
 LOCALITIES = PROCESSED_DIR / "geographies" / "localities_2022.metadata.csv"
 CROSSWALK = MANUAL_DIR / "locality_crosswalk.csv"
 ROW_OVERRIDES = MANUAL_DIR / "ballot_geography_overrides.csv"
+COMPOSITE_BALLOT_COMPONENTS = MANUAL_DIR / "historical_composite_ballot_components.csv"
 OUT_DIR = PROCESSED_DIR / "assignments"
 
 
@@ -76,6 +78,103 @@ def row_override_index(rows: list[dict[str, str]]) -> dict[tuple[str, str, str],
             raise ValueError(f"Duplicate ballot geography override key: {key}")
         index[key] = row
     return index
+
+
+def historical_ballot_base(election: str, value: Any) -> int | None:
+    text = normalize_spaces(value)
+    if not text:
+        return None
+    try:
+        number = Decimal(text)
+    except InvalidOperation:
+        return None
+    return int(number) // 10 if election == "K17" else int(number)
+
+
+def composite_component_index(
+    rows: list[dict[str, str]],
+) -> tuple[dict[tuple[str, str], list[dict[str, Any]]], dict[str, int]]:
+    index: dict[tuple[str, str], list[dict[str, Any]]] = {}
+    expected_matches: dict[str, int] = {}
+    valid_elections = {f"K{number}" for number in range(17, 26)}
+    for source in rows:
+        row = dict(source)
+        election = normalize_spaces(row.get("election", ""))
+        source_name_key = norm_name(row.get("source_locality_name", ""))
+        source_code = normalize_code(row.get("source_locality_code", ""))
+        target_code = normalize_code(row.get("component_locality_code", ""))
+        target_name = normalize_spaces(row.get("component_locality_name", ""))
+        evidence_status = normalize_spaces(row.get("evidence_status", ""))
+        try:
+            ballot_min = int(row.get("ballot_base_min", ""))
+            ballot_max = int(row.get("ballot_base_max", ""))
+            expected = int(row.get("expected_ballot_rows", ""))
+        except ValueError as error:
+            raise ValueError(f"Invalid composite component range: {source}") from error
+        if (
+            election not in valid_elections
+            or not source_name_key
+            or ballot_min > ballot_max
+            or not target_code
+            or not target_name
+            or not evidence_status.startswith("confirmed_")
+            or expected <= 0
+        ):
+            raise ValueError(f"Incomplete composite component range: {source}")
+        rule_id = f"{election}:{source_name_key}:{ballot_min}-{ballot_max}:{target_code}"
+        if rule_id in expected_matches:
+            raise ValueError(f"Duplicate composite component range: {rule_id}")
+        row.update(
+            {
+                "_rule_id": rule_id,
+                "_source_code": source_code,
+                "_ballot_min": ballot_min,
+                "_ballot_max": ballot_max,
+                "_target_code": target_code,
+                "_target_name": target_name,
+            }
+        )
+        key = (election, source_name_key)
+        for existing in index.get(key, []):
+            if ballot_min <= existing["_ballot_max"] and ballot_max >= existing["_ballot_min"]:
+                raise ValueError(f"Overlapping composite component ranges: {rule_id}")
+        index.setdefault(key, []).append(row)
+        expected_matches[rule_id] = expected
+    return index, expected_matches
+
+
+def find_composite_component(
+    row: dict[str, str],
+    index: dict[tuple[str, str], list[dict[str, Any]]],
+) -> dict[str, Any] | None:
+    election = normalize_spaces(row.get("election", ""))
+    source_name_key = norm_name(row.get("source_locality_name", ""))
+    source_code = normalize_code(row.get("source_locality_code", ""))
+    ballot = historical_ballot_base(election, row.get("source_kalpi", ""))
+    if ballot is None:
+        return None
+    matches = [
+        rule
+        for rule in index.get((election, source_name_key), [])
+        if rule["_ballot_min"] <= ballot <= rule["_ballot_max"]
+        and (not rule["_source_code"] or rule["_source_code"] == source_code)
+    ]
+    if len(matches) > 1:
+        raise ValueError(f"Ballot row matches multiple composite component ranges: {row}")
+    return matches[0] if matches else None
+
+
+def assignment_from_composite_component(rule: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "assignment_method": "historical_stat_area_pending",
+        "assignment_source": "reviewed_composite_component_evidence",
+        "target_geography_type": "statistical_area_pending",
+        "target_locality_code": rule["_target_code"],
+        "target_locality_name": rule["_target_name"],
+        "target_stat_area_id": "",
+        "custom_geography_id": "",
+        "unresolved_reason": "",
+    }
 
 
 def assignment_from_row_override(row: dict[str, str]) -> dict[str, Any]:
@@ -273,6 +372,8 @@ def assign_row(
     localities_by_name: dict[str, list[dict]],
     crosswalk: dict[tuple[str, str], dict],
     row_overrides: dict[tuple[str, str, str], dict[str, str]],
+    composite_components: dict[tuple[str, str], list[dict[str, Any]]],
+    component_match_counts: Counter[str],
 ) -> dict[str, Any]:
     if bool_value(row["is_envelope"]):
         return {
@@ -292,6 +393,11 @@ def assign_row(
     )
     if override:
         return assignment_from_row_override(override)
+
+    component = find_composite_component(row, composite_components)
+    if component:
+        component_match_counts[component["_rule_id"]] += 1
+        return assignment_from_composite_component(component)
 
     reviewed = find_crosswalk(row, crosswalk)
     if reviewed:
@@ -318,6 +424,10 @@ def main() -> None:
     localities_by_code, localities_by_name = locality_indexes(read_csv(LOCALITIES))
     crosswalk = crosswalk_index(read_csv(CROSSWALK))
     row_overrides = row_override_index(read_csv(ROW_OVERRIDES))
+    composite_components, expected_component_matches = composite_component_index(
+        read_csv(COMPOSITE_BALLOT_COMPONENTS)
+    )
+    component_match_counts: Counter[str] = Counter()
     ballot_override_keys = {
         key
         for row in ballot_rows
@@ -329,7 +439,15 @@ def main() -> None:
 
     output: list[dict[str, Any]] = []
     for row in ballot_rows:
-        assignment = assign_row(row, localities_by_code, localities_by_name, crosswalk, row_overrides)
+        assignment = assign_row(
+            row,
+            localities_by_code,
+            localities_by_name,
+            crosswalk,
+            row_overrides,
+            composite_components,
+            component_match_counts,
+        )
         output.append(
             {
                 "source_row_uid": row["source_row_uid"],
@@ -343,6 +461,17 @@ def main() -> None:
                 "actual_voters": row["actual_voters"],
                 **assignment,
             }
+        )
+
+    mismatched_component_ranges = {
+        rule_id: {"expected": expected, "actual": component_match_counts[rule_id]}
+        for rule_id, expected in expected_component_matches.items()
+        if component_match_counts[rule_id] != expected
+    }
+    if mismatched_component_ranges:
+        raise ValueError(
+            "Composite component ranges did not match their reviewed ballot counts: "
+            f"{mismatched_component_ranges}"
         )
 
     fields = [

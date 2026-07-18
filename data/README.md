@@ -32,11 +32,20 @@ Important reviewed inputs:
   identities and custom targets.
 - `manual/ballot_geography_overrides.csv` - row-specific reviewed geographic
   classifications.
-- `manual/arcgis_assignment_reconstruction_reviews.csv` - 44 approved Tier A
-  locality-election reconstruction decisions. These authorize inferred
-  ballot-to-area links while preserving official ballot and vote values.
+- `manual/arcgis_assignment_reconstruction_reviews.csv` - 68 reviewed
+  locality-election reconstruction decisions: two approved exact K21
+  partitions (one Tier A and one Tier C) and 66 rejected decisions. The two
+  approvals authorize nine inferred ballot-to-area links while preserving
+  official ballot and vote values.
+- `manual/historical_composite_ballot_components.csv` - reviewed K17/K18
+  ballot ranges that identify component localities inside historical
+  composite municipalities.
 - `manual/composite_localities.csv` and
   `manual/joined_locality_composites.csv` - election-specific locality unions.
+- `manual/statistical_area_display_groups.csv` and
+  `manual/statistical_area_display_overrides.csv` - presentation-only
+  statistical-area grouping, visibility, and naming rules; these do not alter
+  canonical assignment IDs.
 - `manual/party_registry.csv` - election-specific party/list metadata.
 
 Source preparation constraints:
