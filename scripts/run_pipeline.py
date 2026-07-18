@@ -15,8 +15,12 @@ STAGES = [
     ["scripts/normalize_election_results.py"],
     ["scripts/build_assignment_plan.py"],
     ["scripts/build_historical_ballot_assignments.py"],
+    ["scripts/audit_election_source_geography_fields.py"],
+    ["scripts/audit_k23_cec_stat_area_assignments.py"],
     ["scripts/audit_arcgis_assignment_reconstruction.py"],
+    ["scripts/audit_stable_ballot_assignments.py"],
     ["scripts/build_final_geography_assignments.py"],
+    ["scripts/audit_historical_assignment_gaps.py"],
     ["scripts/build_public_outputs.py"],
     ["scripts/build_public_data_release.py"],
 ]

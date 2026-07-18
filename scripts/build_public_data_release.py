@@ -19,6 +19,8 @@ WIDE_DIR = PROCESSED_DIR / "normalized" / "ballot_votes_wide"
 ASSIGNMENTS = PROCESSED_DIR / "assignments" / "ballot_geography_assignments.csv"
 PUBLIC_DIR = PROCESSED_DIR / "public"
 GEOGRAPHY_DIR = PROCESSED_DIR / "geographies"
+ASSIGNMENT_DIR = PROCESSED_DIR / "assignments"
+AUDIT_DIR = PROCESSED_DIR / "audits"
 PARTY_REGISTRY = MANUAL_DIR / "party_registry.csv"
 ARCGIS_RECONSTRUCTION_REVIEWS = (
     MANUAL_DIR / "arcgis_assignment_reconstruction_reviews.csv"
@@ -74,6 +76,9 @@ ASSIGNMENT_COLUMNS = [
     "is_geographic",
     "final_assignment_method",
     "final_assignment_source",
+    "assignment_evidence_class",
+    "assignment_confidence",
+    "assignment_is_synthetic_link",
     "unresolved_reason",
 ]
 
@@ -135,6 +140,117 @@ AGGREGATE_EXPORTS = [
     ("custom_geography_results", "custom-geographies", "geography_id"),
     ("envelope_results", "envelopes", ""),
     ("unmapped_rows", "unresolved", ""),
+]
+
+PROVENANCE_TABLES = [
+    (
+        MANUAL_DIR / "historical_stat_area_overrides.csv",
+        "historical_stat_area_overrides.csv",
+        "Reviewed replacements for contradicted direct crosswalk rows.",
+    ),
+    (
+        ARCGIS_RECONSTRUCTION_REVIEWS,
+        "arcgis_reconstruction_reviews.csv",
+        "Reviewed locality-election decisions for ArcGIS residual reconstruction.",
+    ),
+    (
+        ASSIGNMENT_DIR / "historical_ballot_crosswalk.csv",
+        "official_historical_ballot_crosswalk.csv",
+        "Normalized official CBS ballot-to-statistical-area crosswalk rows.",
+    ),
+    (
+        ASSIGNMENT_DIR / "final_assignment_summary.csv",
+        "final_assignment_summary.csv",
+        "Per-election row and voter coverage for final geography assignments.",
+    ),
+    (
+        AUDIT_DIR / "election_source_geography_field_audit.csv",
+        "election_source_geography_field_audit.csv",
+        "Reproducible inventory of statistical-area and AGS fields in official sources.",
+    ),
+    (
+        AUDIT_DIR / "arcgis_assignment_reconstruction_candidates.csv",
+        "arcgis_reconstruction_candidates.csv",
+        "Approved-capable exact ArcGIS residual-partition candidate rows.",
+    ),
+    (
+        AUDIT_DIR / "arcgis_assignment_reconstruction_localities.csv",
+        "arcgis_reconstruction_localities.csv",
+        "All tested ArcGIS localities, including rejected dissolved aggregates.",
+    ),
+    (
+        AUDIT_DIR / "k23_cec_ags_assignment_candidates.csv",
+        "k23_cec_ags_assignment_candidates.csv",
+        "Missing K23 crosswalk rows recovered from the official CEC AGS field.",
+    ),
+    (
+        AUDIT_DIR / "k23_cec_ags_conflicts.csv",
+        "k23_cec_ags_conflicts.csv",
+        "K23 AGS evidence withheld because it conflicts with another source.",
+    ),
+    (
+        AUDIT_DIR / "k23_cec_ags_coverage.csv",
+        "k23_cec_ags_coverage.csv",
+        "K23 AGS population coverage by locality.",
+    ),
+    (
+        AUDIT_DIR / "k23_cec_ags_validation.csv",
+        "k23_cec_ags_validation.csv",
+        "Row-level comparison of K23 AGS with existing official assignments.",
+    ),
+    (
+        AUDIT_DIR / "stable_ballot_assignment_candidates.csv",
+        "stable_ballot_assignment_candidates.csv",
+        "Synthetic area links inferred from official CBS stable-ballot workbooks.",
+    ),
+    (
+        AUDIT_DIR / "stable_ballot_assignment_conflicts.csv",
+        "stable_ballot_assignment_conflicts.csv",
+        "Stable-ballot links withheld because authoritative areas conflict.",
+    ),
+    (
+        AUDIT_DIR / "stable_ballot_transition_audit.csv",
+        "stable_ballot_transition_audit.csv",
+        "K18-to-K19 stability checks against the official 2008/2011 transition keys.",
+    ),
+    (
+        AUDIT_DIR / "historical_assignment_gap_rows.csv",
+        "historical_assignment_gap_rows.csv",
+        "Every unresolved ballot row with a machine-readable reason.",
+    ),
+    (
+        AUDIT_DIR / "historical_assignment_gap_localities.csv",
+        "historical_assignment_gap_localities.csv",
+        "Unresolved assignment totals by election, reason, and locality.",
+    ),
+    (
+        AUDIT_DIR / "historical_assignment_gap_summary.csv",
+        "historical_assignment_gap_summary.csv",
+        "Unresolved assignment totals by election and reason.",
+    ),
+    (
+        AUDIT_DIR / "historical_polygon_coverage.csv",
+        "historical_polygon_coverage.csv",
+        "Election-by-polygon assignment, source-comparison, and population-proxy audit.",
+    ),
+    (
+        AUDIT_DIR / "historical_polygon_assignment_persistence.csv",
+        "historical_polygon_assignment_persistence.csv",
+        "Cross-election assignment presence for each compatible historical polygon.",
+    ),
+    (
+        AUDIT_DIR / "historical_polygon_coverage_summary.csv",
+        "historical_polygon_coverage_summary.csv",
+        "Per-election historical polygon coverage summary.",
+    ),
+]
+
+PROVENANCE_JSON = [
+    (AUDIT_DIR / "election_source_geography_field_audit.json", "election_source_geography_field_audit.json"),
+    (AUDIT_DIR / "arcgis_assignment_reconstruction_summary.json", "arcgis_reconstruction_summary.json"),
+    (AUDIT_DIR / "k23_cec_ags_assignment_summary.json", "k23_cec_ags_assignment_summary.json"),
+    (AUDIT_DIR / "stable_ballot_assignment_summary.json", "stable_ballot_assignment_summary.json"),
+    (AUDIT_DIR / "historical_assignment_gap_summary.json", "historical_assignment_gap_summary.json"),
 ]
 
 
@@ -360,10 +476,19 @@ def build_ballot_exports(
         )
         if selected["geography_assignment_status"].eq("").any():
             raise ValueError(f"{election} contains rows without final assignment metadata")
+        if selected["assignment_evidence_class"].eq("").any():
+            raise ValueError(f"{election} contains rows without assignment evidence metadata")
+
+        synthetic = selected[
+            selected["assignment_is_synthetic_link"].str.lower() == "true"
+        ]
+        if synthetic["stat_area_id"].eq("").any():
+            raise ValueError(f"{election} has a synthetic link without a stat-area ID")
 
         reconstructed = selected[
-            selected["final_assignment_method"]
-            == "arcgis_residual_partition_tier_a"
+            selected["final_assignment_method"].str.startswith(
+                "arcgis_residual_partition_tier_"
+            )
         ]
         election_reviews = reconstruction_reviews[
             reconstruction_reviews["election"] == election
@@ -389,7 +514,7 @@ def build_ballot_exports(
         ):
             raise ValueError(
                 f"{election} reconstructed assignment totals do not match "
-                "the reviewed Tier A decisions"
+                "the reviewed ArcGIS decisions"
             )
 
         party_sum = (
@@ -402,6 +527,16 @@ def build_ballot_exports(
         if not party_sum.eq(valid_votes).all():
             bad = int((party_sum != valid_votes).sum())
             raise ValueError(f"{election} has {bad} rows whose party votes do not reconcile")
+
+        actual_voters = pd.to_numeric(selected["actual_voters"], errors="raise")
+        invalid_votes = pd.to_numeric(selected["invalid_votes"], errors="raise")
+        turnout_reconciles = actual_voters.eq(valid_votes + invalid_votes)
+        if not turnout_reconciles.all():
+            bad = int((~turnout_reconciles).sum())
+            raise ValueError(
+                f"{election} has {bad} rows whose actual voters do not reconcile "
+                "to valid plus invalid votes"
+            )
 
         stat_rows = selected[selected["stat_area_id"] != ""]
         missing_stat_ids = sorted(
@@ -458,9 +593,19 @@ def build_ballot_exports(
                 "statistically_mapped_rows": len(stat_rows),
                 "reconstructed_stat_assignment_rows": len(reconstructed),
                 "reconstructed_stat_assignment_actual_voters": reconstructed_voters,
+                "synthetic_assignment_rows": len(synthetic),
+                "synthetic_assignment_actual_voters": int(
+                    pd.to_numeric(
+                        synthetic["actual_voters"], errors="raise"
+                    ).sum()
+                ),
+                "assignment_evidence_classes": selected[
+                    "assignment_evidence_class"
+                ].value_counts().to_dict(),
                 "locality_mapped_rows": len(locality_rows),
                 "missing_stat_geometry_ids": len(missing_stat_ids),
                 "missing_locality_geometry_ids": len(missing_locality_ids),
+                "actual_vote_reconciliation_mismatch_rows": 0,
                 "party_vote_mismatch_rows": 0,
             }
         )
@@ -524,6 +669,47 @@ def copy_table(
         )
     )
     return len(frame)
+
+
+def copy_json_artifact(
+    source: Path,
+    target: Path,
+    manifest: list[dict[str, Any]],
+    description: str,
+) -> None:
+    if not source.exists():
+        raise FileNotFoundError(source)
+    payload = json.loads(source.read_text(encoding="utf-8-sig"))
+    write_bytes(
+        target,
+        (json.dumps(payload, ensure_ascii=False, indent=2) + "\n").encode("utf-8"),
+    )
+    manifest.append(
+        manifest_row(
+            target,
+            "assignment-provenance",
+            description,
+        )
+    )
+
+
+def build_assignment_provenance(manifest: list[dict[str, Any]]) -> None:
+    target_dir = OUT_ROOT / "metadata" / "assignment-provenance"
+    for source, filename, description in PROVENANCE_TABLES:
+        copy_table(
+            source,
+            target_dir / filename,
+            manifest,
+            "assignment-provenance",
+            description,
+        )
+    for source, filename in PROVENANCE_JSON:
+        copy_json_artifact(
+            source,
+            target_dir / filename,
+            manifest,
+            "Machine-readable summary for the corresponding assignment audit.",
+        )
 
 
 def build_metadata_and_aggregates(
@@ -647,7 +833,7 @@ def write_manifests(
         (
             json.dumps(
                 {
-                    "schema_version": 1,
+                    "schema_version": 2,
                     "data_release": "v1",
                     "election_range": {"first": "K17", "last": "K25"},
                     "files": manifest,
@@ -663,7 +849,7 @@ def write_manifests(
         (
             json.dumps(
                 {
-                    "schema_version": 1,
+                    "schema_version": 2,
                     "total_ballot_rows": total_rows,
                     "aggregate_joins": aggregate_validation,
                     "elections": validation_rows,
@@ -693,13 +879,7 @@ def main() -> None:
         set(geography_metadata["geography_id"].astype(str)),
         manifest,
     )
-    copy_table(
-        ARCGIS_RECONSTRUCTION_REVIEWS,
-        OUT_ROOT / "metadata" / "arcgis_reconstruction_reviews.csv",
-        manifest,
-        "assignment-provenance",
-        "Reviewed locality-election decisions for inferred ArcGIS residual assignments.",
-    )
+    build_assignment_provenance(manifest)
     write_manifests(manifest, validation_rows, total_rows, aggregate_validation)
 
     print(f"public_data_release={OUT_ROOT.relative_to(ROOT).as_posix()}")

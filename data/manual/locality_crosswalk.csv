@@ -18,7 +18,7 @@
 קרית שמונה,accepted_locality_match,קריית שמונה,
 אבו רובייעה )שבט( [966],custom_point_size_polygon,custom:tribal_negev,custom:tribal_negev
 קרית מלאכי,accepted_locality_match,קריית מלאכי,
-אבו קורינאת )שבט( [968],accepted_locality_match,אבו קורינאת (יישוב),
+אבו קורינאת )שבט( [968],custom_point_size_polygon,custom:tribal_negev,custom:tribal_negev
 באקה-ג'ת,historical_stat_area_pending,באקה אל-גרביה | ג'ת,
 קרית טבעון,accepted_locality_match,קריית טבעון,
 עיר כרמל,historical_stat_area_pending,דאלית אל-כרמל | עספיא,
@@ -32,7 +32,7 @@
 אבו ג'ווייעד (שבט) [967],custom_point_size_polygon,custom:tribal_negev,custom:tribal_negev
 אפרתה,accepted_locality_match,אפרת,
 פרדסיה,accepted_locality_match,פרדסייה,
-סייד )שבט( [1170],accepted_locality_match,אל סייד,
+סייד )שבט( [1170],custom_point_size_polygon,custom:tribal_negev,custom:tribal_negev
 קודייראת א-צאנע(שבט) [964],custom_point_size_polygon,custom:tribal_negev,custom:tribal_negev
 מעלה שומרון [3637],accepted_locality_match,קרני שומרון,
 הוזייל )שבט( [956],custom_point_size_polygon,custom:tribal_negev,custom:tribal_negev
@@ -69,7 +69,7 @@
 מחנה טלי [1418],special_non_geographic,special:envelope_votes,
 מחנה יוכבד [1416],special_non_geographic,special:envelope_votes,
 מחנה יהודית [1413],special_non_geographic,special:envelope_votes,
-אבו קורינאת (שבט),accepted_locality_match,אבו קורינאת (יישוב),
+אבו קורינאת (שבט),custom_point_size_polygon,custom:tribal_negev,custom:tribal_negev
 תראבין א-צאנע (שבט) [970],custom_point_size_polygon,custom:tribal_negev,custom:tribal_negev
 חלמיש,accepted_locality_match,נווה צוף,
 מחנה הילה [1411],special_non_geographic,special:envelope_votes,
@@ -79,7 +79,7 @@
 אבו רובייעה (שבט),custom_point_size_polygon,custom:tribal_negev,custom:tribal_negev
 גני יהודה [781],accepted_locality_match,סביון*,
 נווה אפעל [2032],accepted_locality_match,רמת גן,
-סייד (שבט),accepted_locality_match,אל סייד,
+סייד (שבט),custom_point_size_polygon,custom:tribal_negev,custom:tribal_negev
 שגב,accepted_locality_match,עצמון שגב,
 סתריה,accepted_locality_match,סתרייה,
 קודייראת א-צאנע(ש,custom_point_size_polygon,custom:tribal_negev,custom:tribal_negev
@@ -106,7 +106,7 @@
 מחנה עדי [1417],special_non_geographic,special:envelope_votes,
 אשדות יעקב (מאוח,accepted_locality_match,אשדות יעקב (מאוחד),
 אילניה,accepted_locality_match,אילנייה,
-ח'ואלד )שבט( [986],accepted_locality_match,ח'ואלד,
+ח'ואלד )שבט( [986],custom_point_size_polygon,custom:tribal_negev,custom:tribal_negev
 שושנת העמקים (רסק,accepted_locality_match,שושנת העמקים,
 חברון,custom_point_size_polygon,custom:hebron,custom:hebron
 אטרש (שבט),custom_point_size_polygon,custom:tribal_negev,custom:tribal_negev
@@ -144,7 +144,7 @@
 גנים [3758],custom_point_size_polygon,custom:northern_samaria_evacuated_localities,custom:northern_samaria_evacuated_localities
 מורג [5407],custom_point_size_polygon,custom:gaza_evacuated_localities,custom:gaza_evacuated_localities
 נעמי,accepted_locality_match,"נעמ""ה",
-ח'ואלד (שבט),accepted_locality_match,ח'ואלד,
+ח'ואלד (שבט),custom_point_size_polygon,custom:tribal_negev,custom:tribal_negev
 כדים [3729],custom_point_size_polygon,custom:northern_samaria_evacuated_localities,custom:northern_samaria_evacuated_localities
 רפיח ים [5433],custom_point_size_polygon,custom:gaza_evacuated_localities,custom:gaza_evacuated_localities
 ג'נאביב (שבט),custom_point_size_polygon,custom:tribal_negev,custom:tribal_negev

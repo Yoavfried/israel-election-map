@@ -1,6 +1,6 @@
 # Data Sources
 
-Last updated: 2026-07-17
+Last updated: 2026-07-18
 
 ## Election Results
 
@@ -25,6 +25,11 @@ Archived official reports under `data/raw/` provide the missing counts,
 locality subtotals, regional-committee totals, and the national denominator.
 `data/manual/k17_eligible_voters.csv` restores the denominator for all 8,277
 ordinary result rows.
+
+The same K17 resource omits a separate invalid-vote column, so normalization
+derives invalid votes as actual voters minus valid votes and verifies that every
+row reconciles. This includes Ras Ali ballot 1, whose official final-report row
+confirms the edge case of 196 voters, 196 invalid votes, and zero valid votes.
 
 Final-report image extraction supplies 8,199 rows, 14 more are recovered from
 otherwise unaligned final-report lines, and one omitted zero-voter row is
@@ -56,26 +61,36 @@ election-specific exceptions.
 
 ## Historical Ballot Crosswalks And Geometry
 
-The CBS GIS catalog supplies direct ballot-to-statistical-area tables for every
-current-scope election:
+The CBS GIS catalog supplies one direct ballot-to-statistical-area table for
+every current-scope election:
 
 - K17 -> 1995 areas
 - K18 -> 2008 areas
 - K19-K25 -> 2011 areas
 
-It also supplies the corresponding geometry and transition tables.
+It also supplies the corresponding geometry, transition tables, and one
+stable-ballot workbook for each transition ending K19-K25.
 `scripts/fetch_cbs_historical_geography.py` records exact source URLs, byte
 lengths, and SHA-256 hashes in
 `data/raw/cbs_historical_geography/manifest.json`.
 
+The archived K20-K25 CEC polling-place workbooks were inspected separately.
+Only K23 contains an AGS field. Its direct AGS evidence adds 74 assignments
+after 6,775 of 6,776 comparable existing targets agree and the one conflict is
+withheld. The stable-ballot workbooks add 134 high-confidence inferred links;
+all same-vintage and transition conflicts remain withheld.
+
 Two downloadable ArcGIS FeatureServer layers provide detailed display
-footprints, 30 explicit exact-ID 2011 geometry supplements, and aggregate
-evidence for the K20/K21 residual-partition audit. Forty-four reviewed Tier A
-locality-election decisions use those aggregates to infer missing
-ballot-to-area links. They never replace official ballot or vote values, and
-every affected public row carries explicit inferred-assignment provenance.
-Their service descriptions state that the election output is not official and
-that some polygons are schematic.
+footprints, 32 explicit exact-ID 2011 geometry supplements, and aggregate
+evidence for K20/K21. Their service descriptions state both that the election
+output is not official and that statistical areas in Arab localities were
+merged. After classifying those dissolved locality totals correctly, the audit
+accepts only nine exact K21 links and no K20 links. They never replace official
+ballot or vote values.
+
+`scripts/audit_election_source_geography_fields.py` publishes the complete
+source-schema inventory. The recovered catalog contains no second in-scope
+crosswalk or stability workbook for these elections.
 
 See `docs/HISTORICAL_STATISTICAL_AREA_ASSIGNMENT.md` for the exact precedence,
 vintage rules, supplement IDs, audit results, and current coverage.

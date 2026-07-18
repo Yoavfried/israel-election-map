@@ -5,7 +5,8 @@ The repository includes a versioned, ready-to-download data release under
 
 The release contains all 96,529 normalized K17-K25 ballot-result rows, separate
 polygon aggregates, full-resolution geography packages, election and party
-metadata, checksums, and a machine-readable validation report.
+metadata, row-level assignment provenance, checksums, and a machine-readable
+validation report. The ballot-table contract is schema version 2.
 
 ## Download One Election
 
@@ -38,7 +39,7 @@ metadata. Every feature exposes `properties.geography_id`.
 |---|---:|---|---|
 | 1995 statistical areas | 2,660 | [ZIP](v1/geographies/statistical_areas_1995.zip?raw=1) | [CSV](v1/geographies/statistical_areas_1995.csv?raw=1) |
 | 2008 statistical areas | 3,030 | [ZIP](v1/geographies/statistical_areas_2008.zip?raw=1) | [CSV](v1/geographies/statistical_areas_2008.csv?raw=1) |
-| 2011 statistical areas | 3,113 | [ZIP](v1/geographies/statistical_areas_2011.zip?raw=1) | [CSV](v1/geographies/statistical_areas_2011.csv?raw=1) |
+| 2011 statistical areas | 3,115 | [ZIP](v1/geographies/statistical_areas_2011.zip?raw=1) | [CSV](v1/geographies/statistical_areas_2011.csv?raw=1) |
 | 2022 statistical areas | 3,857 | [ZIP](v1/geographies/statistical_areas_2022.zip?raw=1) | [CSV](v1/geographies/statistical_areas_2022.csv?raw=1) |
 | 2022 locality footprints | 1,387 | [ZIP](v1/geographies/localities_2022.zip?raw=1) | [CSV](v1/geographies/localities_2022.csv?raw=1) |
 | Historical/reviewed locality composites | 100 | [ZIP](v1/geographies/composite_localities.zip?raw=1) | [CSV](v1/geographies/composite_localities.csv?raw=1) |
@@ -62,24 +63,29 @@ combined lookup from any `geography_id` to its geometry archive.
 See the [data dictionary](DATA_DICTIONARY.md) for column-level definitions and
 short pandas/QGIS examples.
 
-## Inferred Assignment Provenance
+## Assignment Provenance
 
-The K20 and K21 ballot files contain 751 reviewed rows whose vote data are
-official but whose ballot-to-statistical-area link is inferred from a unique
-exact partition of election-specific ArcGIS area aggregates. They are not
-official crosswalk rows and they are not synthetic vote records.
+Every ballot row exposes:
 
-Affected rows are machine-readable:
+- `assignment_evidence_class`;
+- `assignment_confidence`;
+- `assignment_is_synthetic_link`;
+- the specific `final_assignment_method` and `final_assignment_source`.
 
-- `final_assignment_method` is `arcgis_residual_partition_tier_a`;
-- `final_assignment_source` names the ArcGIS source and reviewed decision table;
-- [`metadata/arcgis_reconstruction_reviews.csv`](v1/metadata/arcgis_reconstruction_reviews.csv?raw=1)
-  lists all 44 approved locality-election decisions and their reviewed row and
-  voter totals, plus a SHA-256 fingerprint of the exact row-to-area mapping.
+The release contains 148 inferred ballot-to-area links representing 40,752
+actual voters: 134 from official CBS stable-ballot evidence, nine from reviewed
+exact ArcGIS residuals, and five reviewed cross-election corrections. The
+ballot identity, electorate, turnout, valid/invalid totals, and party votes
+remain unchanged official source values. Only the area link is synthetic.
 
-Statistical-area aggregate CSVs include these rows. Users who require only
-official-crosswalk assignments should filter the ballot CSVs by
-`final_assignment_method` and aggregate the remaining rows themselves.
+The separate 74 K23 AGS assignments are direct official evidence and are not
+marked synthetic. Users who require no inferred links can filter
+`assignment_is_synthetic_link=false` and reaggregate the ballot rows.
+
+The complete evidence tables, accepted and rejected decisions, conflicts,
+source-schema inventory, unresolved-row classification, and polygon coverage
+audit are under
+[`metadata/assignment-provenance`](v1/metadata/assignment-provenance/).
 
 ## Metadata And Integrity
 
@@ -90,8 +96,8 @@ official-crosswalk assignments should filter the ballot CSVs by
   metadata.
 - [`metadata/coverage.csv`](v1/metadata/coverage.csv?raw=1) reports mapped and
   pending coverage by election.
-- [`metadata/arcgis_reconstruction_reviews.csv`](v1/metadata/arcgis_reconstruction_reviews.csv?raw=1)
-  records every approved inferred-assignment decision.
+- [`metadata/assignment-provenance`](v1/metadata/assignment-provenance/)
+  contains 25 source, decision, conflict, gap, and polygon-audit artifacts.
 - [`manifest.csv`](v1/manifest.csv?raw=1) and
   [`manifest.json`](v1/manifest.json?raw=1) contain file sizes, row counts, and
   SHA-256 checksums.

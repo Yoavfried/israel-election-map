@@ -1,183 +1,203 @@
 # Data Pipeline
 
-Last updated: 2026-07-17
+Last updated: 2026-07-18
 
 ## Product Grain
 
-The normalized fact table has one row per election result row / ballot
-subdivision. Statistical-area assignment means the CBS area associated with
-that ballot's voters.
+The normalized fact table has one row per official election-result row or
+ballot subdivision. A statistical-area assignment identifies the area served by
+that ballot register. The browser performs no assignment or aggregation.
 
-## Raw Source Preparation
-
-Election results are fetched normally:
-
-```powershell
-python scripts/fetch_election_results.py
-```
-
-Historical geography is a network preparation step, not a routine rebuild step:
+## Source Preparation
 
 ```powershell
 python scripts/fetch_cbs_historical_geography.py
-python scripts/fetch_arcgis_feature_layer.py <FeatureServer-layer-url> <output.geojson>
-```
-
-The CBS downloader enumerates the public catalog, verifies expected byte lengths and file signatures, and writes a SHA-256 manifest. The generic ArcGIS downloader inventories object IDs and requests complete paged GeoJSON rather than trusting a truncated single query.
-
-## Normal Run
-
-```powershell
-python -m pip install -r requirements.txt
+python scripts/fetch_election_results.py
 python scripts/run_pipeline.py
 ```
 
-Use existing current and historical geography assets:
+Historical geometry and ArcGIS downloads are preparation inputs rather than
+routine web-build dependencies. The CBS downloader inventories the public
+catalog, verifies file signatures and expected lengths, and writes a SHA-256
+manifest. The generic ArcGIS downloader pages through all object IDs instead of
+trusting a potentially truncated query.
+
+Reuse existing generated geography with:
 
 ```powershell
 python scripts/run_pipeline.py --skip-geographies
 ```
 
-Pipeline order:
+## Stage Order
 
-1. fetch K17-K25 official election-result rows;
-2. build 2022 statistical areas, dissolved localities, composites, and custom geometry;
-3. build 1995, 2008, and 2011 historical statistical geometry;
+`scripts/run_pipeline.py` executes:
+
+1. fetch K17-K25 official result rows;
+2. build 2022 statistical areas, current localities, composites, and custom geometry;
+3. build 1995, 2008, and 2011 historical geometry;
 4. normalize election results;
-5. build the reviewed locality/handling plan;
-6. build official historical ballot-to-area assignments;
-7. run the K20/K21 ArcGIS residual-partition audit and attach reviewed decisions;
-8. build final row-level geography assignments with official historical
-   assignments first and approved inferred assignments second;
-9. aggregate statistical-area, locality, custom, envelope, contribution, and unresolved working outputs;
-10. publish the committed `public-data/v1` ballot CSVs, aggregate tables,
-    full-resolution geography ZIPs, metadata, checksums, and validation report.
+5. build the reviewed locality and special-handling plan;
+6. normalize the nine official CBS ballot crosswalks;
+7. audit source schemas and catalog completeness;
+8. audit and stage direct K23 CEC AGS assignments;
+9. audit K20/K21 ArcGIS residual candidates and reviewed decisions;
+10. audit and stage official CBS stable-ballot assignments;
+11. build final row-level assignments in evidence-precedence order;
+12. classify every unresolved row and historical polygon coverage state;
+13. aggregate statistical-area, locality, custom, envelope, contribution, and unresolved outputs;
+14. build the committed schema-v2 `public-data/v1` release and validation report.
 
 ## Assignment Precedence
 
 `scripts/build_final_geography_assignments.py` applies:
 
 1. envelope and reviewed non-geographic rules;
-2. official CBS election-specific ballot crosswalk;
-3. approved Tier A ArcGIS residual reconstruction;
-4. unique historical-area locality fallback;
-5. reviewed custom geography rules when no supported historical area exists;
-6. unresolved historical assignment.
+2. reviewed historical overrides for specifically contradicted direct targets;
+3. official CBS election-specific crosswalks;
+4. direct official K23 CEC AGS;
+5. approved exact ArcGIS residual reconstruction;
+6. official CBS stable-ballot propagation with same-vintage consensus;
+7. a locality fallback only when one historical area exists;
+8. reviewed custom geography where no supported historical area exists;
+9. unresolved historical assignment.
 
-Historical unresolved rows are terminal unless a separate reviewed source
-proves a unique exact assignment. The Tier A path is guarded by the reviewed
-locality-election table: changed tier, row count, voter total, exact
-row-to-area SHA-256 fingerprint, or area-level valid/invalid reconciliation
-causes the build to fail instead of silently retaining an old inference.
+The output adds three general provenance fields:
+
+- `assignment_evidence_class` groups the evidence hierarchy;
+- `assignment_confidence` records `authoritative`, `high`, `moderate`,
+  `not_applicable`, or `unresolved`;
+- `assignment_is_synthetic_link` identifies inferred area links without
+  implying synthetic vote data.
+
+Synthetic-link builds are guarded by reviewed fingerprints and expected row and
+voter totals. A changed mapping, evidence tier, or source reconciliation causes
+the build to fail. Approximate arithmetic is not an assignment method.
+
+## Historical Evidence Audits
+
+### Source Fields
+
+`scripts/audit_election_source_geography_fields.py` verifies that all nine CBS
+crosswalks expose area fields, inventories the seven stable-ballot workbooks,
+and checks archived CEC polling-place reports. Only K23 contains AGS among the
+K20-K25 reports available locally.
+
+### K23 AGS
+
+`scripts/audit_k23_cec_stat_area_assignments.py` validates direct AGS against
+existing assignments before staging pending rows. It requires a unique area,
+withholds contradictions, and writes candidate, conflict, coverage, validation,
+and summary artifacts.
+
+### Stable Ballots
+
+`scripts/audit_stable_ballot_assignments.py` builds components from the official
+transition workbooks. It accepts a pending ballot only when all assigned
+same-vintage members agree on one area. Decimal subdivisions share the
+historical base ballot. Conflicts and cross-vintage transitions remain
+published audit records rather than assignments.
+
+### ArcGIS Residuals
+
+`scripts/audit_arcgis_assignment_reconstruction.py` first classifies each
+FeatureServer feature as a detailed area, a valid single-area locality total, or
+a dissolved locality aggregate. Source metadata says Arab-locality areas were
+merged, so dissolved aggregates cannot support detailed assignments.
+
+Only reviewed, unique, exact residual partitions are staged. The current result
+is nine K21 rows and zero K20 rows. No ArcGIS party or vote value enters the
+official election fact table.
+
+### Gap And Polygon Audit
+
+`scripts/audit_historical_assignment_gaps.py` classifies all 5,605 pending rows,
+compares K20/K21 detailed ArcGIS polygons where applicable, and writes
+election-level polygon coverage and cross-election persistence tables.
+Demographic population is labeled as a proxy and never treated as an
+election-specific eligibility count.
 
 ## Historical Geometry
 
 `scripts/build_historical_geographies.py`:
 
 - reads CBS 1995, 2008, and 2011 geometry;
-- preserves each historical election-area ID and does not treat demographic reference fields as unions;
+- preserves distinct election-area IDs and ignores demographic reference fields
+  as union instructions;
 - produces stable IDs `stat<vintage>:<combined-code>`;
-- constructs the one missing 1995 Yehud-Newe Efrayim target from the official transition table;
-- adds 30 exact-ID 2011 geometry supplements from the audited ArcGIS layers;
-- creates separate display geometry with detailed West Bank footprints where a CBS source is a small or low-vertex proxy;
-- never imports ArcGIS vote totals.
+- constructs one 1995 target from the official transition key;
+- adds 32 exact-ID 2011 geometry supplements from audited ArcGIS layers;
+- creates separate display geometry with detailed footprints where canonical
+  shapes are schematic;
+- clips historical replacements against neighbors and uses markers for
+  materially overlapping non-exclusive supplements;
+- never imports ArcGIS election totals.
 
-Current feature counts are 2,660 for 1995, 3,030 for 2008, and 3,113 for
-2011. Display-only detailed replacements number 113, 102, and 117
-respectively. The 1995/2008 display assets preserve shared boundaries without
-independent polygon simplification, and replacement footprints are clipped
-against historical neighbors.
+Canonical feature counts are 2,660 for 1995, 3,030 for 2008, and 3,115 for
+2011. `scripts/build_geographies.py` separately builds the 3,857-feature 2022
+package for current locality display and future direct-crosswalk elections.
 
-`scripts/build_geographies.py` applies the same display-only source policy to current geometry. It writes separate official and `.display` 2022 assets, replaces 115 current locality/statistical proxies, and builds composites from the display geometry. Four West Bank settlements without a detailed source remain markers.
+## Main Working Outputs
 
-## Crosswalk Rules
-
-`scripts/build_historical_ballot_assignments.py`:
-
-- reads all nine official CBS ballot tables;
-- interprets K17 tenths encoding;
-- maps later decimal ballot subdivisions through their base ballot;
-- respects cross-locality combined target IDs;
-- preserves exact crosswalk area IDs; `Stat08_Unite` and `Stat11_Ref` are demographic references, not election-area unions;
-- permits a locality fallback only when one historical area exists;
-- permits the reviewed tribe/Hebron custom rows to use that fallback only for the 2011 vintage; K17/K18 retain their custom markers;
-- emits explicit unresolved and missing-geometry statuses.
-
-After geometry supplements, missing-geometry status is zero in every election.
-
-## Main Outputs
-
-- `data/processed/geographies/statistical_areas_1995.geojson`
-- `data/processed/geographies/statistical_areas_2008.geojson`
-- `data/processed/geographies/statistical_areas_2011.geojson`
-- matching `.display.simplified.geojson`, `.metadata.csv`, and `.aliases.csv` files
-- `data/processed/geographies/statistical_areas_2022.simplified.geojson`
-- `data/processed/geographies/statistical_areas_2022.display.simplified.geojson`
-- `data/processed/geographies/localities_2022_dissolved.simplified.geojson`
-- `data/processed/geographies/localities_2022_dissolved.display.simplified.geojson`
+- `data/processed/geographies/statistical_areas_<vintage>.geojson`
+- matching display GeoJSON, metadata CSV, and alias CSV files
 - `data/processed/assignments/historical_ballot_crosswalk.csv`
 - `data/processed/assignments/historical_ballot_assignments.csv`
 - `data/processed/assignments/ballot_geography_assignments.csv`
 - `data/processed/assignments/unresolved_statistical_area_assignment_rows.csv`
-- `data/processed/audits/arcgis_assignment_reconstruction_candidates.csv`
-- `data/processed/audits/arcgis_assignment_reconstruction_localities.csv`
-- `data/processed/audits/arcgis_assignment_reconstruction_summary.json`
-- `data/manual/arcgis_assignment_reconstruction_reviews.csv`
-- `data/processed/public/election_summary.csv`
-- `data/processed/public/statistical_area_results/*.csv`
-- `data/processed/public/locality_results/*.csv`
-- `data/processed/public/custom_geography_results/*.csv`
-- `data/processed/public/envelope_results/*.csv`
-- `data/processed/public/ballot_contributions/*.csv`
-- `data/processed/public/unmapped_rows/*.csv`
+- `data/processed/audits/election_source_geography_field_audit.*`
+- `data/processed/audits/k23_cec_ags_*`
+- `data/processed/audits/stable_ballot_*`
+- `data/processed/audits/arcgis_assignment_reconstruction_*`
+- `data/processed/audits/historical_assignment_gap_*`
+- `data/processed/audits/historical_polygon_*`
+- `data/processed/public/<mode>/*.csv`
 
-The curated repository release is written separately so ignored working data
-does not need to be committed:
+The curated repository release is written separately:
 
 - `public-data/v1/ballots/*.csv`
 - `public-data/v1/aggregates/<mode>/*.csv`
-- `public-data/v1/geographies/*.zip` and matching feature-metadata CSVs
+- `public-data/v1/geographies/*.zip` and feature-metadata CSVs
 - `public-data/v1/metadata/*.csv`
-- `public-data/v1/manifest.{csv,json}` and `validation.json`
+- `public-data/v1/metadata/assignment-provenance/*`
+- `public-data/v1/manifest.{csv,json}`
+- `public-data/v1/validation.json`
 
-Every published polygon aggregate has a generic `geography_id` that joins to
-the same property in its GeoJSON. The release builder rejects missing geometry
-IDs, duplicate assignment rows, and party totals that do not reconcile to valid
-votes. It also checks that all published Tier A row and voter counts equal the
-reviewed decisions.
-
-`custom_geography_results` rows carry `geography_mode`. This keeps K17/K18 custom statistical markers separate from the locality-mode tribe/Hebron aggregates after K19-K25 move onto exact 2011 statistical polygons.
+The release builder rejects duplicate ballot rows, actual-voter totals that do
+not equal valid plus invalid votes, missing geometry joins, party totals that do
+not equal valid votes, and provenance totals that do not match the reviewed
+decisions.
 
 ## Verified Coverage
 
-Verified from an offline rebuild on 2026-07-17:
+Verified from the offline rebuild on 2026-07-18:
 
-| Election | Vintage | Statistical rows mapped | Pending rows | Mapped voter share | Locality share |
+| Election | Vintage | Supported rows | Pending rows | Supported voter share | Locality share |
 |---|---:|---:|---:|---:|---:|
-| K25 | 2011 | 10,877 | 822 | 93.88% | 100% |
-| K24 | 2011 | 11,161 | 958 | 94.27% | 100% |
-| K23 | 2011 | 9,930 | 693 | 92.37% | 100% |
-| K22 | 2011 | 9,919 | 612 | 93.63% | 100% |
-| K21 | 2011 | 10,023 | 430 | 96.07% | 100% |
-| K20 | 2011 | 10,051 | 61 | 99.30% | 100% |
-| K19 | 2011 | 9,309 | 566 | 94.06% | 100% |
+| K17 | 1995 | 7,859 | 415 | 94.68% | 100% |
 | K18 | 2008 | 8,740 | 519 | 94.13% | 100% |
-| K17 | 1995 | 7,853 | 421 | 94.65% | 100% |
+| K19 | 2011 | 9,311 | 564 | 94.08% | 100% |
+| K20 | 2011 | 9,521 | 591 | 93.31% | 100% |
+| K21 | 2011 | 9,854 | 598 | 94.51% | 100% |
+| K22 | 2011 | 9,920 | 611 | 93.64% | 100% |
+| K23 | 2011 | 10,004 | 619 | 93.06% | 100% |
+| K24 | 2011 | 11,248 | 871 | 94.70% | 100% |
+| K25 | 2011 | 10,882 | 817 | 93.92% | 100% |
 
 ## Other Reviewed Inputs
 
 - `data/manual/k17_eligible_voters.csv` restores K17 ordinary-register turnout
-  and reconciles to 5,011,053 eligible voters. The public K17
-  envelope/non-geographic denominator bucket is 4,087 after adding the separate
-  3,569-person Gush Katif register; envelope turnout is intentionally hidden.
-- `data/manual/composite_localities.csv` and `joined_locality_composites.csv` control election-specific locality display unions.
-- `data/manual/locality_display_overrides.csv` controls reviewed historical names and visibility.
-- `data/manual/arcgis_assignment_reconstruction_reviews.csv` approves 44 Tier A
-  K20/K21 locality-election decisions. It never changes official vote values;
-  it authorizes only the inferred ballot-to-area linkage.
-- `data/manual/party_registry.csv` covers all election-specific result columns and the published display names are complete; `web/app/config/party-overrides.json` contains the still-partial reviewed color assignments.
-
-See `docs/HISTORICAL_STATISTICAL_AREA_ASSIGNMENT.md`, `docs/LOCALITY_MODE.md`, and `docs/K17_ELIGIBLE_VOTER_RECOVERY.md` for detailed decisions.
+  and reconciles to 5,011,053 eligible voters.
+- `data/manual/composite_localities.csv` and
+  `data/manual/joined_locality_composites.csv` control election-specific
+  locality display unions.
+- `data/manual/locality_display_overrides.csv` controls reviewed historical
+  names and visibility.
+- `data/manual/historical_stat_area_overrides.csv` records five reviewed K19
+  target corrections.
+- `data/manual/arcgis_assignment_reconstruction_reviews.csv` records approved
+  and rejected ArcGIS decisions.
+- `data/manual/party_registry.csv` covers every election-specific result column;
+  map colors remain presentation configuration under `web/app/`.
 
 ## Web Build
 
@@ -188,4 +208,6 @@ npm run check
 npm run dev
 ```
 
-The compiler writes schema-v3 assets under `web/app/public/data/v2/`. Each election declares its statistical-area vintage and mode-specific geometry URLs. The browser does no assignment or aggregation.
+The compiler writes schema-v3 frontend assets under `web/app/public/data/v2/`.
+That browser schema is separate from the public download release's schema-v2
+ballot tables.

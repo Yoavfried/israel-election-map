@@ -4,6 +4,7 @@ import argparse
 import hashlib
 import json
 import sys
+import time
 import unicodedata
 import urllib.parse
 import urllib.request
@@ -32,6 +33,29 @@ SELECTED_FILES = {
     "kalpi_March2020_stat2011.xlsx": "k23_ballot_to_stat2011.xlsx",
     "kalpi_March2021_stat2011.xlsx": "k24_ballot_to_stat2011.xlsx",
     "kalpi_November2022_stat2011.xlsx": "k25_ballot_to_stat2011.xlsx",
+    "Stable_kalp_2013.xlsx": "stable_ballots_k19.xlsx",
+    "Stable_kalp_2015.xls": "stable_ballots_k20.xls",
+    "Stable_kalp_April2019.xlsx": "stable_ballots_k21.xlsx",
+    "Stable_kalp_September2019.xlsx": "stable_ballots_k22.xlsx",
+    "Stable_kalp_March2020.xlsx": "stable_ballots_k23.xlsx",
+    "Stable_kalp_March2021.xlsx": "stable_ballots_k24.xlsx",
+    "Stable_kalp_November2022.xlsx": "stable_ballots_k25.xlsx",
+    "ReadMe_Kalpi2006_stat1995.pdf": "readme_k17_ballot_to_stat1995.pdf",
+    "ReadMe_kalpi2008_stat2008.pdf": "readme_k18_ballot_to_stat2008.pdf",
+    "ReadMe_kalpi2013_stat2011.pdf": "readme_k19_ballot_to_stat2011.pdf",
+    "ReadMe_kalpi2015_stat2011.pdf": "readme_k20_ballot_to_stat2011.pdf",
+    "ReadMe_kalpi_April2019_stat2011.pdf": "readme_k21_ballot_to_stat2011.pdf",
+    "ReadMe_kalpi_September2019_stat2011.pdf": "readme_k22_ballot_to_stat2011.pdf",
+    "ReadMe_kalpi_March2020_stat2011.pdf": "readme_k23_ballot_to_stat2011.pdf",
+    "ReadMe_kalpi_March2021_stat2011.pdf": "readme_k24_ballot_to_stat2011.pdf",
+    "ReadMe_kalpi_November2022_stat2011.pdf": "readme_k25_ballot_to_stat2011.pdf",
+    "ReadMe_Stable_kalp_2013.pdf": "readme_stable_ballots_k19.pdf",
+    "ReadMe_Stable_kalp_2015.pdf": "readme_stable_ballots_k20.pdf",
+    "ReadMe_Stable_kalp_April2019.pdf": "readme_stable_ballots_k21.pdf",
+    "ReadMe_Stable_kalp_September2019.pdf": "readme_stable_ballots_k22.pdf",
+    "ReadMe_Stable_kalp_March2020.pdf": "readme_stable_ballots_k23.pdf",
+    "ReadMe_Stable_kalp_March2021.pdf": "readme_stable_ballots_k24.pdf",
+    "ReadMe_Stable_kalp_November2022.pdf": "readme_stable_ballots_k25.pdf",
     "שכבת אזורים סטטיסטיים 1995.zip": "statistical_areas_1995.zip",
     "statisticalareas_demography2008.gdb.zip": "statisticalareas_demography2008.gdb.zip",
     "statisticalareas_demography2020.gdb.zip": "statisticalareas_2020_demography.gdb.zip",
@@ -56,11 +80,23 @@ def request_bytes(url: str, accept: str | None = None) -> bytes:
     headers = {"User-Agent": "israel-election-map/1.0"}
     if accept:
         headers["Accept"] = accept
-    request = urllib.request.Request(url, headers=headers)
-    with urllib.request.urlopen(request, timeout=120) as response:
-        if response.status != 200:
-            raise RuntimeError(f"HTTP {response.status} for {url}")
-        return response.read()
+    last_error: Exception | None = None
+    for attempt in range(4):
+        request = urllib.request.Request(url, headers=headers)
+        try:
+            with urllib.request.urlopen(request, timeout=120) as response:
+                if response.status != 200:
+                    raise RuntimeError(f"HTTP {response.status} for {url}")
+                data = response.read()
+                if not data:
+                    raise RuntimeError(f"Empty response for {url}")
+                return data
+        except Exception as error:
+            last_error = error
+            if attempt == 3:
+                break
+            time.sleep(2 ** attempt)
+    raise RuntimeError(f"Failed to download {url} after four attempts") from last_error
 
 
 def catalog_url() -> str:
@@ -92,6 +128,10 @@ def load_catalog(cache_path: Path | None) -> list[dict[str, Any]]:
 
 def validate_file(path: Path, expected_size: int) -> None:
     data = path.read_bytes()
+    validate_bytes(data, path, expected_size)
+
+
+def validate_bytes(data: bytes, path: Path, expected_size: int) -> None:
     if len(data) != expected_size:
         raise ValueError(
             f"{path.name} has {len(data):,} bytes; expected {expected_size:,}"
@@ -139,9 +179,15 @@ def main() -> None:
         source_url = CBS_ORIGIN + urllib.parse.quote(source_path, safe="/")
         output_path = args.output_dir / local_name
 
-        if args.force or not output_path.exists():
+        if (
+            args.force
+            or not output_path.exists()
+            or output_path.stat().st_size != expected_size
+        ):
             print(f"downloading {source_name}")
-            output_path.write_bytes(request_bytes(source_url))
+            data = request_bytes(source_url)
+            validate_bytes(data, output_path, expected_size)
+            output_path.write_bytes(data)
         validate_file(output_path, expected_size)
         digest = hashlib.sha256(output_path.read_bytes()).hexdigest()
         manifest_rows.append(

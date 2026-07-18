@@ -1,26 +1,32 @@
 # Historical Statistical-Area Assignment
 
-Last updated: 2026-07-17
+Last updated: 2026-07-18
 
 ## Decision
 
-Statistical-area election results are assigned from election-specific CBS
-ballot crosswalks. These tables directly associate ballot identifiers with the
-statistical areas represented by the result rows.
+Statistical-area results represent the areas assigned to each ballot register.
+The project starts from official ballot-to-area evidence and leaves a row
+unresolved when no source supports a unique area.
 
 Assignment precedence is:
 
 1. official envelope or reviewed non-geographic handling;
-2. official election-specific ballot-to-statistical-area crosswalk;
-3. reviewed, uniquely reconstructed ballot-to-area assignment from an
-   election-specific aggregate source;
-4. the election-vintage locality when that locality has exactly one published statistical area;
-5. reviewed custom geography where no supported historical statistical area exists;
-6. unresolved.
+2. reviewed historical override where independent evidence disproves a direct
+   crosswalk target;
+3. official election-specific CBS ballot crosswalk;
+4. direct K23 CEC AGS evidence;
+5. reviewed exact ArcGIS residual reconstruction;
+6. official CBS stable-ballot propagation when all same-vintage evidence agrees;
+7. election-vintage locality fallback only when one area exists;
+8. reviewed custom geography where no historical area is supported;
+9. unresolved.
+
+No assignment is accepted from a merely similar ballot number, an approximate
+aggregate match, or a polling-place location.
 
 ## Election Vintages
 
-| Election | Year | Statistical-area vintage | Official crosswalk |
+| Election | Year | Area vintage | Official crosswalk |
 |---|---:|---:|---|
 | K17 | 2006 | 1995 | `Kalpi2006_stat1995.xls` |
 | K18 | 2009 | 2008 | `kalpi2008_stat2008.xlsx` |
@@ -32,187 +38,215 @@ Assignment precedence is:
 | K24 | 2021 | 2011 | `kalpi_March2021_stat2011.xlsx` |
 | K25 | 2022 | 2011 | `kalpi_November2022_stat2011.xlsx` |
 
-K25 deliberately uses 2011 areas. The official November 2022 table targets 2011, not 2022. The CBS 2011-to-2022 transition table gives a single deterministic 2022 target for 7,217 of 10,761 K25 crosswalk rows; at least 3,543 rows point to 2011 areas split across multiple 2022 areas. Assigning those rows to one 2022 polygon would invent precision. A future election should use 2022 areas only when a direct official 2022 crosswalk exists.
+K25 deliberately stays on 2011 areas. Its official crosswalk targets 2011, and
+at least 3,543 directly assigned K25 rows point to 2011 areas that split across
+multiple 2022 areas. A future election should use 2022 geometry only when an
+official 2022 ballot crosswalk exists.
 
-## Source Recovery
+## Source Inventory
 
-`scripts/fetch_cbs_historical_geography.py` enumerates the public CBS GIS catalog, downloads the nine crosswalks, three geometry vintages, and transition tables, verifies file size and file signatures, and writes a SHA-256 manifest under `data/raw/cbs_historical_geography/`.
+`scripts/fetch_cbs_historical_geography.py` enumerates the public CBS GIS
+catalog, downloads the nine crosswalks, seven stable-ballot workbooks, three
+historical geometry vintages, and transition tables, verifies signatures and
+sizes, and writes a SHA-256 manifest.
 
-The CBS GIS catalog documents the historical ballot products, including ballot-to-1995 areas for 2006, ballot-to-2008 areas for 2009, and ballot-to-2011 areas for later elections. The K20 readme explicitly defines the locality, ballot, statistical-area, and combined locality-area fields.
+`scripts/audit_election_source_geography_fields.py` audits the available source
+schemas. The downloaded CBS catalog contains exactly one in-scope direct
+crosswalk for each K17-K25 election and one stability workbook for each
+transition ending K19-K25. No alternate in-scope ballot-geography workbook is
+listed. Among the archived K20-K25 CEC polling-place reports, only K23 contains
+an AGS field.
 
-### ArcGIS Aggregate Reconstruction
+The machine-readable inventory is published as
+`metadata/assignment-provenance/election_source_geography_field_audit.*`.
 
-The downloaded 2015 and April 2019 ArcGIS layers contain one aggregate per 2011
-statistical area. They are derivative and must not replace official election
-totals, but exact aggregate reconciliation may identify ballot groupings omitted
-from the CBS crosswalks.
+## Evidence Paths
 
-The automated audit is implemented in
-`scripts/audit_arcgis_assignment_reconstruction.py`. It found unique exact
-candidates for 33 of 37 K20 pending localities, covering 585 rows and 262,038
-actual voters. It found unique exact candidates for 34 of 37 K21 pending
-localities, covering 600 rows and 225,827 actual voters.
+### Official Direct Crosswalks
 
-K21 Umm al-Fahm is deliberately rejected even though the locality totals agree:
-the ArcGIS layer collapses the locality into area 1 while existing CBS
-assignments use areas 11-34, so assigned rows cannot be subtracted from matching
-targets. Jerusalem and Nazareth fail exact source-total reconciliation.
+The nine CBS crosswalks provide 83,237 final row assignments. K17 tenths
+encoding and later decimal subdivisions are normalized explicitly:
 
-Review should happen at the locality-election level, not by reading 1,185 rows
-one at a time. The 67 unique-exact cases divide into two evidence tiers:
+- in K17, `10` means ballot 1, while values such as `61` and `62` are
+  subdivisions of ballot 6;
+- in later elections, subdivisions such as `1.1` and `1.2` inherit a direct
+  base-ballot target when the official crosswalk maps ballot 1;
+- the crosswalk's combined area ID is authoritative even when it crosses the
+  result row's locality boundary;
+- `Stat08_Unite` and `Stat11_Ref` are demographic reference fields, not
+  instructions to merge election areas.
 
-| Evidence tier | Locality-election cases | Candidate rows | Actual voters |
-|---|---:|---:|---:|
-| A: every residual area's ballot count, eligible, actual, valid, and invalid totals reconcile | 44 | 751 | 325,377 |
-| B: ballot count, eligible, and actual reconcile; one residual area has a small valid/invalid shift | 23 | 434 | 162,488 |
+Five K19 targets contradicted independent same-vintage evidence. Reviewed rows
+in `data/manual/historical_stat_area_overrides.csv` replace those links using
+adjacent-election and ArcGIS evidence. They are labeled synthetic corrections,
+not silently presented as direct crosswalk rows.
 
-Tier A is approved and active: 32 K20 locality-election decisions assign 573
-rows representing 257,667 actual voters, and 12 K21 decisions assign 178 rows
-representing 67,710 actual voters. Tier B remains review-only.
+### K23 Direct AGS
 
-The assignment relationship is inferred, not the election result. Every ballot
-row, eligible-voter value, vote count, and party vector still comes from the
-official normalized election source. Public ballot rows identify the inferred
-linkage with
-`final_assignment_method=arcgis_residual_partition_tier_a` and retain both the
-ArcGIS source and reviewed decision-table path in `final_assignment_source`.
-The 44 decisions are published as
-`public-data/v1/metadata/arcgis_reconstruction_reviews.csv`. Each decision pins
-the exact row-to-area mapping with a SHA-256 fingerprint in addition to its row
-and voter totals.
+The official K23 CEC report supplies AGS for 6,849 ballot keys. Against 6,776
+rows already assigned by the CBS crosswalk, 6,775 agree and one contradicts.
+The contradiction is withheld. The remaining direct AGS evidence assigns 74
+previously pending rows representing 29,685 actual voters.
 
-For example, the K21 source had three previously pending rows in ערערה-בנגב:
+These links use `assignment_evidence_class=official_direct_ags` and are not
+synthetic. Full validation, conflicts, candidates, and hashes are published
+under `metadata/assignment-provenance/k23_cec_ags_*`.
 
-| Ballot | Eligible | Actual | Valid | Invalid | Candidate area |
-|---:|---:|---:|---:|---:|---|
-| 9 | 686 | 424 | 424 | 0 | `stat2011:11920001` |
-| 10 | 718 | 265 | 264 | 1 | `stat2011:11920001` |
-| 11 | 629 | 276 | 272 | 4 | `stat2011:11920001` |
-| **Combined** | **2,033** | **965** | **960** | **5** | area 1 |
+### Official Stable-Ballot Workbooks
 
-After the ballots already assigned by the official CBS crosswalk are subtracted
-from the ArcGIS locality areas, area 1 has exactly this residual and no other
-partition exists. This is a first-tier case because valid and invalid votes also
-reconcile for the target area, so these rows are now mapped. By contrast, K21
-Jerusalem is rejected before partitioning: ballot count and eligibility agree,
-but ArcGIS has 262,100 actual voters while the official rows have 262,103. Umm
-al-Fahm is rejected structurally because the ArcGIS area IDs do not correspond
-to the CBS areas already assigned there.
+The seven CBS transition workbooks identify ballot registers treated as stable
+between elections. A pending row is propagated only when every assigned member
+of its same-vintage stability component agrees on one area. Decimal
+subdivisions are evaluated through the historical base ballot.
 
-The experiment must:
+This adds 134 links representing 35,129 actual voters:
 
-1. subtract official-crosswalk-assigned rows from each ArcGIS area aggregate;
-2. partition remaining official ballot rows against residual eligible-voter,
-   actual-voter, and ballot-count targets;
-3. accept only a unique exact partition and leave ambiguous or approximate
-   cases pending;
-4. preserve party votes from the official normalized ballot rows;
-5. record candidate provenance, source fields, and uniqueness evidence in a
-   reviewed decision table;
-6. rerun national, locality, party, and geometry-join reconciliation before a
-   candidate becomes production data.
+| Election | Rows | Actual voters |
+|---|---:|---:|
+| K19 | 2 | 537 |
+| K20 | 43 | 16,676 |
+| K22 | 1 | 344 |
+| K24 | 87 | 17,082 |
+| K25 | 1 | 490 |
 
-For Tier B, all 23 unique core partitions differ in only one residual area. The
-ArcGIS valid count is one to three votes higher than the official rows and its
-invalid count is lower by the same amount, while ballot count, eligible voters,
-and actual voters remain exact. ArcGIS party fields sum exactly to its own valid
-total in all 23 cases, so the discrepancy is internally consistent with that
-source and is most likely a derivative-snapshot classification difference. The
-next review should look for an alternate official aggregate export or service
-version. If Tier B is later accepted, it must use a separate method such as
-`arcgis_residual_partition_tier_b_snapshot_delta`; it must not silently inherit
-Tier A provenance. ArcGIS party vectors are never copied into the project.
+One same-vintage conflict and 105 conflicts crossing a statistical-area
+vintage transition are withheld. Stable-ballot links are high-confidence
+inferences, not direct election-specific crosswalk rows.
 
-For K17-K19 and K22-K25, source recovery should search alternate CBS exports,
-archived GIS catalogs, official election maps or statistical publications, and
-reconcilable archived FeatureServer layers before requesting omitted records
-from CBS or the State Archives. An assignment must never be transferred from a
-different election merely because a ballot number appears stable.
+### ArcGIS Residual Reconstruction
 
-## Geometry Provenance
+The 2015 and April 2019 FeatureServer layers can validate or reconstruct some
+K20/K21 area totals, but their item descriptions explicitly state that
+statistical areas in Arab localities were merged and that the election product
+is not official. A locality-wide feature is therefore never treated as a
+detailed statistical area.
 
-`scripts/build_historical_geographies.py` builds canonical assignment geometry and separate display geometry.
+The audit classifies every feature before arithmetic:
 
-| Vintage | Assignment features | Display replacements |
-|---:|---:|---:|
-| 1995 | 2,660 | 113 |
-| 2008 | 3,030 | 102 |
-| 2011 | 3,113 | 117 |
+| Election | Detailed or single-area records | Dissolved locality aggregates |
+|---|---:|---:|
+| K20 | 2,826 | 35 |
+| K21 | 2,655 | 34 |
 
-The canonical geometry is official CBS geometry except for 31 explicit supplements:
+Sixty-five reviewed locality decisions were rejected after this metadata check,
+and one military/non-geographic candidate was rejected. K20 has no accepted
+ArcGIS reconstruction. K21 has two accepted exact decisions:
 
-- `stat1995:9400008` is the union defined by the official CBS 1995-to-2008 transition key for Yehud-Newe Efrayim.
-- Thirty 2011 areas are absent from the downloaded CBS GDB and use exact-ID
-  geometry from the supplied ArcGIS layers. The original 22 include three
-  crosswalk-backed records and 19 one-area records for 18 reviewed tribal
-  localities plus Hebron. Eight additional targets support the aggregate audit:
-  Umm al-Fahm area 1 and seven K21 camp areas.
+| Tier | Locality | Rows | Actual voters | Basis |
+|---|---|---:|---:|---|
+| A | Ar'ara-BaNegev | 3 | 965 | Unique exact residual across ballot, eligible, actual, valid, invalid, and party totals. |
+| C | Jerusalem | 6 | 2,634 | One isolated residual area matches exactly; unrelated zero-ballot source deltas remain documented. |
 
-The 19 tribe/Hebron supplements are eligible for the one-area fallback only in K19-K25, whose active vintage is 2011. The independent K20 ArcGIS table reproduces the official ballot count, eligible voters, actual voters, valid votes, and invalid votes exactly for all 19 localities. The K21 layer contains all 18 tribal localities but not Hebron; its ballot, eligible-voter, and actual-voter totals agree, while three localities shift one vote between valid and invalid. Election votes always come from the normalized official election source, never from ArcGIS. K17/K18 retain the reviewed tribe and Hebron markers because neither their official crosswalks nor the 1995/2008 CBS geometry supplies a defensible historical area.
+Tier B/C approval was permission to use defensible evidence, not permission to
+accept a 1-3 vote discrepancy. No tolerance-based Tier B row is published.
+ArcGIS party vectors and vote totals are never copied into election results.
 
-For display only, schematic West Bank proxy shapes are replaced by detailed settlement footprints from the supplied ArcGIS election layers when the locality has exactly one statistical area, the candidate has a non-schematic boundary, and the candidate polygon is spatially consistent. Apart from the 30 explicit exact-ID geometry supplements above, ArcGIS does not replace canonical geometry. Its aggregates additionally support the explicitly labeled Tier A inferred assignments described above. The ArcGIS service itself warns that its election data are not official and that some polygons are schematic.
+### Single-Area And Custom Rules
 
-This replacement now covers 113 shapes in the 1995 layer and 102 in the 2008
-layer. Replacement footprints are clipped against historical neighbors, and
-the 1995/2008 display files preserve unsimplified shared boundaries so adjacent
-areas do not paint over one another. `stat1995:9400008` is a non-exclusive
-transition union and therefore renders as a marker instead of covering its
-component polygons.
+A locality fallback is allowed only when the active historical geography has
+exactly one canonical area. This assigns 3,788 rows. K17/K18 tribal and Hebron
+cases retain 92 reviewed custom-marker rows because their active historical
+geometry cannot distinguish the later 2011 areas.
 
-The same display-only rule replaces 115 tiny proxies in current 2022 locality geometry. Rotem, Maskiyot, Avnat, and Mavo'ot Yeriho have no usable detailed footprint in either supplied ArcGIS layer and remain fixed-size markers. Sha'ar Shomron now renders as the union of its two detailed component polygons. The active K25 Yitav/Mavo'ot result remains one result with two marker points so the unresolved Mavo'ot proxy is not hidden inside a mixed polygon.
+## Published Provenance Classes
 
-## Matching Rules
+| Evidence class | Rows | Synthetic link |
+|---|---:|---|
+| `official_direct_crosswalk` | 83,237 | No |
+| `official_direct_ags` | 74 | No |
+| `deterministic_single_area_locality` | 3,788 | No |
+| `official_stability_inferred_link` | 134 | Yes |
+| `reviewed_exact_aggregate_inferred_link` | 9 | Yes |
+| `reviewed_cross_election_inferred_link` | 5 | Yes |
+| `reviewed_custom_geography` | 92 | No |
+| `non_geographic` | 3,585 | No |
+| `unresolved` | 5,605 | No |
+| **Total** | **96,529** | |
 
-- K17 stores ballot numbers in tenths: `10` means ballot 1; `61` and `62` are subdivisions of base ballot 6.
-- Later sources use decimal subdivisions such as `1.1` and `1.2`. If the CBS table maps base ballot 1, its result subdivisions inherit that same target.
-- The combined target area ID in a crosswalk is authoritative even when it crosses the result row's locality boundary.
-- Each ballot crosswalk's statistical-area ID is preserved exactly. The CBS `Stat08_Unite` and `Stat11_Ref` demographic reference fields are not election-area union instructions. In particular, Ma'ale Adumim areas 1, 2, and 3 remain separate wherever the official crosswalk reports them separately.
-- A locality-only fallback is allowed only when that historical locality has exactly one canonical statistical area.
-- Missing crosswalk rows remain unresolved unless a separate reviewed source
-  proves a unique exact assignment.
+Every public ballot row carries `assignment_evidence_class`,
+`assignment_confidence`, and `assignment_is_synthetic_link`, together with the
+more specific method and source fields.
 
 ## Current Coverage
 
-Coverage below is the share of actual voters in the geographic scope after adding reviewed custom geographies. Envelope and reviewed non-geographic rows are outside the denominator.
+Coverage is the share of actual voters in geographic scope with a supported
+statistical-mode target. Reviewed K17/K18 custom markers count as supported map
+targets; envelopes and other non-geographic rows are outside the denominator.
 
-| Election | Statistical-area vintage | Mapped rows | Pending rows | Mapped voter share |
-|---|---:|---:|---:|---:|
-| K25 | 2011 | 10,877 | 822 | 93.88% |
-| K24 | 2011 | 11,161 | 958 | 94.27% |
-| K23 | 2011 | 9,930 | 693 | 92.37% |
-| K22 | 2011 | 9,919 | 612 | 93.63% |
-| K21 | 2011 | 10,023 | 430 | 96.07% |
-| K20 | 2011 | 10,051 | 61 | 99.30% |
-| K19 | 2011 | 9,309 | 566 | 94.06% |
-| K18 | 2008 | 8,740 | 519 | 94.13% |
-| K17 | 1995 | 7,853 | 421 | 94.65% |
+| Election | Vintage | Supported rows | Pending rows | Pending actual voters | Supported voter share |
+|---|---:|---:|---:|---:|---:|
+| K17 | 1995 | 7,859 | 415 | 160,216 | 94.68% |
+| K18 | 2008 | 8,740 | 519 | 189,711 | 94.13% |
+| K19 | 2011 | 9,311 | 564 | 214,251 | 94.08% |
+| K20 | 2011 | 9,521 | 591 | 269,029 | 93.31% |
+| K21 | 2011 | 9,854 | 598 | 225,160 | 94.51% |
+| K22 | 2011 | 9,920 | 611 | 266,046 | 93.64% |
+| K23 | 2011 | 10,004 | 619 | 297,152 | 93.06% |
+| K24 | 2011 | 11,248 | 871 | 212,701 | 94.70% |
+| K25 | 2011 | 10,882 | 817 | 263,243 | 93.92% |
 
-Every pending row lacks a matching official ballot-crosswalk row and belongs to a locality with more than one historical statistical area. Earlier near-complete K19-K25 figures were invalid: they treated the CBS demographic reference fields as area unions, which made many multi-area localities look like single-area localities and triggered an unjustified fallback. Restoring the distinct source areas returned those rows to pending.
+The 5,605 pending rows are fully classified:
 
-Ma'ale Adumim is the regression case that exposed the problem. Areas 1, 2, and 3 are now separate in both 2008 and 2011 geometry. The rebuilt K20 and K21 ballot counts for all ten Ma'ale Adumim areas match the independent 2015 and April 2019 ArcGIS election layers exactly. Election totals always remain official; ArcGIS is either validation evidence or explicitly labeled aggregate-reconstruction evidence for the approved Tier A rows.
+- 5,349 belong to entire localities omitted from an official crosswalk;
+- 99 belong to localities absent from the active historical geography;
+- 57 are in a K17 historical composite municipality without a crosswalk;
+- 70 are central ballot 990 rows intentionally retained at locality level;
+- 30 are specific ordinary ballots omitted from an otherwise present locality.
 
-Every pending row is preserved in
-`unresolved_statistical_area_assignment_rows.csv`.
+Every specific omission was checked against normalized crosswalk keys, K23 AGS,
+stable-ballot components, and applicable ArcGIS evidence. The remaining gaps
+are irreducible with the currently recovered sources. They are published, not
+estimated, in `historical_assignment_gap_rows.csv`.
 
-The geometry join itself has no current missing-ID gap: every mapped target
-resolves to geometry. The remaining geometry caveats concern provenance and
-display quality, including 31 documented historical supplements and derivative
-ArcGIS West Bank display footprints.
+## Geometry Provenance
 
-## Generated Outputs
+`scripts/build_historical_geographies.py` builds canonical assignment geometry
+and separate display geometry.
 
-- `data/processed/geographies/statistical_areas_<vintage>.geojson`
-- `data/processed/geographies/statistical_areas_<vintage>.display.simplified.geojson`
-- `data/processed/geographies/statistical_areas_<vintage>.metadata.csv`
-- `data/processed/geographies/statistical_areas_<vintage>.aliases.csv`
-- `data/processed/assignments/historical_ballot_crosswalk.csv`
-- `data/processed/assignments/historical_ballot_assignments.csv`
-- `data/processed/assignments/historical_ballot_assignment_summary.csv`
+| Vintage | Canonical features | Use |
+|---:|---:|---|
+| 1995 | 2,660 | K17 |
+| 2008 | 3,030 | K18 |
+| 2011 | 3,115 | K19-K25 |
+| 2022 | 3,857 | Future direct-crosswalk election and independent analysis |
+
+Canonical geometry is official CBS geometry except for 33 documented targets:
+
+- `stat1995:9400008` is an official 1995-to-2008 transition-key union;
+- 32 2011 targets absent from the downloaded CBS FileGDB use exact-ID geometry
+  from the audited ArcGIS layers.
+
+Detailed West Bank ArcGIS footprints otherwise remain display derivatives.
+Replacement footprints are clipped against historical neighbors; K17/K18
+preserve shared boundaries, and materially overlapping non-exclusive
+supplements render as markers. Election votes never come from geometry files.
+
+The polygon audit reports zero assigned IDs without geometry and zero
+unassigned detailed K20/K21 ArcGIS polygons carrying an official electorate
+after dissolved locality totals and special rows are classified correctly.
+Population fields attached to historical geometry are demographic proxies, not
+election-specific eligible-voter counts.
+
+For the 2011 vintage, 2,405 polygons receive an assignment in every supported
+election, 358 are intermittent, 75 are never assigned but have a positive
+population proxy, and 277 are never assigned without one. Those last two
+categories are audit leads, not proof that a separate ballot result should
+exist.
+
+## Reproducible Outputs
+
+Working audit outputs include:
+
+- `data/processed/audits/election_source_geography_field_audit.*`
+- `data/processed/audits/k23_cec_ags_*`
+- `data/processed/audits/stable_ballot_*`
+- `data/processed/audits/arcgis_assignment_reconstruction_*`
+- `data/processed/audits/historical_assignment_gap_*`
+- `data/processed/audits/historical_polygon_*`
+- `data/processed/assignments/ballot_geography_assignments.csv`
 - `data/processed/assignments/unresolved_statistical_area_assignment_rows.csv`
-- `data/processed/audits/arcgis_assignment_reconstruction_candidates.csv`
-- `data/processed/audits/arcgis_assignment_reconstruction_localities.csv`
-- `data/processed/audits/arcgis_assignment_reconstruction_summary.json`
-- `data/manual/arcgis_assignment_reconstruction_reviews.csv`
-- `public-data/v1/metadata/arcgis_reconstruction_reviews.csv`
 
-The browser catalog is schema version 3. Each election declares `statisticalAreaVintage` and election-specific `geographiesByMode`; switching elections can therefore switch geometry without changing the result contract.
+The committed copies are under
+`public-data/v1/metadata/assignment-provenance/`. The release builder validates
+row uniqueness, party totals, geography joins, synthetic-link counts, and
+reviewed decision fingerprints before publishing.

@@ -150,20 +150,33 @@ def solve_partition(
     return PartitionResult(count, solution, states_visited)
 
 
-def load_arcgis_areas(election: str, config: dict[str, Any]) -> pd.DataFrame:
+def load_arcgis_areas(
+    election: str,
+    config: dict[str, Any],
+    party_columns: list[str],
+) -> pd.DataFrame:
     collection = json.loads(Path(config["path"]).read_text(encoding="utf-8"))
     rows: list[dict[str, Any]] = []
     for feature in collection["features"]:
         properties = feature.get("properties") or {}
         if election == "K21":
-            party_fields = [
-                field for field in properties if re.fullmatch(r"f\d+", field)
-            ]
+            party_fields = [f"f{index}" for index in range(1, len(party_columns) + 1)]
+            party_votes = {
+                party: number(properties.get(field))
+                for party, field in zip(party_columns, party_fields, strict=True)
+            }
         else:
             property_fields = list(properties)
             first_party = property_fields.index(config["invalid_votes"]) + 1
             last_party = property_fields.index("Shape__Area")
             party_fields = property_fields[first_party:last_party]
+            if set(party_fields) != set(party_columns):
+                raise ValueError(
+                    f"{election} ArcGIS party fields do not match normalized results"
+                )
+            party_votes = {
+                party: number(properties.get(party)) for party in party_columns
+            }
         rows.append(
             {
                 "source_area_id": number(properties.get(config["area_id"])),
@@ -175,6 +188,7 @@ def load_arcgis_areas(election: str, config: dict[str, Any]) -> pd.DataFrame:
                     for metric in METRICS
                 },
                 "party_vote_sum": sum(number(properties.get(field)) for field in party_fields),
+                **party_votes,
             }
         )
     areas = pd.DataFrame(rows)
@@ -205,12 +219,13 @@ def load_area_identity() -> tuple[dict[int, str], dict[str, dict[str, Any]]]:
     return source_to_canonical, metadata_by_id
 
 
-def load_election_rows(election: str) -> pd.DataFrame:
+def load_election_rows(election: str) -> tuple[pd.DataFrame, list[str]]:
     wide = pd.read_csv(
         WIDE_DIR / f"{election.lower()}_ballot_votes.csv",
         dtype=str,
         encoding="utf-8-sig",
     ).fillna("")
+    party_columns = list(wide.columns[wide.columns.get_loc("is_envelope") + 1 :])
     assignments = pd.read_csv(
         ASSIGNMENTS, dtype=str, encoding="utf-8-sig"
     ).fillna("")
@@ -231,8 +246,10 @@ def load_election_rows(election: str) -> pd.DataFrame:
     rows["source_locality_code"] = rows["source_locality_code"].map(number)
     for metric in METRICS:
         rows[metric] = rows[metric].map(number)
+    for party in party_columns:
+        rows[party] = rows[party].map(number)
     rows["is_mapped"] = rows["is_historical_stat_mapped"].map(bool_value)
-    return rows
+    return rows, party_columns
 
 
 def total_signature(rows: pd.DataFrame) -> tuple[int, ...]:
@@ -245,8 +262,8 @@ def audit_election(
     source_to_canonical: dict[int, str],
     metadata_by_id: dict[str, dict[str, Any]],
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
-    rows = load_election_rows(election)
-    arcgis = load_arcgis_areas(election, config)
+    rows, party_columns = load_election_rows(election)
+    arcgis = load_arcgis_areas(election, config, party_columns)
     arcgis["stat_area_id"] = arcgis["source_area_id"].map(source_to_canonical)
     arcgis["stat_area_id"] = arcgis["stat_area_id"].fillna(
         arcgis["source_area_id"].map(lambda value: f"stat2011:{value}")
@@ -262,6 +279,13 @@ def audit_election(
         if pending.empty:
             continue
         locality_areas = arcgis[arcgis["source_locality_code"] == locality_code].copy()
+        published_stat_areas = sum(
+            number(metadata.get("locality_code")) == locality_code
+            for metadata in metadata_by_id.values()
+        )
+        source_is_dissolved_locality = (
+            len(locality_areas) == 1 and published_stat_areas > 1
+        )
         report: dict[str, Any] = {
             "election": election,
             "source_locality_code": locality_code,
@@ -269,12 +293,25 @@ def audit_election(
             "pending_rows": len(pending),
             "pending_actual_voters": int(pending["actual_voters"].sum()),
             "arcgis_areas": len(locality_areas),
+            "published_stat_areas": published_stat_areas,
+            "arcgis_granularity": (
+                "dissolved_locality_aggregate"
+                if source_is_dissolved_locality
+                else "detailed_statistical_areas"
+            ),
             "candidate_rows": 0,
             "solution_count_capped": 0,
             "search_states": 0,
             "arcgis_minus_official_valid_votes": 0,
             "arcgis_minus_official_invalid_votes": 0,
             "arcgis_party_sum_mismatch_areas": 0,
+            "excluded_noncandidate_discrepancy_areas": 0,
+            "excluded_noncandidate_differences": "",
+            "party_vector_mismatch_areas": 0,
+            "party_vector_net_difference": 0,
+            "party_vector_absolute_difference": 0,
+            "party_vector_negative_difference_fields": 0,
+            "party_vector_differences": "",
             "evidence_tier": "",
             "secondary_area_mismatch_count": 0,
             "secondary_area_differences": "",
@@ -287,6 +324,17 @@ def audit_election(
             continue
         if locality_areas.empty:
             report.update(status="no_arcgis_locality", reason="Locality is absent from the ArcGIS layer")
+            locality_reports.append(report)
+            continue
+        if source_is_dissolved_locality:
+            report.update(
+                status="source_dissolved_locality_aggregate",
+                reason=(
+                    "The ArcGIS item documentation says Arab-locality statistical "
+                    "areas were merged. One source feature cannot identify ballots "
+                    f"among the locality's {published_stat_areas} published areas."
+                ),
+            )
             locality_reports.append(report)
             continue
 
@@ -303,13 +351,7 @@ def audit_election(
         report["arcgis_party_sum_mismatch_areas"] = int(
             (locality_areas["party_vote_sum"] != locality_areas["valid_votes"]).sum()
         )
-        if arcgis_total != official_total:
-            report.update(
-                status="source_locality_total_mismatch",
-                reason=f"ArcGIS {arcgis_total} != official {official_total}",
-            )
-            locality_reports.append(report)
-            continue
+        source_locality_total_matches = arcgis_total == official_total
 
         grouped_areas = (
             locality_areas.groupby("stat_area_id", as_index=False)
@@ -318,7 +360,11 @@ def audit_election(
                 source_stat_area_number=("source_stat_area_number", "first"),
                 **{
                     field: (field, "sum")
-                    for field in [*SIGNATURE_FIELDS, *SECONDARY_METRICS]
+                    for field in [
+                        *SIGNATURE_FIELDS,
+                        *SECONDARY_METRICS,
+                        *party_columns,
+                    ]
                 },
             )
         )
@@ -338,6 +384,28 @@ def audit_election(
             residual.at[area_index, "ballot_count"] -= len(assigned_area)
             for metric in METRICS:
                 residual.at[area_index, metric] -= int(assigned_area[metric].sum())
+            for party in party_columns:
+                residual.at[area_index, party] -= int(assigned_area[party].sum())
+        noncandidate_mask = (
+            residual["ballot_count"].eq(0)
+            & residual["eligible_voters"].eq(0)
+            & residual[[*SIGNATURE_FIELDS, *SECONDARY_METRICS, *party_columns]]
+            .ne(0)
+            .any(axis=1)
+        )
+        excluded = residual[noncandidate_mask].copy()
+        if not excluded.empty:
+            report["excluded_noncandidate_discrepancy_areas"] = len(excluded)
+            report["excluded_noncandidate_differences"] = "|".join(
+                f"{area['stat_area_id']}:"
+                + ",".join(
+                    f"{field}{int(area[field]):+d}"
+                    for field in [*SIGNATURE_FIELDS, *SECONDARY_METRICS, *party_columns]
+                    if int(area[field])
+                )
+                for _, area in excluded.iterrows()
+            )
+            residual = residual[~noncandidate_mask].copy()
         if (residual[SIGNATURE_FIELDS] < 0).any().any():
             report.update(status="negative_residual", reason="Assigned rows exceed an ArcGIS area aggregate")
             locality_reports.append(report)
@@ -384,6 +452,11 @@ def audit_election(
 
         secondary_differences: list[str] = []
         secondary_mismatch_areas = 0
+        party_differences: list[str] = []
+        party_mismatch_areas = 0
+        party_net_difference = 0
+        party_absolute_difference = 0
+        party_negative_fields = 0
         for area_index, area in residual.iterrows():
             candidate_indexes = [
                 pending_index
@@ -402,17 +475,68 @@ def audit_election(
                     f"invalid{deltas['invalid_votes']:+d}"
                 )
 
-        evidence_tier = "A" if not secondary_differences else "B"
+            party_deltas = {
+                party: int(area[party]) - int(candidate_area[party].sum())
+                for party in party_columns
+            }
+            nonzero_party_deltas = {
+                party: delta for party, delta in party_deltas.items() if delta
+            }
+            if nonzero_party_deltas:
+                party_mismatch_areas += 1
+                party_net_difference += sum(nonzero_party_deltas.values())
+                party_absolute_difference += sum(
+                    abs(delta) for delta in nonzero_party_deltas.values()
+                )
+                party_negative_fields += sum(
+                    delta < 0 for delta in nonzero_party_deltas.values()
+                )
+                party_differences.append(
+                    f"{area['stat_area_id']}:"
+                    + ",".join(
+                        f"{party}{delta:+d}"
+                        for party, delta in nonzero_party_deltas.items()
+                    )
+                )
+
+        if not secondary_differences and not party_differences:
+            evidence_tier = "A"
+        elif (
+            secondary_differences
+            and party_differences
+            and party_negative_fields == 0
+            and party_absolute_difference == party_net_difference
+        ):
+            evidence_tier = "B"
+        else:
+            evidence_tier = "C"
+        if not source_locality_total_matches or not excluded.empty:
+            evidence_tier = "C"
         secondary_note = (
             "every residual area also reconciles valid and invalid votes"
             if evidence_tier == "A"
             else "secondary area audit differs: " + "|".join(secondary_differences)
         )
+        if not source_locality_total_matches:
+            secondary_note += (
+                f"; locality source totals differ: ArcGIS {arcgis_total} "
+                f"!= official {official_total}"
+            )
+        if not excluded.empty:
+            secondary_note += (
+                "; excluded zero-ballot discrepancies outside the candidate areas: "
+                + report["excluded_noncandidate_differences"]
+            )
         report.update(
             status="unique_exact_partition",
             evidence_tier=evidence_tier,
             secondary_area_mismatch_count=secondary_mismatch_areas,
             secondary_area_differences="|".join(secondary_differences),
+            party_vector_mismatch_areas=party_mismatch_areas,
+            party_vector_net_difference=party_net_difference,
+            party_vector_absolute_difference=party_absolute_difference,
+            party_vector_negative_difference_fields=party_negative_fields,
+            party_vector_differences="|".join(party_differences),
             reason=(
                 "Unique exact partition of ballot count, eligible voters, and "
                 f"actual voters; {secondary_note}"
@@ -435,6 +559,7 @@ def audit_election(
                     "candidate_yishuv_stat": number(metadata["yishuv_stat"]),
                     "candidate_stat_area_number": number(metadata["stat_area_number"]),
                     "arcgis_source_area_ids": area["source_area_ids"],
+                    "source_granularity": "detailed_statistical_area",
                     "proof_status": "unique_exact_partition",
                     "proof_metrics": "ballot_count|eligible_voters|actual_voters",
                     "evidence_tier": evidence_tier,
@@ -463,6 +588,7 @@ def attach_reviews(
     reviews["source_locality_code"] = reviews["source_locality_code"].map(number)
     reviews = reviews.rename(
         columns={
+            "evidence_tier": "review_evidence_tier",
             "candidate_rows": "review_candidate_rows",
             "candidate_actual_voters": "review_candidate_actual_voters",
         }
@@ -470,6 +596,7 @@ def attach_reviews(
     review_fields = [
         *key_fields,
         "decision",
+        "review_evidence_tier",
         "review_candidate_rows",
         "review_candidate_actual_voters",
         "candidate_assignment_sha256",
@@ -490,8 +617,11 @@ def attach_reviews(
     approved_reports = report_frame[report_frame["decision"] == "approved"]
     invalid = approved_reports[
         (approved_reports["status"] != "unique_exact_partition")
-        | (approved_reports["evidence_tier"] != "A")
-        | (approved_reports["secondary_area_mismatch_count"].map(number) != 0)
+        | (~approved_reports["evidence_tier"].isin(["A", "B", "C"]))
+        | (
+            approved_reports["evidence_tier"]
+            != approved_reports["review_evidence_tier"]
+        )
         | (
             approved_reports["candidate_rows"].map(number)
             != approved_reports["review_candidate_rows"].map(number)
@@ -525,7 +655,7 @@ def attach_reviews(
     candidate_frame = candidate_frame.rename(columns={"decision": "review_decision"})
     candidate_frame["assignment_applied"] = (
         (candidate_frame["review_decision"] == "approved")
-        & (candidate_frame["evidence_tier"] == "A")
+        & candidate_frame["evidence_tier"].isin(["A", "B", "C"])
     )
     return report_frame, candidate_frame
 
@@ -563,8 +693,13 @@ def main() -> None:
     )
 
     summary: dict[str, Any] = {
-        "status": "tier_a_approved_tier_b_review_only",
+        "status": "reviewed_arcgis_residual_assignments",
         "method": "unique exact partition after subtracting existing historical assignments",
+        "source_caveat": (
+            "The ArcGIS item descriptions state that statistical areas in Arab "
+            "localities were merged. Such locality-wide features are audited but "
+            "never accepted as detailed statistical-area assignments."
+        ),
         "matching_metrics": SIGNATURE_FIELDS,
         "secondary_audit_metrics_not_used_for_matching": SECONDARY_METRICS,
         "elections": {},
@@ -591,7 +726,7 @@ def main() -> None:
                         candidates.loc[candidates["evidence_tier"] == tier, "actual_voters"].sum()
                     ),
                 }
-                for tier in ["A", "B"]
+                for tier in ["A", "B", "C"]
             },
             "status_counts": {
                 str(status): int(count)

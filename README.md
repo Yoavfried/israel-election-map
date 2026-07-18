@@ -5,8 +5,9 @@ election results by locality and election-appropriate statistical area.
 
 The repository contains a Python data pipeline, a React/TypeScript/MapLibre
 client, and a committed public-data release. Statistical results use direct CBS
-ballot-to-area evidence where available, explicitly labeled reviewed inference
-for approved K20/K21 gaps, and matching historical geometry.
+ballot-to-area evidence where available, additional official AGS and
+stable-ballot evidence, explicitly labeled reviewed inference, and matching
+historical geometry.
 
 ## Download The Data
 
@@ -28,8 +29,9 @@ pipeline run is required.
 The ballot CSVs contain every source result row, party-vote columns, and the
 corresponding statistical-area and locality IDs. Polygon ZIPs expose the same
 `geography_id`, so the join is direct. Assignment method/source fields identify
-the 751 K20/K21 rows whose area link was reconstructed from aggregate evidence;
-their vote values remain official.
+148 rows whose area link is inferred rather than copied from a direct official
+crosswalk. Their vote values remain official, and the exact evidence class,
+confidence, source, and synthetic-link flag are published on every row.
 
 - [Complete download index and polygon packages](public-data/README.md)
 - [Data dictionary and join examples](public-data/DATA_DICTIONARY.md)
@@ -43,11 +45,15 @@ configuration under `web/app/`; they are not part of the reusable data tables.
 Statistical-area assignment precedence is:
 
 1. official envelope or reviewed non-geographic handling;
-2. official election-specific CBS ballot-to-statistical-area crosswalk;
-3. reviewed Tier A K20/K21 aggregate reconstruction;
-4. historical locality fallback only when that locality has one published area;
-5. reviewed custom geography where no supported historical area exists;
-6. explicit unresolved status.
+2. reviewed historical overrides where independent evidence disproves a direct
+   crosswalk target;
+3. official election-specific CBS ballot-to-statistical-area crosswalk;
+4. direct K23 CEC AGS evidence;
+5. reviewed exact ArcGIS residual reconstruction;
+6. official CBS stable-ballot propagation when all same-vintage evidence agrees;
+7. historical locality fallback only when that locality has one published area;
+8. reviewed custom geography where no supported historical area exists;
+9. explicit unresolved status.
 
 Statistical mode uses 1995 areas for K17, 2008 for K18, and 2011 for K19-K25.
 K25 remains on 2011 because its official crosswalk targets that vintage;

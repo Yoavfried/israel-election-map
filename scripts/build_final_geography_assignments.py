@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import csv
 import hashlib
+import json
 import sys
 from collections import Counter
 from functools import cache
@@ -29,6 +30,9 @@ STAT_AREA_METADATA = (
 HISTORICAL_STAT_AREA_METADATA = (
     PROCESSED_DIR / "geographies" / "statistical_areas_2011.metadata.csv"
 )
+HISTORICAL_STAT_AREA_OVERRIDES = (
+    MANUAL_DIR / "historical_stat_area_overrides.csv"
+)
 ARCGIS_RECONSTRUCTION_CANDIDATES = (
     PROCESSED_DIR / "audits" / "arcgis_assignment_reconstruction_candidates.csv"
 )
@@ -37,6 +41,18 @@ ARCGIS_RECONSTRUCTION_LOCALITIES = (
 )
 ARCGIS_RECONSTRUCTION_REVIEWS = (
     MANUAL_DIR / "arcgis_assignment_reconstruction_reviews.csv"
+)
+STABLE_BALLOT_CANDIDATES = (
+    PROCESSED_DIR / "audits" / "stable_ballot_assignment_candidates.csv"
+)
+STABLE_BALLOT_SUMMARY = (
+    PROCESSED_DIR / "audits" / "stable_ballot_assignment_summary.json"
+)
+K23_CEC_AGS_CANDIDATES = (
+    PROCESSED_DIR / "audits" / "k23_cec_ags_assignment_candidates.csv"
+)
+K23_CEC_AGS_SUMMARY = (
+    PROCESSED_DIR / "audits" / "k23_cec_ags_assignment_summary.json"
 )
 OUT_DIR = PROCESSED_DIR / "assignments"
 COMPOSITE_LOCALITIES = MANUAL_DIR / "composite_localities.csv"
@@ -78,6 +94,62 @@ def normalize_locality_code(value: Any) -> str:
         return str(int(number))
     digits = "".join(char for char in text if char.isdigit())
     return str(int(digits)) if digits else ""
+
+
+def assignment_evidence_metadata(row: dict[str, Any]) -> dict[str, Any]:
+    method = str(row.get("final_assignment_method", ""))
+    status = str(row.get("geography_assignment_status", ""))
+    if not row.get("stat_area_id") and status in {
+        "no_direct_historical_assignment",
+        "crosswalk_area_missing_geometry",
+        "unresolved",
+        "missing_stat_area_metadata",
+    }:
+        evidence_class = "unresolved"
+        confidence = "unresolved"
+        synthetic = False
+    elif method.startswith("official_cbs_ballot_crosswalk"):
+        evidence_class = "official_direct_crosswalk"
+        confidence = "authoritative"
+        synthetic = False
+    elif method == "official_cec_k23_ags":
+        evidence_class = "official_direct_ags"
+        confidence = "authoritative"
+        synthetic = False
+    elif method.startswith("cbs_stable_ballot_"):
+        evidence_class = "official_stability_inferred_link"
+        confidence = "high"
+        synthetic = True
+    elif method.startswith("arcgis_residual_partition_tier_"):
+        tier = method.rsplit("_", 1)[-1]
+        evidence_class = "reviewed_exact_aggregate_inferred_link"
+        confidence = "moderate" if tier == "c" else "high"
+        synthetic = True
+    elif method == "reviewed_historical_stat_area_override":
+        evidence_class = "reviewed_cross_election_inferred_link"
+        confidence = "high"
+        synthetic = True
+    elif method in {"single_historical_stat_locality", "single_stat_locality"}:
+        evidence_class = "deterministic_single_area_locality"
+        confidence = "high"
+        synthetic = False
+    elif method == "custom_point_size_polygon":
+        evidence_class = "reviewed_custom_geography"
+        confidence = "high"
+        synthetic = False
+    elif status in {"official_envelope", "special_non_geographic"}:
+        evidence_class = "non_geographic"
+        confidence = "not_applicable"
+        synthetic = False
+    else:
+        evidence_class = "unresolved"
+        confidence = "unresolved"
+        synthetic = False
+    return {
+        "assignment_evidence_class": evidence_class,
+        "assignment_confidence": confidence,
+        "assignment_is_synthetic_link": synthetic,
+    }
 
 
 def split_locality_codes(value: Any) -> list[str]:
@@ -255,10 +327,8 @@ def historical_stat_assignment(
     )
 
 
-def arcgis_reconstructed_assignment(
-    row: dict[str, str],
-    candidate: dict[str, str],
-    stat: dict[str, str],
+def historical_override_assignment(
+    row: dict[str, str], override: dict[str, str], stat: dict[str, str]
 ) -> dict[str, Any]:
     return mapped_assignment(
         row=row,
@@ -268,11 +338,95 @@ def arcgis_reconstructed_assignment(
         stat_area_number=stat["stat_area_number"],
         locality_code=stat["locality_code"],
         locality_name=stat["locality_name_he"],
-        status="arcgis_reconstructed_exact_assigned",
-        method="arcgis_residual_partition_tier_a",
+        status="reviewed_historical_override_assigned",
+        method="reviewed_historical_stat_area_override",
+        source=(
+            "data/manual/historical_stat_area_overrides.csv;evidence="
+            f"{override['evidence_sources']}"
+        ),
+    )
+
+
+def arcgis_reconstructed_assignment(
+    row: dict[str, str],
+    candidate: dict[str, str],
+    stat: dict[str, str],
+) -> dict[str, Any]:
+    if candidate.get("source_granularity") != "detailed_statistical_area":
+        raise ValueError(
+            "ArcGIS reconstruction is not a detailed statistical-area target: "
+            f"{candidate.get('source_row_uid', '')}"
+        )
+    evidence_tier = normalize_spaces(candidate.get("evidence_tier", "")).lower()
+    if evidence_tier not in {"a", "b", "c"}:
+        raise ValueError(
+            f"Unsupported ArcGIS reconstruction tier: {candidate.get('evidence_tier', '')}"
+        )
+    return mapped_assignment(
+        row=row,
+        stat_area_id=stat["stat_area_id"],
+        vintage=int_value(stat["stat_area_vintage"]),
+        yishuv_stat=stat["yishuv_stat"],
+        stat_area_number=stat["stat_area_number"],
+        locality_code=stat["locality_code"],
+        locality_name=stat["locality_name_he"],
+        status="arcgis_reconstructed_assigned",
+        method=f"arcgis_residual_partition_tier_{evidence_tier}",
         source=(
             f"{candidate['source']};review="
             "data/manual/arcgis_assignment_reconstruction_reviews.csv"
+        ),
+    )
+
+
+def stable_ballot_assignment(
+    row: dict[str, str],
+    candidate: dict[str, str],
+    stat: dict[str, str],
+) -> dict[str, Any]:
+    method = normalize_spaces(candidate.get("evidence_method", ""))
+    if not method.startswith("cbs_stable_ballot_"):
+        raise ValueError(f"Unsupported stable-ballot method: {method}")
+    sources = normalize_spaces(candidate.get("source_workbooks", ""))
+    return mapped_assignment(
+        row=row,
+        stat_area_id=stat["stat_area_id"],
+        vintage=int_value(stat["stat_area_vintage"]),
+        yishuv_stat=stat["yishuv_stat"],
+        stat_area_number=stat["stat_area_number"],
+        locality_code=stat["locality_code"],
+        locality_name=stat["locality_name_he"],
+        status="cbs_stable_ballot_assigned",
+        method=method,
+        source=(
+            f"data/raw/cbs_historical_geography/{sources};"
+            "audit=data/processed/audits/stable_ballot_assignment_candidates.csv"
+        ),
+    )
+
+
+def k23_cec_ags_assignment(
+    row: dict[str, str],
+    candidate: dict[str, str],
+    stat: dict[str, str],
+) -> dict[str, Any]:
+    if candidate.get("evidence_method") != "official_cec_k23_ags":
+        raise ValueError(
+            f"Unsupported K23 CEC AGS method: {candidate.get('evidence_method', '')}"
+        )
+    return mapped_assignment(
+        row=row,
+        stat_area_id=stat["stat_area_id"],
+        vintage=int_value(stat["stat_area_vintage"]),
+        yishuv_stat=stat["yishuv_stat"],
+        stat_area_number=stat["stat_area_number"],
+        locality_code=stat["locality_code"],
+        locality_name=stat["locality_name_he"],
+        status="official_cec_ags_assigned",
+        method="official_cec_k23_ags",
+        source=(
+            f"data/raw/{candidate['source_workbook']};"
+            "audit=data/processed/audits/k23_cec_ags_assignment_candidates.csv"
         ),
     )
 
@@ -360,6 +514,26 @@ def load_historical_assignments() -> dict[str, dict[str, str]]:
     return output
 
 
+def load_historical_overrides() -> dict[str, dict[str, str]]:
+    rows = read_csv(HISTORICAL_STAT_AREA_OVERRIDES)
+    if not rows:
+        raise FileNotFoundError(
+            f"Missing or empty reviewed historical override table: "
+            f"{HISTORICAL_STAT_AREA_OVERRIDES}"
+        )
+    output: dict[str, dict[str, str]] = {}
+    for row in rows:
+        uid = normalize_spaces(row.get("source_row_uid", ""))
+        if not uid or uid in output:
+            raise ValueError(f"Missing or duplicate historical override UID: {uid}")
+        if row.get("evidence_status") != "reviewed_exact_stable_conflict_resolution":
+            raise ValueError(f"Unsupported historical override evidence: {uid}")
+        if int_value(row.get("stat_area_vintage")) != 2011:
+            raise ValueError(f"Historical override must target 2011 geography: {uid}")
+        output[uid] = row
+    return output
+
+
 def load_approved_arcgis_reconstructions() -> dict[str, dict[str, str]]:
     reviews = read_csv(ARCGIS_RECONSTRUCTION_REVIEWS)
     candidates = read_csv(ARCGIS_RECONSTRUCTION_CANDIDATES)
@@ -404,13 +578,13 @@ def load_approved_arcgis_reconstructions() -> dict[str, dict[str, str]]:
         locality_candidates = candidates_by_locality.get(key, [])
         if not report or not locality_candidates:
             raise ValueError(f"Approved ArcGIS reconstruction is absent from audit: {key}")
+        evidence_tier = normalize_spaces(review.get("evidence_tier", "")).upper()
         if (
-            review.get("evidence_tier") != "A"
+            evidence_tier not in {"A", "B", "C"}
             or report.get("status") != "unique_exact_partition"
-            or report.get("evidence_tier") != "A"
-            or int_value(report.get("secondary_area_mismatch_count")) != 0
+            or report.get("evidence_tier") != evidence_tier
         ):
-            raise ValueError(f"Approved ArcGIS reconstruction is not current Tier A: {key}")
+            raise ValueError(f"Approved ArcGIS reconstruction evidence changed: {key}")
         if (
             int_value(review.get("candidate_rows")) != len(locality_candidates)
             or int_value(review.get("candidate_rows"))
@@ -427,13 +601,75 @@ def load_approved_arcgis_reconstructions() -> dict[str, dict[str, str]]:
             raise ValueError(f"Approved ArcGIS reconstruction mapping changed: {key}")
 
         for candidate in locality_candidates:
-            if candidate.get("evidence_tier") != "A":
-                raise ValueError(f"Approved ArcGIS candidate is not Tier A: {key}")
+            if candidate.get("evidence_tier") != evidence_tier:
+                raise ValueError(f"Approved ArcGIS candidate tier changed: {key}")
             uid = candidate.get("source_row_uid", "")
             if not uid or uid in approved:
                 raise ValueError(f"Missing or duplicate approved ArcGIS row: {uid}")
             approved[uid] = candidate
     return approved
+
+
+def load_stable_ballot_assignments() -> dict[str, dict[str, str]]:
+    candidates = read_csv(STABLE_BALLOT_CANDIDATES)
+    if not STABLE_BALLOT_SUMMARY.exists():
+        raise FileNotFoundError(
+            f"Missing stable-ballot audit summary: {STABLE_BALLOT_SUMMARY}"
+        )
+    summary = json.loads(STABLE_BALLOT_SUMMARY.read_text(encoding="utf-8"))
+    if summary.get("status") not in {"complete", "partial_missing_sources"}:
+        raise ValueError("Stable-ballot assignment audit has an invalid status")
+    if summary.get("status") == "partial_missing_sources" and not summary.get(
+        "missing_source_workbooks"
+    ):
+        raise ValueError("Partial stable-ballot audit does not identify missing sources")
+    if int_value(summary.get("candidate_rows")) != len(candidates):
+        raise ValueError("Stable-ballot candidate row count changed")
+    if int_value(summary.get("candidate_actual_voters")) != sum(
+        int_value(row.get("actual_voters")) for row in candidates
+    ):
+        raise ValueError("Stable-ballot candidate voter total changed")
+    if reconstruction_fingerprint(candidates) != summary.get(
+        "candidate_assignment_sha256"
+    ):
+        raise ValueError("Stable-ballot candidate mapping fingerprint changed")
+
+    output: dict[str, dict[str, str]] = {}
+    for candidate in candidates:
+        uid = candidate.get("source_row_uid", "")
+        if not uid or uid in output:
+            raise ValueError(f"Missing or duplicate stable-ballot row: {uid}")
+        output[uid] = candidate
+    return output
+
+
+def load_k23_cec_ags_assignments() -> dict[str, dict[str, str]]:
+    candidates = read_csv(K23_CEC_AGS_CANDIDATES)
+    if not K23_CEC_AGS_SUMMARY.exists():
+        raise FileNotFoundError(
+            f"Missing K23 CEC AGS audit summary: {K23_CEC_AGS_SUMMARY}"
+        )
+    summary = json.loads(K23_CEC_AGS_SUMMARY.read_text(encoding="utf-8"))
+    if summary.get("status") != "complete":
+        raise ValueError("K23 CEC AGS assignment audit is not complete")
+    if int_value(summary.get("candidate_rows")) != len(candidates):
+        raise ValueError("K23 CEC AGS candidate row count changed")
+    if int_value(summary.get("candidate_actual_voters")) != sum(
+        int_value(row.get("actual_voters")) for row in candidates
+    ):
+        raise ValueError("K23 CEC AGS candidate voter total changed")
+    if reconstruction_fingerprint(candidates) != summary.get(
+        "candidate_assignment_sha256"
+    ):
+        raise ValueError("K23 CEC AGS candidate mapping fingerprint changed")
+
+    output: dict[str, dict[str, str]] = {}
+    for candidate in candidates:
+        uid = candidate.get("source_row_uid", "")
+        if not uid or uid in output:
+            raise ValueError(f"Missing or duplicate K23 CEC AGS row: {uid}")
+        output[uid] = candidate
+    return output
 
 
 def main() -> None:
@@ -443,7 +679,10 @@ def main() -> None:
 
     assignment_rows = read_csv(ASSIGNMENT_PLAN)
     historical_assignments = load_historical_assignments()
+    historical_overrides = load_historical_overrides()
+    k23_cec_ags_assignments = load_k23_cec_ags_assignments()
     arcgis_reconstructions = load_approved_arcgis_reconstructions()
+    stable_ballot_assignments = load_stable_ballot_assignments()
     stat_metadata = {
         row["stat_area_id"]: row for row in read_csv(STAT_AREA_METADATA)
     }
@@ -460,10 +699,75 @@ def main() -> None:
         method = row["assignment_method"]
         historical = historical_assignments.get(row["source_row_uid"])
 
+        override = historical_overrides.get(row["source_row_uid"])
+        if override:
+            expected = {
+                "election": row["election"],
+                "source_locality_code": normalize_locality_code(
+                    row["source_locality_code"]
+                ),
+                "source_kalpi": normalize_spaces(row["source_kalpi"]),
+            }
+            observed = {
+                "election": override.get("election", ""),
+                "source_locality_code": normalize_locality_code(
+                    override.get("source_locality_code", "")
+                ),
+                "source_kalpi": normalize_spaces(override.get("source_kalpi", "")),
+            }
+            if observed != expected:
+                raise ValueError(
+                    f"Historical override source identity changed: "
+                    f"{row['source_row_uid']}"
+                )
+            if not historical or not normalize_bool(
+                historical.get("is_historical_stat_mapped", "")
+            ):
+                raise ValueError(
+                    f"Historical override does not replace a direct assignment: "
+                    f"{row['source_row_uid']}"
+                )
+            stat = historical_stat_metadata.get(override["target_stat_area_id"])
+            if not stat:
+                raise ValueError(
+                    f"Historical override target lacks 2011 metadata: "
+                    f"{override['target_stat_area_id']}"
+                )
+            if normalize_locality_code(stat.get("locality_code", "")) != expected[
+                "source_locality_code"
+            ]:
+                raise ValueError(
+                    f"Historical override crosses locality boundaries: "
+                    f"{row['source_row_uid']}"
+                )
+            output.append(historical_override_assignment(row, override, stat))
+            continue
+
         if historical and normalize_bool(
             historical.get("is_historical_stat_mapped", "")
         ):
             output.append(historical_stat_assignment(row, historical))
+            continue
+        k23_ags_candidate = k23_cec_ags_assignments.get(row["source_row_uid"])
+        if k23_ags_candidate:
+            if (
+                not historical
+                or historical.get("historical_assignment_status")
+                != "no_direct_historical_assignment"
+            ):
+                raise ValueError(
+                    "K23 CEC AGS evidence may only replace a missing direct "
+                    f"historical assignment: {row['source_row_uid']}"
+                )
+            stat = historical_stat_metadata.get(
+                k23_ags_candidate["candidate_stat_area_id"]
+            )
+            if not stat:
+                raise ValueError(
+                    "K23 CEC AGS target lacks 2011 metadata: "
+                    f"{k23_ags_candidate['candidate_stat_area_id']}"
+                )
+            output.append(k23_cec_ags_assignment(row, k23_ags_candidate, stat))
             continue
         reconstruction = arcgis_reconstructions.get(row["source_row_uid"])
         if reconstruction:
@@ -486,11 +790,42 @@ def main() -> None:
                 )
             output.append(arcgis_reconstructed_assignment(row, reconstruction, stat))
             continue
+        stable_candidate = stable_ballot_assignments.get(row["source_row_uid"])
+        if stable_candidate:
+            if (
+                not historical
+                or historical.get("historical_assignment_status")
+                != "no_direct_historical_assignment"
+            ):
+                raise ValueError(
+                    "Stable-ballot evidence may only replace a missing direct "
+                    f"historical assignment: {row['source_row_uid']}"
+                )
+            stat = historical_stat_metadata.get(
+                stable_candidate["candidate_stat_area_id"]
+            )
+            if not stat:
+                raise ValueError(
+                    "Stable-ballot target lacks 2011 metadata: "
+                    f"{stable_candidate['candidate_stat_area_id']}"
+                )
+            output.append(stable_ballot_assignment(row, stable_candidate, stat))
+            continue
         if (
             historical
             and historical.get("historical_assignment_status")
             != "not_applicable_non_geographic"
         ):
+            unresolved_reason = historical.get(
+                "unresolved_reason",
+                "No direct historical ballot assignment is available",
+            )
+            if historical.get("ballot_base") == "990":
+                unresolved_reason = (
+                    "Central ballot 990 serves locality-registered voters without "
+                    "a supported area-level allocation; this multi-area locality "
+                    "cannot be reduced to one statistical area"
+                )
             output.append(
                 unresolved(
                     row,
@@ -498,10 +833,7 @@ def main() -> None:
                         "historical_assignment_status",
                         "no_direct_historical_assignment",
                     ),
-                    historical.get(
-                        "unresolved_reason",
-                        "No direct historical ballot assignment is available",
-                    ),
+                    unresolved_reason,
                 )
             )
             continue
@@ -539,6 +871,9 @@ def main() -> None:
             )
         )
 
+    for assignment in output:
+        assignment.update(assignment_evidence_metadata(assignment))
+
     fields = [
         "source_row_uid",
         "election",
@@ -574,6 +909,9 @@ def main() -> None:
         "is_geographic",
         "final_assignment_method",
         "final_assignment_source",
+        "assignment_evidence_class",
+        "assignment_confidence",
+        "assignment_is_synthetic_link",
         "unresolved_reason",
     ]
     write_csv(OUT_DIR / "ballot_geography_assignments.csv", output, fields)
@@ -622,15 +960,50 @@ def main() -> None:
                     for row in mapped_rows
                 ),
                 "arcgis_reconstructed_rows": sum(
-                    row["final_assignment_method"]
-                    == "arcgis_residual_partition_tier_a"
+                    row["final_assignment_method"].startswith(
+                        "arcgis_residual_partition_tier_"
+                    )
                     for row in mapped_rows
                 ),
                 "arcgis_reconstructed_actual_voters": sum(
                     int_value(row["actual_voters"])
                     for row in mapped_rows
+                    if row["final_assignment_method"].startswith(
+                        "arcgis_residual_partition_tier_"
+                    )
+                ),
+                "stable_ballot_assigned_rows": sum(
+                    row["final_assignment_method"].startswith(
+                        "cbs_stable_ballot_"
+                    )
+                    for row in mapped_rows
+                ),
+                "stable_ballot_assigned_actual_voters": sum(
+                    int_value(row["actual_voters"])
+                    for row in mapped_rows
+                    if row["final_assignment_method"].startswith(
+                        "cbs_stable_ballot_"
+                    )
+                ),
+                "official_cec_ags_assigned_rows": sum(
+                    row["final_assignment_method"] == "official_cec_k23_ags"
+                    for row in mapped_rows
+                ),
+                "official_cec_ags_assigned_actual_voters": sum(
+                    int_value(row["actual_voters"])
+                    for row in mapped_rows
+                    if row["final_assignment_method"] == "official_cec_k23_ags"
+                ),
+                "reviewed_historical_override_rows": sum(
+                    row["final_assignment_method"]
+                    == "reviewed_historical_stat_area_override"
+                    for row in mapped_rows
+                ),
+                "reviewed_historical_override_actual_voters": sum(
+                    int_value(row["actual_voters"])
+                    for row in mapped_rows
                     if row["final_assignment_method"]
-                    == "arcgis_residual_partition_tier_a"
+                    == "reviewed_historical_stat_area_override"
                 ),
                 "locality_mapped_rows": len(locality_mapped_rows),
                 "locality_mapped_actual_voters": sum(

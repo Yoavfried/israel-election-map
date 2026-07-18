@@ -39,6 +39,7 @@ ARCGIS_2011_SUPPLEMENT_IDS = {
     9650001,
     9660001,
     9670001,
+    9680001,
     9690001,
     9700001,
     9720001,
@@ -46,6 +47,7 @@ ARCGIS_2011_SUPPLEMENT_IDS = {
     9860001,
     10410001,
     11690001,
+    11700001,
     12340001,
     34000001,
     36370001,
@@ -85,7 +87,23 @@ TRANSITION_1995_TARGETS = {
         "locality_name_en": "YEHUD-NEWE EFRAYIM",
     }
 }
-NON_EXCLUSIVE_DISPLAY_MARKERS = {1995: {"stat1995:9400008"}}
+NON_EXCLUSIVE_DISPLAY_MARKERS = {
+    1995: {"stat1995:9400008"},
+    2011: {
+        "stat2011:9390001",
+        "stat2011:9560001",
+        "stat2011:9580001",
+        "stat2011:9610001",
+        "stat2011:9650001",
+        "stat2011:9660001",
+        "stat2011:9670001",
+        "stat2011:9690001",
+        "stat2011:11690001",
+        "stat2011:11700001",
+        "stat2011:14110001",
+        "stat2011:27100001",
+    },
+}
 UNSIMPLIFIED_DISPLAY_VINTAGES = {1995, 2008}
 
 VINTAGES = {
@@ -517,6 +535,46 @@ def validate_no_material_display_overlaps(
         )
 
 
+def validate_supplement_overlap_markers(
+    stats: gpd.GeoDataFrame,
+    vintage: int,
+    marker_ids: set[str],
+    maximum_unmarked_overlap_share: float = 0.05,
+) -> None:
+    projected = stats.to_crs("EPSG:2039").reset_index(drop=True)
+    supplements = projected[
+        projected["geometry_source"].astype(str).str.startswith("arcgis_")
+    ].reset_index(drop=True)
+    failures: list[tuple[str, str, float]] = []
+    for supplement_position, area_position in zip(
+        *projected.sindex.query(supplements.geometry, predicate="intersects")
+    ):
+        supplement = supplements.iloc[supplement_position]
+        area = projected.iloc[area_position]
+        if supplement["stat_area_id"] == area["stat_area_id"]:
+            continue
+        overlap_share = (
+            supplement.geometry.intersection(area.geometry).area
+            / supplement.geometry.area
+        )
+        if (
+            overlap_share > maximum_unmarked_overlap_share
+            and supplement["stat_area_id"] not in marker_ids
+        ):
+            failures.append(
+                (
+                    str(supplement["stat_area_id"]),
+                    str(area["stat_area_id"]),
+                    round(overlap_share, 4),
+                )
+            )
+    if failures:
+        raise ValueError(
+            f"{vintage} ArcGIS supplements with material overlaps must render "
+            f"as markers: {failures[:10]}"
+        )
+
+
 def write_geojson(stats: gpd.GeoDataFrame, path: Path) -> None:
     ensure_dir(path.parent)
     stats.to_file(path, driver="GeoJSON", encoding="utf-8", index=False)
@@ -575,6 +633,7 @@ def main() -> None:
         )
         display["display_mode"] = ""
         marker_ids = NON_EXCLUSIVE_DISPLAY_MARKERS.get(vintage, set())
+        validate_supplement_overlap_markers(official, vintage, marker_ids)
         display.loc[display["stat_area_id"].isin(marker_ids), "display_mode"] = "marker"
         official_public = public_columns(official_wgs84)
         display_public = public_columns(display)

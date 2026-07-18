@@ -75,7 +75,12 @@ K25:11662,K25,,,single_stat_locality,statistical_area,3720,שערי תקווה,s
 K25:11663,K25,,,single_stat_locality,statistical_area,3720,שערי תקווה,stat2022:37200001,,Reviewed single-area locality assignment.
 K25:11664,K25,,,single_stat_locality,statistical_area,3720,שערי תקווה,stat2022:37200001,,Reviewed single-area locality assignment.
 K25:11665,K25,,,single_stat_locality,statistical_area,3720,שערי תקווה,stat2022:37200001,,Reviewed single-area locality assignment.
+K25:11666,K25,,,single_stat_locality,statistical_area,3778,עץ אפרים,stat2022:37780001,,Official K25 polling-place report identifies ballot 101 at the Etz Efraim Pais club.
+K25:11667,K25,,,single_stat_locality,statistical_area,3778,עץ אפרים,stat2022:37780001,,Official K25 polling-place report identifies ballot 101 at the Etz Efraim Pais club.
+K25:11668,K25,,,single_stat_locality,statistical_area,3778,עץ אפרים,stat2022:37780001,,Official K25 polling-place report identifies ballot 102 at the Etz Efraim library and secretariat.
+K25:11669,K25,,,single_stat_locality,statistical_area,3778,עץ אפרים,stat2022:37780001,,Official K25 polling-place report identifies ballot 102 at the Etz Efraim library and secretariat.
 ,K22,2200,91,special_non_geographic,special_non_geographic,,special:envelope_votes,,special:envelope_votes,Reviewed non-geographic classification.
 ,K23,2200,91,special_non_geographic,special_non_geographic,,special:envelope_votes,,special:envelope_votes,Reviewed non-geographic classification.
 ,K24,2200,91,special_non_geographic,special_non_geographic,,special:envelope_votes,,special:envelope_votes,Reviewed non-geographic classification.
 ,K25,2200,91,special_non_geographic,special_non_geographic,,special:envelope_votes,,special:envelope_votes,Reviewed non-geographic classification.
+K21:2597,K21,2200,990,special_non_geographic,special_non_geographic,,special:envelope_votes,,special:envelope_votes,Reviewed military-envelope classification: the official polling-place label is a shuttle to Camp Adi.

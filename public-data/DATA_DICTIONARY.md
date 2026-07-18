@@ -1,93 +1,109 @@
 # Public Data Dictionary
 
-This dictionary describes schema version 1 under [`public-data/v1`](v1/).
+This dictionary describes ballot-table schema version 2 under
+[`public-data/v1`](v1/).
 
 ## Ballot Tables
 
 Files: `v1/ballots/k17.csv` through `v1/ballots/k25.csv`.
 
-The grain is one official election-result source row, sometimes called a ballot
-subdivision in the source. `source_row_uid` is the unique row key. A displayed
-ballot number is not globally unique; use the repository row key.
+The grain is one official election-result source row, sometimes a ballot
+subdivision. `source_row_uid` is the unique repository key. A displayed ballot
+number is not globally unique.
 
 ### Source And Vote Columns
 
 | Column | Meaning |
 |---|---|
-| `source_row_uid` | Stable repository row key, unique across all elections. |
+| `source_row_uid` | Stable row key, unique across all elections. |
 | `election`, `election_number` | Election key and Knesset number. |
-| `source_row_id`, `source_order` | Source-system row identity and source order. |
-| `source_locality_code`, `source_locality_name` | Locality identity printed by the election source. |
-| `source_kalpi` | Polling-station/subdivision identifier printed by the source. |
-| `eligible_voters` | Registered eligible voters where the source provides a usable denominator. |
+| `source_row_id`, `source_order` | Source-system identity and source order. |
+| `source_locality_code`, `source_locality_name` | Locality printed by the election source. |
+| `source_kalpi` | Ballot/subdivision identifier printed by the source. |
+| `eligible_voters` | Registered voters where the source provides a supported denominator. |
 | `actual_voters` | Ballots cast. |
 | `valid_votes`, `invalid_votes` | Valid and invalid ballots. |
-| `is_envelope` | Whether the source row is an official envelope result. |
+| `is_envelope` | Whether the row is an official envelope result. |
 
-The columns between `is_envelope` and `geography_assignment_status` are party
-vote columns. Their names are the official ballot letters for that election.
-Use [`metadata/parties.csv`](v1/metadata/parties.csv?raw=1), joined on
-`(election, source_column)`, to resolve each column to a reviewed list name.
-Party columns sum exactly to `valid_votes` on every published row.
+Columns between `is_envelope` and `geography_assignment_status` are the
+election-specific party vote columns. Join their source-column names to
+[`metadata/parties.csv`](v1/metadata/parties.csv?raw=1) on
+`(election, source_column)`. They sum exactly to `valid_votes` on every row.
 
-### Statistical-Area Assignment
+### Statistical-Mode Assignment
 
 | Column | Meaning |
 |---|---|
 | `geography_assignment_status` | Final statistical-mode handling status. |
-| `geography_type` | `statistical_area`, `custom_geography`, an envelope/special type, or unresolved handling. |
-| `geography_id` | Final statistical-mode target ID when one exists. |
-| `stat_area_id` | Stable historical statistical-area ID; blank unless a real area was assigned. |
-| `stat_area_vintage` | 1995, 2008, or 2011 for K17-K25 assignments. |
-| `stat_area_yishuv_stat` | Historical locality-area compound code from the source crosswalk. |
+| `geography_type` | Statistical area, custom geography, envelope/special type, or unresolved handling. |
+| `geography_id` | Final statistical-mode target when one exists. |
+| `stat_area_id` | Stable historical area ID; blank unless an actual area was assigned. |
+| `stat_area_vintage` | 1995, 2008, or 2011 for K17-K25. |
+| `stat_area_yishuv_stat` | Historical combined locality-area code. |
 | `stat_area_number` | Area number within the historical locality. |
-| `is_mapped` | Whether statistical mode has a supported mapped target. |
-| `final_assignment_method` | Machine-readable assignment method. Official crosswalk methods begin with `official_cbs_ballot_crosswalk`; reviewed inferred rows use `arcgis_residual_partition_tier_a`. |
-| `final_assignment_source` | Source file used for the link. Tier A inferred rows also name the reviewed decision table. |
-| `unresolved_reason` | Why no defensible statistical polygon was assigned. |
+| `is_mapped` | Whether statistical mode has a supported map target. |
+| `final_assignment_method` | Specific machine-readable assignment rule. |
+| `final_assignment_source` | Source files and reviewed tables supporting the link. |
+| `assignment_evidence_class` | General evidence category described below. |
+| `assignment_confidence` | `authoritative`, `high`, `moderate`, `not_applicable`, or `unresolved`. |
+| `assignment_is_synthetic_link` | True only when the ballot-to-area link is inferred. It never means vote data were synthesized. |
+| `unresolved_reason` | Why no defensible statistical-area polygon was assigned. |
 
-For ordinary statistical assignments, join `stat_area_id` to
-`properties.geography_id` in the package named for `stat_area_vintage`.
-`geography_id` may instead point to a reviewed custom geography, so use that
-generic field when reproducing the exact statistical-mode display.
+For an ordinary area, join `stat_area_id` to `properties.geography_id` in the
+package named by `stat_area_vintage`. `geography_id` can instead identify a
+reviewed custom geography, so use that generic field to reproduce the exact map
+handling.
 
-#### Inferred K20/K21 Assignments
+### Evidence Classes
 
-Rows with
-`geography_assignment_status=arcgis_reconstructed_exact_assigned` and
-`final_assignment_method=arcgis_residual_partition_tier_a` have an inferred
-ballot-to-area relationship. Their ballot identity, eligible voters, actual
-voters, valid/invalid totals, and party votes remain unchanged official source
-values.
+| Evidence class | Rows | Meaning |
+|---|---:|---|
+| `official_direct_crosswalk` | 83,237 | Direct election-specific CBS crosswalk, including supported base subdivisions. |
+| `official_direct_ags` | 74 | Direct AGS from the official K23 CEC report. |
+| `deterministic_single_area_locality` | 3,788 | The active historical locality has exactly one canonical area. |
+| `official_stability_inferred_link` | 134 | Official CBS stable-ballot evidence has a unanimous same-vintage target. |
+| `reviewed_exact_aggregate_inferred_link` | 9 | Reviewed unique exact K21 ArcGIS residual partition. |
+| `reviewed_cross_election_inferred_link` | 5 | Reviewed correction supported by independent same-vintage evidence. |
+| `reviewed_custom_geography` | 92 | Supported custom marker where historical geometry cannot represent the target. |
+| `non_geographic` | 3,585 | Envelope or other reviewed non-geographic row. |
+| `unresolved` | 5,605 | No defensible historical area under the current evidence. |
 
-Tier A means that, after official-crosswalk rows are subtracted from the ArcGIS
-area aggregates, exactly one partition of the remaining ballot rows matches
-every residual area's ballot count, eligible voters, and actual voters. The
-chosen partition also matches valid and invalid votes in every residual area.
-The release contains 573 such K20 rows and 178 K21 rows.
+The three inferred classes total 148 rows and 40,752 actual voters. Filter
+`assignment_is_synthetic_link=false` when an analysis requires only direct or
+deterministic links.
 
-[`metadata/arcgis_reconstruction_reviews.csv`](v1/metadata/arcgis_reconstruction_reviews.csv?raw=1)
-contains the 44 locality-election approvals, evidence label, expected row and
-voter totals, exact row-to-area SHA-256 fingerprint, review date, and review
-basis. Tier B candidates are not assigned or included in that approval table.
+### Method-Specific Notes
+
+- `official_cbs_ballot_crosswalk*` methods are direct crosswalk assignments.
+- `official_cec_k23_ags` is direct official AGS.
+- `cbs_stable_ballot_*` methods are high-confidence inferred links. Conflicting
+  stability components are withheld.
+- `arcgis_residual_partition_tier_a` covers three exact Ar'ara-BaNegev rows.
+- `arcgis_residual_partition_tier_c` covers six exact Jerusalem rows with
+  unrelated source-snapshot deltas documented in the review record.
+- `reviewed_historical_stat_area_override` covers five corrected K19 targets.
+- `single_historical_stat_locality` is deterministic only when the active
+  historical locality has one area.
+
+No published method accepts a vote-count tolerance. ArcGIS election values are
+audit evidence only and never replace the official ballot values.
 
 ### Locality Assignment
 
 | Column | Meaning |
 |---|---|
 | `locality_assignment_status` | Independent locality-mode handling status. |
-| `locality_geography_type` | Locality, composite locality, custom geography, envelope, or special handling. |
-| `locality_geography_id` | Exact feature ID used by locality mode. |
+| `locality_geography_type` | Locality, composite, custom geography, envelope, or special handling. |
+| `locality_geography_id` | Feature ID used by locality mode. |
 | `locality_id`, `locality_code`, `locality_name` | Canonical 2022 locality identity where applicable. |
-| `locality_result_code`, `locality_result_name` | Published result identity retained for aggregation/display. |
-| `is_locality_mapped` | Whether locality mode has a supported mapped target. |
+| `locality_result_code`, `locality_result_name` | Published result identity retained for aggregation and display. |
+| `is_locality_mapped` | Whether locality mode has a supported target. |
 | `custom_geography_id` | Reviewed custom grouping when applicable. |
-| `is_geographic` | Whether the source row represents an ordinary geographic result. |
+| `is_geographic` | Whether the source row is an ordinary geographic result. |
 
 Join `locality_geography_id` to
-[`metadata/geographies.csv`](v1/metadata/geographies.csv?raw=1). The lookup's
-`geometry_archive` tells you whether the feature is in `localities_2022`,
-`composite_localities`, or `custom_geographies`.
+[`metadata/geographies.csv`](v1/metadata/geographies.csv?raw=1). Its
+`geometry_archive` identifies the required locality, composite, or custom ZIP.
 
 ## Aggregate Tables
 
@@ -96,38 +112,53 @@ Each election has separate tables under `v1/aggregates/`:
 | Directory | Grain |
 |---|---|
 | `statistical-areas` | One row per mapped historical statistical area. |
-| `localities` | One row per published/reviewed locality result. |
-| `custom-geographies` | Reviewed custom results, with the applicable map mode. |
+| `localities` | One row per published or reviewed locality result. |
+| `custom-geographies` | Reviewed custom results, including applicable map mode. |
 | `envelopes` | One national non-geographic envelope aggregate. |
 | `unresolved` | Source rows without a statistical-area polygon, including non-geographic handling. |
 
 Geographic aggregate tables expose `geography_id` and `geography_type` as their
-first join columns. Vote totals and party columns are additive. Do not split a
-published aggregate among component polygons unless another source supports the
-split.
+first join columns. Vote totals and party columns are additive. Never split a
+published aggregate among component polygons without independent evidence.
 
-The K17 envelope/non-geographic row stores an eligible-voter value of 4,087 as
-a technical national-denominator bucket: 518 from three source camp rows plus
-the separate 3,569-person Gush Katif register. It is not a geographic split and
-must not be used to calculate envelope turnout.
+The K17 envelope/non-geographic row stores 4,087 eligible voters as a technical
+national-denominator bucket: 518 from three source camp rows plus the separate
+3,569-person Gush Katif register. It is not a geographic split and must not be
+used to calculate envelope turnout.
 
-## Geography Tables And Archives
+## Geography Packages
 
-Every feature in every published GeoJSON has:
+Every published GeoJSON feature has:
 
 | Property | Meaning |
 |---|---|
 | `geography_id` | Stable join key used by ballot and aggregate CSVs. |
 | `geography_type` | Statistical area, locality, composite locality, or custom geography. |
 
-The CSV beside each ZIP contains the same non-geometry properties. The combined
-`metadata/geographies.csv` adds `geography_package` and `geometry_archive`, which
-makes package discovery possible from a join ID alone.
+The CSV beside each ZIP contains the same non-geometry properties.
+`metadata/geographies.csv` adds `geography_package` and `geometry_archive` so a
+consumer can locate the correct archive from a join ID alone.
 
-The statistical packages preserve the election-appropriate historical vintages.
-K25 uses 2011 areas because its official ballot crosswalk targets 2011; the 2022
-package is supplied for future elections and independent analysis, not as a
-fabricated K25 conversion.
+K25 uses 2011 because its official crosswalk targets 2011. The 2022 package is
+provided for a future direct-crosswalk election and independent analysis, not
+as a fabricated K25 conversion.
+
+## Assignment Audit Package
+
+[`v1/metadata/assignment-provenance`](v1/metadata/assignment-provenance/)
+contains 25 inspectable artifacts:
+
+- official normalized crosswalk and final assignment summary;
+- source-field inventory;
+- K23 AGS candidates, conflicts, validation, coverage, and summary;
+- stable-ballot candidates, conflicts, transition audit, and summary;
+- ArcGIS candidates, locality classifications, reviews, and summary;
+- historical overrides;
+- unresolved row/locality classifications;
+- per-election polygon coverage and cross-election persistence.
+
+Population values in the polygon audit are demographic proxies. They are not
+election-specific eligible-voter counts.
 
 ## Minimal Examples
 
@@ -148,18 +179,22 @@ joined = areas.merge(results, on="geography_id", how="left", validate="one_to_on
 
 QGIS:
 
-1. Extract the matching geography ZIP and open its GeoJSON.
-2. Add the election aggregate CSV as a delimited-text layer without geometry.
+1. Extract the election's matching geography ZIP and open its GeoJSON.
+2. Add the aggregate CSV as a delimited-text layer without geometry.
 3. Join CSV `geography_id` to GeoJSON `geography_id`.
 
-## Nulls And Reconciliation
+## Nulls And Validation
 
-- Blank assignment IDs mean the evidence does not support a polygon; they are
+- Blank statistical IDs mean the evidence does not support a polygon; they are
   not zero-vote areas.
 - Envelope and reviewed non-geographic rows remain counted but have no polygon.
-- Statistical and locality coverage are different because they answer different
+- Statistical and locality coverage differ because they answer different
   geographic questions.
-- `validation.json` verifies row counts, party-vote reconciliation, and that all
-  nonblank published join IDs exist in the supplied geometry. It separately
-  reports reconstructed assignment rows and voters for each election and checks
-  them against the reviewed decisions.
+- `validation.json` verifies row counts, actual-voter reconciliation to valid
+  plus invalid votes, party reconciliation, all nonblank geography joins,
+  per-election evidence-class counts, and inferred-link totals.
+- `manifest.csv` and `manifest.json` provide file sizes, row counts, and SHA-256
+  checksums.
+
+CSVs use UTF-8 with a byte-order mark for reliable Hebrew display in spreadsheet
+software. Generated release files must not be edited manually.

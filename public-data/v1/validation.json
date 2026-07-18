@@ -1,8 +1,8 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "total_ballot_rows": 96529,
   "aggregate_joins": {
-    "geographic_aggregate_rows": 34003,
+    "geographic_aggregate_rows": 34016,
     "missing_aggregate_geometry_ids": 0
   },
   "elections": [
@@ -14,9 +14,19 @@
       "statistically_mapped_rows": 7815,
       "reconstructed_stat_assignment_rows": 0,
       "reconstructed_stat_assignment_actual_voters": 0,
+      "synthetic_assignment_rows": 0,
+      "synthetic_assignment_actual_voters": 0,
+      "assignment_evidence_classes": {
+        "official_direct_crosswalk": 6117,
+        "deterministic_single_area_locality": 1698,
+        "unresolved": 415,
+        "non_geographic": 152,
+        "reviewed_custom_geography": 44
+      },
       "locality_mapped_rows": 8274,
       "missing_stat_geometry_ids": 0,
       "missing_locality_geometry_ids": 0,
+      "actual_vote_reconciliation_mismatch_rows": 0,
       "party_vote_mismatch_rows": 0
     },
     {
@@ -24,12 +34,22 @@
       "rows": 9264,
       "party_columns": 34,
       "stat_area_vintage": 2008,
-      "statistically_mapped_rows": 8699,
+      "statistically_mapped_rows": 8692,
       "reconstructed_stat_assignment_rows": 0,
       "reconstructed_stat_assignment_actual_voters": 0,
+      "synthetic_assignment_rows": 0,
+      "synthetic_assignment_actual_voters": 0,
+      "assignment_evidence_classes": {
+        "official_direct_crosswalk": 7043,
+        "deterministic_single_area_locality": 1649,
+        "unresolved": 519,
+        "reviewed_custom_geography": 48,
+        "non_geographic": 5
+      },
       "locality_mapped_rows": 9259,
       "missing_stat_geometry_ids": 0,
       "missing_locality_geometry_ids": 0,
+      "actual_vote_reconciliation_mismatch_rows": 0,
       "party_vote_mismatch_rows": 0
     },
     {
@@ -37,12 +57,23 @@
       "rows": 10109,
       "party_columns": 34,
       "stat_area_vintage": 2011,
-      "statistically_mapped_rows": 9309,
+      "statistically_mapped_rows": 9311,
       "reconstructed_stat_assignment_rows": 0,
       "reconstructed_stat_assignment_actual_voters": 0,
+      "synthetic_assignment_rows": 7,
+      "synthetic_assignment_actual_voters": 2561,
+      "assignment_evidence_classes": {
+        "official_direct_crosswalk": 9253,
+        "unresolved": 564,
+        "non_geographic": 234,
+        "deterministic_single_area_locality": 51,
+        "reviewed_cross_election_inferred_link": 5,
+        "official_stability_inferred_link": 2
+      },
       "locality_mapped_rows": 9875,
       "missing_stat_geometry_ids": 0,
       "missing_locality_geometry_ids": 0,
+      "actual_vote_reconciliation_mismatch_rows": 0,
       "party_vote_mismatch_rows": 0
     },
     {
@@ -50,12 +81,22 @@
       "rows": 10414,
       "party_columns": 26,
       "stat_area_vintage": 2011,
-      "statistically_mapped_rows": 10051,
-      "reconstructed_stat_assignment_rows": 573,
-      "reconstructed_stat_assignment_actual_voters": 257667,
+      "statistically_mapped_rows": 9521,
+      "reconstructed_stat_assignment_rows": 0,
+      "reconstructed_stat_assignment_actual_voters": 0,
+      "synthetic_assignment_rows": 43,
+      "synthetic_assignment_actual_voters": 16676,
+      "assignment_evidence_classes": {
+        "official_direct_crosswalk": 9422,
+        "unresolved": 591,
+        "non_geographic": 302,
+        "deterministic_single_area_locality": 56,
+        "official_stability_inferred_link": 43
+      },
       "locality_mapped_rows": 10112,
       "missing_stat_geometry_ids": 0,
       "missing_locality_geometry_ids": 0,
+      "actual_vote_reconciliation_mismatch_rows": 0,
       "party_vote_mismatch_rows": 0
     },
     {
@@ -63,12 +104,22 @@
       "rows": 10765,
       "party_columns": 43,
       "stat_area_vintage": 2011,
-      "statistically_mapped_rows": 10023,
-      "reconstructed_stat_assignment_rows": 178,
-      "reconstructed_stat_assignment_actual_voters": 67710,
-      "locality_mapped_rows": 10453,
+      "statistically_mapped_rows": 9854,
+      "reconstructed_stat_assignment_rows": 9,
+      "reconstructed_stat_assignment_actual_voters": 3599,
+      "synthetic_assignment_rows": 9,
+      "synthetic_assignment_actual_voters": 3599,
+      "assignment_evidence_classes": {
+        "official_direct_crosswalk": 9784,
+        "unresolved": 598,
+        "non_geographic": 313,
+        "deterministic_single_area_locality": 61,
+        "reviewed_exact_aggregate_inferred_link": 9
+      },
+      "locality_mapped_rows": 10452,
       "missing_stat_geometry_ids": 0,
       "missing_locality_geometry_ids": 0,
+      "actual_vote_reconciliation_mismatch_rows": 0,
       "party_vote_mismatch_rows": 0
     },
     {
@@ -76,12 +127,22 @@
       "rows": 10901,
       "party_columns": 32,
       "stat_area_vintage": 2011,
-      "statistically_mapped_rows": 9919,
+      "statistically_mapped_rows": 9920,
       "reconstructed_stat_assignment_rows": 0,
       "reconstructed_stat_assignment_actual_voters": 0,
+      "synthetic_assignment_rows": 1,
+      "synthetic_assignment_actual_voters": 344,
+      "assignment_evidence_classes": {
+        "official_direct_crosswalk": 9858,
+        "unresolved": 611,
+        "non_geographic": 370,
+        "deterministic_single_area_locality": 61,
+        "official_stability_inferred_link": 1
+      },
       "locality_mapped_rows": 10531,
       "missing_stat_geometry_ids": 0,
       "missing_locality_geometry_ids": 0,
+      "actual_vote_reconciliation_mismatch_rows": 0,
       "party_vote_mismatch_rows": 0
     },
     {
@@ -89,12 +150,22 @@
       "rows": 11179,
       "party_columns": 30,
       "stat_area_vintage": 2011,
-      "statistically_mapped_rows": 9930,
+      "statistically_mapped_rows": 10004,
       "reconstructed_stat_assignment_rows": 0,
       "reconstructed_stat_assignment_actual_voters": 0,
+      "synthetic_assignment_rows": 0,
+      "synthetic_assignment_actual_voters": 0,
+      "assignment_evidence_classes": {
+        "official_direct_crosswalk": 9869,
+        "unresolved": 619,
+        "non_geographic": 556,
+        "official_direct_ags": 74,
+        "deterministic_single_area_locality": 61
+      },
       "locality_mapped_rows": 10623,
       "missing_stat_geometry_ids": 0,
       "missing_locality_geometry_ids": 0,
+      "actual_vote_reconciliation_mismatch_rows": 0,
       "party_vote_mismatch_rows": 0
     },
     {
@@ -102,12 +173,22 @@
       "rows": 12926,
       "party_columns": 39,
       "stat_area_vintage": 2011,
-      "statistically_mapped_rows": 11161,
+      "statistically_mapped_rows": 11248,
       "reconstructed_stat_assignment_rows": 0,
       "reconstructed_stat_assignment_actual_voters": 0,
+      "synthetic_assignment_rows": 87,
+      "synthetic_assignment_actual_voters": 17082,
+      "assignment_evidence_classes": {
+        "official_direct_crosswalk": 11091,
+        "unresolved": 871,
+        "non_geographic": 807,
+        "official_stability_inferred_link": 87,
+        "deterministic_single_area_locality": 70
+      },
       "locality_mapped_rows": 12119,
       "missing_stat_geometry_ids": 0,
       "missing_locality_geometry_ids": 0,
+      "actual_vote_reconciliation_mismatch_rows": 0,
       "party_vote_mismatch_rows": 0
     },
     {
@@ -115,12 +196,22 @@
       "rows": 12545,
       "party_columns": 40,
       "stat_area_vintage": 2011,
-      "statistically_mapped_rows": 10877,
+      "statistically_mapped_rows": 10882,
       "reconstructed_stat_assignment_rows": 0,
       "reconstructed_stat_assignment_actual_voters": 0,
+      "synthetic_assignment_rows": 1,
+      "synthetic_assignment_actual_voters": 490,
+      "assignment_evidence_classes": {
+        "official_direct_crosswalk": 10800,
+        "non_geographic": 846,
+        "unresolved": 817,
+        "deterministic_single_area_locality": 81,
+        "official_stability_inferred_link": 1
+      },
       "locality_mapped_rows": 11699,
       "missing_stat_geometry_ids": 0,
       "missing_locality_geometry_ids": 0,
+      "actual_vote_reconciliation_mismatch_rows": 0,
       "party_vote_mismatch_rows": 0
     }
   ]

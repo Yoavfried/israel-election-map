@@ -85,8 +85,13 @@ def normalize_resource(
         actual = int_value(first_value(source_row, ACTUAL_FIELDS))
         valid = int_value(first_value(source_row, VALID_FIELDS))
         invalid = int_value(first_value(source_row, INVALID_FIELDS))
-        if invalid == 0 and actual and valid and actual >= valid:
+        if invalid == 0 and actual and actual >= valid:
             invalid = actual - valid
+        if actual != valid + invalid:
+            raise ValueError(
+                f"{election}:{source_row_id} has {actual} actual voters but "
+                f"{valid} valid plus {invalid} invalid votes"
+            )
         source_row_uid = f"{election}:{source_row_id}"
         envelope = is_envelope(locality_code, locality_name)
         if election == "K17" and not envelope:
