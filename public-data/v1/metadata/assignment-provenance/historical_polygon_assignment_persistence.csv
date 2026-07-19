@@ -5265,70 +5265,70 @@ stat2008:8260001,2008,826,עוזה,1,1,1,K18,0,,,,assigned_in_every_supported_el
 stat2008:8270001,2008,827,נווה מבטח,1,1,1,K18,0,,,,assigned_in_every_supported_election,False,600,0,2008.0,CBS 2008 Census statistical-area demographics
 stat2008:8280001,2008,828,ישרש,1,1,1,K18,0,,,,assigned_in_every_supported_election,False,800,0,2008.0,CBS 2008 Census statistical-area demographics
 stat2008:8290001,2008,829,מבטחים,1,1,1,K18,0,,,,assigned_in_every_supported_election,False,400,0,2008.0,CBS 2008 Census statistical-area demographics
-stat2008:83000111,2008,8300,ראשון לציון,111,1,1,K18,0,,,K18,assigned_in_every_supported_election,False,0,0,2008.0,CBS 2008 Census statistical-area demographics
-stat2008:83000112,2008,8300,ראשון לציון,112,1,0,,1,K18,,K18,never_assigned_without_positive_population_proxy,True,0,0,2008.0,CBS 2008 Census statistical-area demographics
-stat2008:83000113,2008,8300,ראשון לציון,113,1,1,K18,0,,,K18,assigned_in_every_supported_election,False,2800,1700,2008.0,CBS 2008 Census statistical-area demographics
-stat2008:83000114,2008,8300,ראשון לציון,114,1,1,K18,0,,,K18,assigned_in_every_supported_election,False,5500,4200,2008.0,CBS 2008 Census statistical-area demographics
-stat2008:83000115,2008,8300,ראשון לציון,115,1,1,K18,0,,,K18,assigned_in_every_supported_election,False,4400,3300,2008.0,CBS 2008 Census statistical-area demographics
-stat2008:83000116,2008,8300,ראשון לציון,116,1,1,K18,0,,,K18,assigned_in_every_supported_election,False,4300,3300,2008.0,CBS 2008 Census statistical-area demographics
-stat2008:83000117,2008,8300,ראשון לציון,117,1,1,K18,0,,,K18,assigned_in_every_supported_election,False,4000,3400,2008.0,CBS 2008 Census statistical-area demographics
-stat2008:83000121,2008,8300,ראשון לציון,121,1,1,K18,0,,,K18,assigned_in_every_supported_election,False,4400,3500,2008.0,CBS 2008 Census statistical-area demographics
-stat2008:83000122,2008,8300,ראשון לציון,122,1,1,K18,0,,,K18,assigned_in_every_supported_election,False,3300,2500,2008.0,CBS 2008 Census statistical-area demographics
-stat2008:83000123,2008,8300,ראשון לציון,123,1,1,K18,0,,,K18,assigned_in_every_supported_election,False,3100,2200,2008.0,CBS 2008 Census statistical-area demographics
-stat2008:83000124,2008,8300,ראשון לציון,124,1,1,K18,0,,,K18,assigned_in_every_supported_election,False,2500,1900,2008.0,CBS 2008 Census statistical-area demographics
-stat2008:83000125,2008,8300,ראשון לציון,125,1,1,K18,0,,,K18,assigned_in_every_supported_election,False,5000,3800,2008.0,CBS 2008 Census statistical-area demographics
-stat2008:83000126,2008,8300,ראשון לציון,126,1,1,K18,0,,,K18,assigned_in_every_supported_election,False,5400,3700,2008.0,CBS 2008 Census statistical-area demographics
-stat2008:83000211,2008,8300,ראשון לציון,211,1,1,K18,0,,,K18,assigned_in_every_supported_election,False,4000,2800,2008.0,CBS 2008 Census statistical-area demographics
-stat2008:83000212,2008,8300,ראשון לציון,212,1,1,K18,0,,,K18,assigned_in_every_supported_election,False,5000,3500,2008.0,CBS 2008 Census statistical-area demographics
-stat2008:83000213,2008,8300,ראשון לציון,213,1,1,K18,0,,,K18,assigned_in_every_supported_election,False,4200,2900,2008.0,CBS 2008 Census statistical-area demographics
-stat2008:83000214,2008,8300,ראשון לציון,214,1,1,K18,0,,,K18,assigned_in_every_supported_election,False,5000,3300,2008.0,CBS 2008 Census statistical-area demographics
-stat2008:83000215,2008,8300,ראשון לציון,215,1,1,K18,0,,,K18,assigned_in_every_supported_election,False,4800,3300,2008.0,CBS 2008 Census statistical-area demographics
-stat2008:83000221,2008,8300,ראשון לציון,221,1,1,K18,0,,,K18,assigned_in_every_supported_election,False,5300,3800,2008.0,CBS 2008 Census statistical-area demographics
-stat2008:83000222,2008,8300,ראשון לציון,222,1,1,K18,0,,,K18,assigned_in_every_supported_election,False,3000,2200,2008.0,CBS 2008 Census statistical-area demographics
-stat2008:83000223,2008,8300,ראשון לציון,223,1,1,K18,0,,,K18,assigned_in_every_supported_election,False,4100,3100,2008.0,CBS 2008 Census statistical-area demographics
-stat2008:83000224,2008,8300,ראשון לציון,224,1,1,K18,0,,,K18,assigned_in_every_supported_election,False,2600,2000,2008.0,CBS 2008 Census statistical-area demographics
-stat2008:83000225,2008,8300,ראשון לציון,225,1,1,K18,0,,,K18,assigned_in_every_supported_election,False,3400,2600,2008.0,CBS 2008 Census statistical-area demographics
-stat2008:83000311,2008,8300,ראשון לציון,311,1,1,K18,0,,,K18,assigned_in_every_supported_election,False,3500,2500,2008.0,CBS 2008 Census statistical-area demographics
-stat2008:83000312,2008,8300,ראשון לציון,312,1,1,K18,0,,,K18,assigned_in_every_supported_election,False,3600,2700,2008.0,CBS 2008 Census statistical-area demographics
-stat2008:83000313,2008,8300,ראשון לציון,313,1,1,K18,0,,,K18,assigned_in_every_supported_election,False,5200,3800,2008.0,CBS 2008 Census statistical-area demographics
-stat2008:83000314,2008,8300,ראשון לציון,314,1,1,K18,0,,,K18,assigned_in_every_supported_election,False,4200,3300,2008.0,CBS 2008 Census statistical-area demographics
-stat2008:83000315,2008,8300,ראשון לציון,315,1,1,K18,0,,,K18,assigned_in_every_supported_election,False,3200,2700,2008.0,CBS 2008 Census statistical-area demographics
-stat2008:83000411,2008,8300,ראשון לציון,411,1,0,,1,K18,,K18,never_assigned_with_positive_population_proxy,True,900,600,2008.0,CBS 2008 Census statistical-area demographics
-stat2008:83000412,2008,8300,ראשון לציון,412,1,1,K18,0,,,K18,assigned_in_every_supported_election,False,5400,3900,2008.0,CBS 2008 Census statistical-area demographics
-stat2008:83000413,2008,8300,ראשון לציון,413,1,1,K18,0,,,K18,assigned_in_every_supported_election,False,4700,3800,2008.0,CBS 2008 Census statistical-area demographics
-stat2008:83000421,2008,8300,ראשון לציון,421,1,1,K18,0,,,K18,assigned_in_every_supported_election,False,4200,3300,2008.0,CBS 2008 Census statistical-area demographics
-stat2008:83000422,2008,8300,ראשון לציון,422,1,1,K18,0,,,K18,assigned_in_every_supported_election,False,3600,2800,2008.0,CBS 2008 Census statistical-area demographics
-stat2008:83000423,2008,8300,ראשון לציון,423,1,1,K18,0,,,K18,assigned_in_every_supported_election,False,3900,3000,2008.0,CBS 2008 Census statistical-area demographics
-stat2008:83000424,2008,8300,ראשון לציון,424,1,1,K18,0,,,K18,assigned_in_every_supported_election,False,3900,3000,2008.0,CBS 2008 Census statistical-area demographics
-stat2008:83000425,2008,8300,ראשון לציון,425,1,1,K18,0,,,K18,assigned_in_every_supported_election,False,3100,2300,2008.0,CBS 2008 Census statistical-area demographics
-stat2008:83000426,2008,8300,ראשון לציון,426,1,1,K18,0,,,K18,assigned_in_every_supported_election,False,4800,3600,2008.0,CBS 2008 Census statistical-area demographics
-stat2008:83000427,2008,8300,ראשון לציון,427,1,0,,1,K18,,K18,never_assigned_without_positive_population_proxy,True,0,0,2008.0,CBS 2008 Census statistical-area demographics
-stat2008:83000511,2008,8300,ראשון לציון,511,1,1,K18,0,,,K18,assigned_in_every_supported_election,False,5400,3800,2008.0,CBS 2008 Census statistical-area demographics
-stat2008:83000512,2008,8300,ראשון לציון,512,1,1,K18,0,,,K18,assigned_in_every_supported_election,False,3700,2500,2008.0,CBS 2008 Census statistical-area demographics
-stat2008:83000513,2008,8300,ראשון לציון,513,1,1,K18,0,,,K18,assigned_in_every_supported_election,False,3100,2200,2008.0,CBS 2008 Census statistical-area demographics
-stat2008:83000514,2008,8300,ראשון לציון,514,1,1,K18,0,,,K18,assigned_in_every_supported_election,False,4200,3100,2008.0,CBS 2008 Census statistical-area demographics
-stat2008:83000515,2008,8300,ראשון לציון,515,1,1,K18,0,,,K18,assigned_in_every_supported_election,False,2600,2000,2008.0,CBS 2008 Census statistical-area demographics
-stat2008:83000516,2008,8300,ראשון לציון,516,1,1,K18,0,,,K18,assigned_in_every_supported_election,False,3700,2300,2008.0,CBS 2008 Census statistical-area demographics
-stat2008:83000521,2008,8300,ראשון לציון,521,1,1,K18,0,,,K18,assigned_in_every_supported_election,False,3100,2200,2008.0,CBS 2008 Census statistical-area demographics
-stat2008:83000522,2008,8300,ראשון לציון,522,1,1,K18,0,,,K18,assigned_in_every_supported_election,False,4800,3400,2008.0,CBS 2008 Census statistical-area demographics
-stat2008:83000523,2008,8300,ראשון לציון,523,1,1,K18,0,,,K18,assigned_in_every_supported_election,False,3200,2100,2008.0,CBS 2008 Census statistical-area demographics
-stat2008:83000524,2008,8300,ראשון לציון,524,1,1,K18,0,,,K18,assigned_in_every_supported_election,False,3400,2300,2008.0,CBS 2008 Census statistical-area demographics
-stat2008:83000531,2008,8300,ראשון לציון,531,1,1,K18,0,,,K18,assigned_in_every_supported_election,False,5000,3300,2008.0,CBS 2008 Census statistical-area demographics
-stat2008:83000532,2008,8300,ראשון לציון,532,1,1,K18,0,,,K18,assigned_in_every_supported_election,False,2200,1300,2008.0,CBS 2008 Census statistical-area demographics
-stat2008:83000533,2008,8300,ראשון לציון,533,1,1,K18,0,,,K18,assigned_in_every_supported_election,False,4800,3000,2008.0,CBS 2008 Census statistical-area demographics
-stat2008:83000534,2008,8300,ראשון לציון,534,1,1,K18,0,,,K18,assigned_in_every_supported_election,False,6500,4400,2008.0,CBS 2008 Census statistical-area demographics
-stat2008:83000611,2008,8300,ראשון לציון,611,1,1,K18,0,,,K18,assigned_in_every_supported_election,False,2800,1500,2008.0,CBS 2008 Census statistical-area demographics
-stat2008:83000612,2008,8300,ראשון לציון,612,1,1,K18,0,,,K18,assigned_in_every_supported_election,False,2800,1900,2008.0,CBS 2008 Census statistical-area demographics
-stat2008:83000613,2008,8300,ראשון לציון,613,1,1,K18,0,,,K18,assigned_in_every_supported_election,False,0,0,2008.0,CBS 2008 Census statistical-area demographics
-stat2008:83000614,2008,8300,ראשון לציון,614,1,1,K18,0,,,K18,assigned_in_every_supported_election,False,3700,2200,2008.0,CBS 2008 Census statistical-area demographics
-stat2008:83000615,2008,8300,ראשון לציון,615,1,1,K18,0,,,K18,assigned_in_every_supported_election,False,5200,3400,2008.0,CBS 2008 Census statistical-area demographics
-stat2008:83000616,2008,8300,ראשון לציון,616,1,1,K18,0,,,K18,assigned_in_every_supported_election,False,4000,2900,2008.0,CBS 2008 Census statistical-area demographics
-stat2008:83000617,2008,8300,ראשון לציון,617,1,1,K18,0,,,K18,assigned_in_every_supported_election,False,5500,3500,2008.0,CBS 2008 Census statistical-area demographics
-stat2008:83000621,2008,8300,ראשון לציון,621,1,0,,1,K18,,K18,never_assigned_without_positive_population_proxy,True,0,0,2008.0,CBS 2008 Census statistical-area demographics
-stat2008:83000622,2008,8300,ראשון לציון,622,1,0,,1,K18,,K18,never_assigned_without_positive_population_proxy,True,0,0,2008.0,CBS 2008 Census statistical-area demographics
-stat2008:83000623,2008,8300,ראשון לציון,623,1,1,K18,0,,,K18,assigned_in_every_supported_election,False,2300,1800,2008.0,CBS 2008 Census statistical-area demographics
-stat2008:83000624,2008,8300,ראשון לציון,624,1,1,K18,0,,,K18,assigned_in_every_supported_election,False,5200,3700,2008.0,CBS 2008 Census statistical-area demographics
-stat2008:83000625,2008,8300,ראשון לציון,625,1,0,,1,K18,,K18,never_assigned_without_positive_population_proxy,True,0,0,2008.0,CBS 2008 Census statistical-area demographics
+stat2008:83000111,2008,8300,ראשון לציון,111,1,1,K18,0,,,,assigned_in_every_supported_election,False,0,0,2008.0,CBS 2008 Census statistical-area demographics
+stat2008:83000112,2008,8300,ראשון לציון,112,1,0,,1,K18,,,never_assigned_without_positive_population_proxy,True,0,0,2008.0,CBS 2008 Census statistical-area demographics
+stat2008:83000113,2008,8300,ראשון לציון,113,1,1,K18,0,,,,assigned_in_every_supported_election,False,2800,1700,2008.0,CBS 2008 Census statistical-area demographics
+stat2008:83000114,2008,8300,ראשון לציון,114,1,1,K18,0,,,,assigned_in_every_supported_election,False,5500,4200,2008.0,CBS 2008 Census statistical-area demographics
+stat2008:83000115,2008,8300,ראשון לציון,115,1,1,K18,0,,,,assigned_in_every_supported_election,False,4400,3300,2008.0,CBS 2008 Census statistical-area demographics
+stat2008:83000116,2008,8300,ראשון לציון,116,1,1,K18,0,,,,assigned_in_every_supported_election,False,4300,3300,2008.0,CBS 2008 Census statistical-area demographics
+stat2008:83000117,2008,8300,ראשון לציון,117,1,1,K18,0,,,,assigned_in_every_supported_election,False,4000,3400,2008.0,CBS 2008 Census statistical-area demographics
+stat2008:83000121,2008,8300,ראשון לציון,121,1,1,K18,0,,,,assigned_in_every_supported_election,False,4400,3500,2008.0,CBS 2008 Census statistical-area demographics
+stat2008:83000122,2008,8300,ראשון לציון,122,1,1,K18,0,,,,assigned_in_every_supported_election,False,3300,2500,2008.0,CBS 2008 Census statistical-area demographics
+stat2008:83000123,2008,8300,ראשון לציון,123,1,1,K18,0,,,,assigned_in_every_supported_election,False,3100,2200,2008.0,CBS 2008 Census statistical-area demographics
+stat2008:83000124,2008,8300,ראשון לציון,124,1,1,K18,0,,,,assigned_in_every_supported_election,False,2500,1900,2008.0,CBS 2008 Census statistical-area demographics
+stat2008:83000125,2008,8300,ראשון לציון,125,1,1,K18,0,,,,assigned_in_every_supported_election,False,5000,3800,2008.0,CBS 2008 Census statistical-area demographics
+stat2008:83000126,2008,8300,ראשון לציון,126,1,1,K18,0,,,,assigned_in_every_supported_election,False,5400,3700,2008.0,CBS 2008 Census statistical-area demographics
+stat2008:83000211,2008,8300,ראשון לציון,211,1,1,K18,0,,,,assigned_in_every_supported_election,False,4000,2800,2008.0,CBS 2008 Census statistical-area demographics
+stat2008:83000212,2008,8300,ראשון לציון,212,1,1,K18,0,,,,assigned_in_every_supported_election,False,5000,3500,2008.0,CBS 2008 Census statistical-area demographics
+stat2008:83000213,2008,8300,ראשון לציון,213,1,1,K18,0,,,,assigned_in_every_supported_election,False,4200,2900,2008.0,CBS 2008 Census statistical-area demographics
+stat2008:83000214,2008,8300,ראשון לציון,214,1,1,K18,0,,,,assigned_in_every_supported_election,False,5000,3300,2008.0,CBS 2008 Census statistical-area demographics
+stat2008:83000215,2008,8300,ראשון לציון,215,1,1,K18,0,,,,assigned_in_every_supported_election,False,4800,3300,2008.0,CBS 2008 Census statistical-area demographics
+stat2008:83000221,2008,8300,ראשון לציון,221,1,1,K18,0,,,,assigned_in_every_supported_election,False,5300,3800,2008.0,CBS 2008 Census statistical-area demographics
+stat2008:83000222,2008,8300,ראשון לציון,222,1,1,K18,0,,,,assigned_in_every_supported_election,False,3000,2200,2008.0,CBS 2008 Census statistical-area demographics
+stat2008:83000223,2008,8300,ראשון לציון,223,1,1,K18,0,,,,assigned_in_every_supported_election,False,4100,3100,2008.0,CBS 2008 Census statistical-area demographics
+stat2008:83000224,2008,8300,ראשון לציון,224,1,1,K18,0,,,,assigned_in_every_supported_election,False,2600,2000,2008.0,CBS 2008 Census statistical-area demographics
+stat2008:83000225,2008,8300,ראשון לציון,225,1,1,K18,0,,,,assigned_in_every_supported_election,False,3400,2600,2008.0,CBS 2008 Census statistical-area demographics
+stat2008:83000311,2008,8300,ראשון לציון,311,1,1,K18,0,,,,assigned_in_every_supported_election,False,3500,2500,2008.0,CBS 2008 Census statistical-area demographics
+stat2008:83000312,2008,8300,ראשון לציון,312,1,1,K18,0,,,,assigned_in_every_supported_election,False,3600,2700,2008.0,CBS 2008 Census statistical-area demographics
+stat2008:83000313,2008,8300,ראשון לציון,313,1,1,K18,0,,,,assigned_in_every_supported_election,False,5200,3800,2008.0,CBS 2008 Census statistical-area demographics
+stat2008:83000314,2008,8300,ראשון לציון,314,1,1,K18,0,,,,assigned_in_every_supported_election,False,4200,3300,2008.0,CBS 2008 Census statistical-area demographics
+stat2008:83000315,2008,8300,ראשון לציון,315,1,1,K18,0,,,,assigned_in_every_supported_election,False,3200,2700,2008.0,CBS 2008 Census statistical-area demographics
+stat2008:83000411,2008,8300,ראשון לציון,411,1,1,K18,0,,,,assigned_in_every_supported_election,False,900,600,2008.0,CBS 2008 Census statistical-area demographics
+stat2008:83000412,2008,8300,ראשון לציון,412,1,1,K18,0,,,,assigned_in_every_supported_election,False,5400,3900,2008.0,CBS 2008 Census statistical-area demographics
+stat2008:83000413,2008,8300,ראשון לציון,413,1,1,K18,0,,,,assigned_in_every_supported_election,False,4700,3800,2008.0,CBS 2008 Census statistical-area demographics
+stat2008:83000421,2008,8300,ראשון לציון,421,1,1,K18,0,,,,assigned_in_every_supported_election,False,4200,3300,2008.0,CBS 2008 Census statistical-area demographics
+stat2008:83000422,2008,8300,ראשון לציון,422,1,1,K18,0,,,,assigned_in_every_supported_election,False,3600,2800,2008.0,CBS 2008 Census statistical-area demographics
+stat2008:83000423,2008,8300,ראשון לציון,423,1,1,K18,0,,,,assigned_in_every_supported_election,False,3900,3000,2008.0,CBS 2008 Census statistical-area demographics
+stat2008:83000424,2008,8300,ראשון לציון,424,1,1,K18,0,,,,assigned_in_every_supported_election,False,3900,3000,2008.0,CBS 2008 Census statistical-area demographics
+stat2008:83000425,2008,8300,ראשון לציון,425,1,1,K18,0,,,,assigned_in_every_supported_election,False,3100,2300,2008.0,CBS 2008 Census statistical-area demographics
+stat2008:83000426,2008,8300,ראשון לציון,426,1,1,K18,0,,,,assigned_in_every_supported_election,False,4800,3600,2008.0,CBS 2008 Census statistical-area demographics
+stat2008:83000427,2008,8300,ראשון לציון,427,1,0,,1,K18,,,never_assigned_without_positive_population_proxy,True,0,0,2008.0,CBS 2008 Census statistical-area demographics
+stat2008:83000511,2008,8300,ראשון לציון,511,1,1,K18,0,,,,assigned_in_every_supported_election,False,5400,3800,2008.0,CBS 2008 Census statistical-area demographics
+stat2008:83000512,2008,8300,ראשון לציון,512,1,1,K18,0,,,,assigned_in_every_supported_election,False,3700,2500,2008.0,CBS 2008 Census statistical-area demographics
+stat2008:83000513,2008,8300,ראשון לציון,513,1,1,K18,0,,,,assigned_in_every_supported_election,False,3100,2200,2008.0,CBS 2008 Census statistical-area demographics
+stat2008:83000514,2008,8300,ראשון לציון,514,1,1,K18,0,,,,assigned_in_every_supported_election,False,4200,3100,2008.0,CBS 2008 Census statistical-area demographics
+stat2008:83000515,2008,8300,ראשון לציון,515,1,1,K18,0,,,,assigned_in_every_supported_election,False,2600,2000,2008.0,CBS 2008 Census statistical-area demographics
+stat2008:83000516,2008,8300,ראשון לציון,516,1,1,K18,0,,,,assigned_in_every_supported_election,False,3700,2300,2008.0,CBS 2008 Census statistical-area demographics
+stat2008:83000521,2008,8300,ראשון לציון,521,1,1,K18,0,,,,assigned_in_every_supported_election,False,3100,2200,2008.0,CBS 2008 Census statistical-area demographics
+stat2008:83000522,2008,8300,ראשון לציון,522,1,1,K18,0,,,,assigned_in_every_supported_election,False,4800,3400,2008.0,CBS 2008 Census statistical-area demographics
+stat2008:83000523,2008,8300,ראשון לציון,523,1,1,K18,0,,,,assigned_in_every_supported_election,False,3200,2100,2008.0,CBS 2008 Census statistical-area demographics
+stat2008:83000524,2008,8300,ראשון לציון,524,1,1,K18,0,,,,assigned_in_every_supported_election,False,3400,2300,2008.0,CBS 2008 Census statistical-area demographics
+stat2008:83000531,2008,8300,ראשון לציון,531,1,1,K18,0,,,,assigned_in_every_supported_election,False,5000,3300,2008.0,CBS 2008 Census statistical-area demographics
+stat2008:83000532,2008,8300,ראשון לציון,532,1,1,K18,0,,,,assigned_in_every_supported_election,False,2200,1300,2008.0,CBS 2008 Census statistical-area demographics
+stat2008:83000533,2008,8300,ראשון לציון,533,1,1,K18,0,,,,assigned_in_every_supported_election,False,4800,3000,2008.0,CBS 2008 Census statistical-area demographics
+stat2008:83000534,2008,8300,ראשון לציון,534,1,1,K18,0,,,,assigned_in_every_supported_election,False,6500,4400,2008.0,CBS 2008 Census statistical-area demographics
+stat2008:83000611,2008,8300,ראשון לציון,611,1,1,K18,0,,,,assigned_in_every_supported_election,False,2800,1500,2008.0,CBS 2008 Census statistical-area demographics
+stat2008:83000612,2008,8300,ראשון לציון,612,1,1,K18,0,,,,assigned_in_every_supported_election,False,2800,1900,2008.0,CBS 2008 Census statistical-area demographics
+stat2008:83000613,2008,8300,ראשון לציון,613,1,1,K18,0,,,,assigned_in_every_supported_election,False,0,0,2008.0,CBS 2008 Census statistical-area demographics
+stat2008:83000614,2008,8300,ראשון לציון,614,1,1,K18,0,,,,assigned_in_every_supported_election,False,3700,2200,2008.0,CBS 2008 Census statistical-area demographics
+stat2008:83000615,2008,8300,ראשון לציון,615,1,1,K18,0,,,,assigned_in_every_supported_election,False,5200,3400,2008.0,CBS 2008 Census statistical-area demographics
+stat2008:83000616,2008,8300,ראשון לציון,616,1,1,K18,0,,,,assigned_in_every_supported_election,False,4000,2900,2008.0,CBS 2008 Census statistical-area demographics
+stat2008:83000617,2008,8300,ראשון לציון,617,1,1,K18,0,,,,assigned_in_every_supported_election,False,5500,3500,2008.0,CBS 2008 Census statistical-area demographics
+stat2008:83000621,2008,8300,ראשון לציון,621,1,0,,1,K18,,,never_assigned_without_positive_population_proxy,True,0,0,2008.0,CBS 2008 Census statistical-area demographics
+stat2008:83000622,2008,8300,ראשון לציון,622,1,0,,1,K18,,,never_assigned_without_positive_population_proxy,True,0,0,2008.0,CBS 2008 Census statistical-area demographics
+stat2008:83000623,2008,8300,ראשון לציון,623,1,1,K18,0,,,,assigned_in_every_supported_election,False,2300,1800,2008.0,CBS 2008 Census statistical-area demographics
+stat2008:83000624,2008,8300,ראשון לציון,624,1,1,K18,0,,,,assigned_in_every_supported_election,False,5200,3700,2008.0,CBS 2008 Census statistical-area demographics
+stat2008:83000625,2008,8300,ראשון לציון,625,1,0,,1,K18,,,never_assigned_without_positive_population_proxy,True,0,0,2008.0,CBS 2008 Census statistical-area demographics
 stat2008:8310001,2008,831,ירוחם,1,1,1,K18,0,,,,assigned_in_every_supported_election,False,8100,5000,2008.0,CBS 2008 Census statistical-area demographics
 stat2008:8330001,2008,833,נורית,1,1,0,,1,K18,,,never_assigned_without_positive_population_proxy,True,0,0,2008.0,CBS 2008 Census statistical-area demographics
 stat2008:8360001,2008,836,גנות,1,1,1,K18,0,,,,assigned_in_every_supported_election,False,600,0,2008.0,CBS 2008 Census statistical-area demographics
@@ -5732,7 +5732,7 @@ stat2011:10510001,2011,1051,תלמי אליהו,1,7,7,K19|K20|K21|K22|K23|K24|K2
 stat2011:10520001,2011,1052,קטורה,1,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,,assigned_in_every_supported_election,False,487,0,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
 stat2011:10530001,2011,1053,עין חצבה,1,7,0,,7,K19|K20|K21|K22|K23|K24|K25,,,never_assigned_without_positive_population_proxy,True,0,0,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
 stat2011:10540001,2011,1054,תל שבע,1,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,K19,assigned_in_every_supported_election,False,21552,9100,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
-stat2011:10540002,2011,1054,תל שבע,2,7,6,K20|K21|K22|K23|K24|K25,1,K19,,K19,intermittently_unassigned,False,0,0,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
+stat2011:10540002,2011,1054,תל שבע,2,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,K19,assigned_in_every_supported_election,False,0,0,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
 stat2011:10540003,2011,1054,תל שבע,3,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,K19,assigned_in_every_supported_election,False,0,0,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
 stat2011:10560001,2011,1056,"עין כרם-בי""ס חקלאי",1,7,0,,7,K19|K20|K21|K22|K23|K24|K25,,,never_assigned_with_positive_population_proxy,True,162,0,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
 stat2011:10570001,2011,1057,נווה זוהר,1,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,,assigned_in_every_supported_election,False,53,0,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
@@ -5883,34 +5883,34 @@ stat2011:11870001,2011,1187,עיר אובות,1,7,0,,7,K19|K20|K21|K22|K23|K24|K
 stat2011:11880001,2011,1188,אשחר,1,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,,assigned_in_every_supported_election,False,964,0,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
 stat2011:11900001,2011,1190,מצפה נטופה,1,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,,assigned_in_every_supported_election,False,1035,0,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
 stat2011:11910001,2011,1191,בר יוחאי,1,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,,assigned_in_every_supported_election,False,1090,0,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
-stat2011:11920001,2011,1192,ערערה-בנגב,1,7,6,K19|K21|K22|K23|K24|K25,1,K20,,K20|K22|K23|K24|K25,intermittently_unassigned,False,18953,8101,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
-stat2011:11920002,2011,1192,ערערה-בנגב,2,7,6,K19|K21|K22|K23|K24|K25,1,K20,,K20|K22|K23|K24|K25,intermittently_unassigned,False,0,0,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
-stat2011:11920003,2011,1192,ערערה-בנגב,3,7,6,K19|K21|K22|K23|K24|K25,1,K20,,K20|K22|K23|K24|K25,intermittently_unassigned,False,0,0,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
+stat2011:11920001,2011,1192,ערערה-בנגב,1,7,6,K19|K21|K22|K23|K24|K25,1,K20,,K20|K24|K25,intermittently_unassigned,False,18953,8101,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
+stat2011:11920002,2011,1192,ערערה-בנגב,2,7,6,K19|K21|K22|K23|K24|K25,1,K20,,K20|K24|K25,intermittently_unassigned,False,0,0,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
+stat2011:11920003,2011,1192,ערערה-בנגב,3,7,6,K19|K21|K22|K23|K24|K25,1,K20,,K20|K24|K25,intermittently_unassigned,False,0,0,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
 stat2011:11950001,2011,1195,ניצנה (קהילת חינוך),1,7,6,K20|K21|K22|K23|K24|K25,1,K19,,,intermittently_unassigned,False,348,0,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
 stat2011:11960001,2011,1196,מחנה יתיר,1,7,0,,7,K19|K20|K21|K22|K23|K24|K25,,,never_assigned_with_positive_population_proxy,True,292,0,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
 stat2011:11970001,2011,1197,נאות סמדר,1,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,,assigned_in_every_supported_election,False,227,0,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
 stat2011:11980001,2011,1198,כרמים,1,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,,assigned_in_every_supported_election,False,508,0,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
 stat2011:11990001,2011,1199,עדי,1,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,,assigned_in_every_supported_election,False,1858,1286,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
-stat2011:12000011,2011,1200,מודיעין-מכבים-רעות*,11,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,K25,assigned_in_every_supported_election,False,3042,2169,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
-stat2011:12000012,2011,1200,מודיעין-מכבים-רעות*,12,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,K25,assigned_in_every_supported_election,False,4555,2997,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
-stat2011:12000013,2011,1200,מודיעין-מכבים-רעות*,13,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,K25,assigned_in_every_supported_election,False,4764,3044,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
-stat2011:12000014,2011,1200,מודיעין-מכבים-רעות*,14,7,0,,7,K19|K20|K21|K22|K23|K24|K25,,K25,never_assigned_with_positive_population_proxy,True,429,310,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
-stat2011:12000015,2011,1200,מודיעין-מכבים-רעות*,15,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,K25,assigned_in_every_supported_election,False,6176,4338,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
-stat2011:12000016,2011,1200,מודיעין-מכבים-רעות*,16,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,K25,assigned_in_every_supported_election,False,3431,2433,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
-stat2011:12000017,2011,1200,מודיעין-מכבים-רעות*,17,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,K25,assigned_in_every_supported_election,False,4250,3154,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
-stat2011:12000021,2011,1200,מודיעין-מכבים-רעות*,21,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,K25,assigned_in_every_supported_election,False,12173,7006,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
-stat2011:12000022,2011,1200,מודיעין-מכבים-רעות*,22,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,K25,assigned_in_every_supported_election,False,7207,4373,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
-stat2011:12000023,2011,1200,מודיעין-מכבים-רעות*,23,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,K25,assigned_in_every_supported_election,False,9957,6172,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
-stat2011:12000024,2011,1200,מודיעין-מכבים-רעות*,24,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,K25,assigned_in_every_supported_election,False,11250,6209,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
-stat2011:12000025,2011,1200,מודיעין-מכבים-רעות*,25,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,K25,assigned_in_every_supported_election,False,0,0,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
-stat2011:12000026,2011,1200,מודיעין-מכבים-רעות*,26,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,K25,assigned_in_every_supported_election,False,0,0,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
-stat2011:12000031,2011,1200,מודיעין-מכבים-רעות*,31,7,5,K21|K22|K23|K24|K25,2,K19|K20,,K25,intermittently_unassigned,False,4608,2448,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
-stat2011:12000032,2011,1200,מודיעין-מכבים-רעות*,32,7,0,,7,K19|K20|K21|K22|K23|K24|K25,,K25,never_assigned_without_positive_population_proxy,True,0,0,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
-stat2011:12000033,2011,1200,מודיעין-מכבים-רעות*,33,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,K25,assigned_in_every_supported_election,False,5895,3490,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
-stat2011:12000034,2011,1200,מודיעין-מכבים-רעות*,34,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,K25,assigned_in_every_supported_election,False,9050,4827,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
-stat2011:12000041,2011,1200,מודיעין-מכבים-רעות*,41,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,K25,assigned_in_every_supported_election,False,2846,2198,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
-stat2011:12000042,2011,1200,מודיעין-מכבים-רעות*,42,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,K25,assigned_in_every_supported_election,False,2755,2157,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
-stat2011:12000043,2011,1200,מודיעין-מכבים-רעות*,43,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,K25,assigned_in_every_supported_election,False,2269,1801,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
+stat2011:12000011,2011,1200,מודיעין-מכבים-רעות*,11,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,,assigned_in_every_supported_election,False,3042,2169,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
+stat2011:12000012,2011,1200,מודיעין-מכבים-רעות*,12,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,,assigned_in_every_supported_election,False,4555,2997,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
+stat2011:12000013,2011,1200,מודיעין-מכבים-רעות*,13,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,,assigned_in_every_supported_election,False,4764,3044,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
+stat2011:12000014,2011,1200,מודיעין-מכבים-רעות*,14,7,0,,7,K19|K20|K21|K22|K23|K24|K25,,,never_assigned_with_positive_population_proxy,True,429,310,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
+stat2011:12000015,2011,1200,מודיעין-מכבים-רעות*,15,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,,assigned_in_every_supported_election,False,6176,4338,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
+stat2011:12000016,2011,1200,מודיעין-מכבים-רעות*,16,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,,assigned_in_every_supported_election,False,3431,2433,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
+stat2011:12000017,2011,1200,מודיעין-מכבים-רעות*,17,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,,assigned_in_every_supported_election,False,4250,3154,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
+stat2011:12000021,2011,1200,מודיעין-מכבים-רעות*,21,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,,assigned_in_every_supported_election,False,12173,7006,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
+stat2011:12000022,2011,1200,מודיעין-מכבים-רעות*,22,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,,assigned_in_every_supported_election,False,7207,4373,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
+stat2011:12000023,2011,1200,מודיעין-מכבים-רעות*,23,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,,assigned_in_every_supported_election,False,9957,6172,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
+stat2011:12000024,2011,1200,מודיעין-מכבים-רעות*,24,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,,assigned_in_every_supported_election,False,11250,6209,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
+stat2011:12000025,2011,1200,מודיעין-מכבים-רעות*,25,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,,assigned_in_every_supported_election,False,0,0,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
+stat2011:12000026,2011,1200,מודיעין-מכבים-רעות*,26,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,,assigned_in_every_supported_election,False,0,0,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
+stat2011:12000031,2011,1200,מודיעין-מכבים-רעות*,31,7,5,K21|K22|K23|K24|K25,2,K19|K20,,,intermittently_unassigned,False,4608,2448,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
+stat2011:12000032,2011,1200,מודיעין-מכבים-רעות*,32,7,0,,7,K19|K20|K21|K22|K23|K24|K25,,,never_assigned_without_positive_population_proxy,True,0,0,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
+stat2011:12000033,2011,1200,מודיעין-מכבים-רעות*,33,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,,assigned_in_every_supported_election,False,5895,3490,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
+stat2011:12000034,2011,1200,מודיעין-מכבים-רעות*,34,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,,assigned_in_every_supported_election,False,9050,4827,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
+stat2011:12000041,2011,1200,מודיעין-מכבים-רעות*,41,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,,assigned_in_every_supported_election,False,2846,2198,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
+stat2011:12000042,2011,1200,מודיעין-מכבים-רעות*,42,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,,assigned_in_every_supported_election,False,2755,2157,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
+stat2011:12000043,2011,1200,מודיעין-מכבים-רעות*,43,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,,assigned_in_every_supported_election,False,2269,1801,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
 stat2011:12010001,2011,1201,כמון,1,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,,assigned_in_every_supported_election,False,1404,0,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
 stat2011:12020001,2011,1202,מכמנים,1,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,,assigned_in_every_supported_election,False,575,0,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
 stat2011:12030001,2011,1203,הררית,1,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,,assigned_in_every_supported_election,False,587,336,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
@@ -6480,18 +6480,18 @@ stat2011:2680001,2011,268,טירת צבי,1,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,
 stat2011:2690001,2011,269,מולדת,1,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,,assigned_in_every_supported_election,False,1088,673,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
 stat2011:2700001,2011,270,עין השופט,1,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,,assigned_in_every_supported_election,False,836,594,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
 stat2011:270001,2011,27,שדות מיכה,1,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,,assigned_in_every_supported_election,False,384,246,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
-stat2011:27100001,2011,2710,אום אל-פחם,1,7,0,,7,K19|K20|K21|K22|K23|K24|K25,,K20|K21|K24,never_assigned_without_positive_population_proxy,True,0,0,,
-stat2011:27100011,2011,2710,אום אל-פחם,11,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,K20|K21|K24,assigned_in_every_supported_election,False,56776,33588,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
-stat2011:27100012,2011,2710,אום אל-פחם,12,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,K20|K21|K24,assigned_in_every_supported_election,False,0,0,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
-stat2011:27100013,2011,2710,אום אל-פחם,13,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,K20|K21|K24,assigned_in_every_supported_election,False,0,0,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
-stat2011:27100014,2011,2710,אום אל-פחם,14,7,5,K19|K20|K21|K22|K23,2,K24|K25,,K20|K21|K24,intermittently_unassigned,False,0,0,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
-stat2011:27100015,2011,2710,אום אל-פחם,15,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,K20|K21|K24,assigned_in_every_supported_election,False,0,0,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
-stat2011:27100021,2011,2710,אום אל-פחם,21,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,K20|K21|K24,assigned_in_every_supported_election,False,0,0,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
-stat2011:27100022,2011,2710,אום אל-פחם,22,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,K20|K21|K24,assigned_in_every_supported_election,False,0,0,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
-stat2011:27100031,2011,2710,אום אל-פחם,31,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,K20|K21|K24,assigned_in_every_supported_election,False,0,0,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
-stat2011:27100032,2011,2710,אום אל-פחם,32,7,6,K19|K21|K22|K23|K24|K25,1,K20,,K20|K21|K24,intermittently_unassigned,False,0,0,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
-stat2011:27100033,2011,2710,אום אל-פחם,33,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,K20|K21|K24,assigned_in_every_supported_election,False,0,0,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
-stat2011:27100034,2011,2710,אום אל-פחם,34,7,6,K19|K20|K21|K22|K23|K24,1,K25,,K20|K21|K24,intermittently_unassigned,False,0,0,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
+stat2011:27100001,2011,2710,אום אל-פחם,1,7,0,,7,K19|K20|K21|K22|K23|K24|K25,,,never_assigned_without_positive_population_proxy,True,0,0,,
+stat2011:27100011,2011,2710,אום אל-פחם,11,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,,assigned_in_every_supported_election,False,56776,33588,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
+stat2011:27100012,2011,2710,אום אל-פחם,12,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,,assigned_in_every_supported_election,False,0,0,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
+stat2011:27100013,2011,2710,אום אל-פחם,13,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,,assigned_in_every_supported_election,False,0,0,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
+stat2011:27100014,2011,2710,אום אל-פחם,14,7,6,K19|K20|K21|K22|K23|K24,1,K25,,,intermittently_unassigned,False,0,0,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
+stat2011:27100015,2011,2710,אום אל-פחם,15,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,,assigned_in_every_supported_election,False,0,0,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
+stat2011:27100021,2011,2710,אום אל-פחם,21,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,,assigned_in_every_supported_election,False,0,0,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
+stat2011:27100022,2011,2710,אום אל-פחם,22,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,,assigned_in_every_supported_election,False,0,0,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
+stat2011:27100031,2011,2710,אום אל-פחם,31,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,,assigned_in_every_supported_election,False,0,0,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
+stat2011:27100032,2011,2710,אום אל-פחם,32,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,,assigned_in_every_supported_election,False,0,0,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
+stat2011:27100033,2011,2710,אום אל-פחם,33,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,,assigned_in_every_supported_election,False,0,0,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
+stat2011:27100034,2011,2710,אום אל-פחם,34,7,6,K19|K20|K21|K22|K23|K24,1,K25,,,intermittently_unassigned,False,0,0,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
 stat2011:27200001,2011,2720,טירה,1,7,0,,7,K19|K20|K21|K22|K23|K24|K25,,K19|K20|K21|K22|K23|K24|K25,never_assigned_with_positive_population_proxy,True,27039,17402,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
 stat2011:27200002,2011,2720,טירה,2,7,0,,7,K19|K20|K21|K22|K23|K24|K25,,K19|K20|K21|K22|K23|K24|K25,never_assigned_without_positive_population_proxy,True,0,0,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
 stat2011:27200003,2011,2720,טירה,3,7,0,,7,K19|K20|K21|K22|K23|K24|K25,,K19|K20|K21|K22|K23|K24|K25,never_assigned_without_positive_population_proxy,True,0,0,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
@@ -7237,11 +7237,11 @@ stat2011:4900003,2011,490,דייר אל-אסד,3,7,0,,7,K19|K20|K21|K22|K23|K24|
 stat2011:490001,2011,49,אילנייה,1,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,,assigned_in_every_supported_election,False,487,362,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
 stat2011:4920001,2011,492,דייר חנא,1,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,,assigned_in_every_supported_election,False,10488,6767,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
 stat2011:4930001,2011,493,דייר ראפאת,1,7,0,,7,K19|K20|K21|K22|K23|K24|K25,,,never_assigned_with_positive_population_proxy,True,103,0,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
-stat2011:4940001,2011,494,דאלית אל-כרמל,1,7,5,K21|K22|K23|K24|K25,2,K19|K20,,K19|K20|K25,intermittently_unassigned,False,17866,12298,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
-stat2011:4940002,2011,494,דאלית אל-כרמל,2,7,5,K21|K22|K23|K24|K25,2,K19|K20,,K19|K20|K25,intermittently_unassigned,False,0,0,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
+stat2011:4940001,2011,494,דאלית אל-כרמל,1,7,6,K20|K21|K22|K23|K24|K25,1,K19,,K19|K20|K25,intermittently_unassigned,False,17866,12298,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
+stat2011:4940002,2011,494,דאלית אל-כרמל,2,7,6,K20|K21|K22|K23|K24|K25,1,K19,,K19|K20|K25,intermittently_unassigned,False,0,0,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
 stat2011:4940003,2011,494,דאלית אל-כרמל,3,7,6,K20|K21|K22|K23|K24|K25,1,K19,,K19|K20|K25,intermittently_unassigned,False,0,0,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
-stat2011:4940004,2011,494,דאלית אל-כרמל,4,7,5,K21|K22|K23|K24|K25,2,K19|K20,,K19|K20|K25,intermittently_unassigned,False,0,0,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
-stat2011:4940005,2011,494,דאלית אל-כרמל,5,7,5,K21|K22|K23|K24|K25,2,K19|K20,,K19|K20|K25,intermittently_unassigned,False,0,0,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
+stat2011:4940004,2011,494,דאלית אל-כרמל,4,7,6,K20|K21|K22|K23|K24|K25,1,K19,,K19|K20|K25,intermittently_unassigned,False,0,0,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
+stat2011:4940005,2011,494,דאלית אל-כרמל,5,7,6,K20|K21|K22|K23|K24|K25,1,K19,,K19|K20|K25,intermittently_unassigned,False,0,0,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
 stat2011:4960001,2011,496,חורפיש,1,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,,assigned_in_every_supported_election,False,6488,4231,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
 stat2011:4970001,2011,497,טייבה (בעמק),1,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,,assigned_in_every_supported_election,False,1918,0,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
 stat2011:4980001,2011,498,טורעאן,1,7,0,,7,K19|K20|K21|K22|K23|K24|K25,,K19|K20|K21|K22|K23|K24|K25,never_assigned_with_positive_population_proxy,True,14436,8763,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
@@ -8049,24 +8049,24 @@ stat2011:7260001,2011,726,הודייה,1,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,,as
 stat2011:7270001,2011,727,תלמי יחיאל,1,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,,assigned_in_every_supported_election,False,1021,661,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
 stat2011:7290001,2011,729,משמר השבעה,1,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,,assigned_in_every_supported_election,False,1059,724,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
 stat2011:7300001,2011,730,אליפלט,1,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,,assigned_in_every_supported_election,False,639,432,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
-stat2011:73000011,2011,7300,נצרת,11,7,6,K19|K20|K21|K22|K23|K24,1,K25,,K20|K21|K22|K23|K25,intermittently_unassigned,False,2286,1712,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
-stat2011:73000012,2011,7300,נצרת,12,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,K20|K21|K22|K23|K25,assigned_in_every_supported_election,False,6447,4290,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
-stat2011:73000013,2011,7300,נצרת,13,7,5,K19|K20|K21|K22|K23,2,K24|K25,,K20|K21|K22|K23|K25,intermittently_unassigned,False,5667,3708,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
-stat2011:73000014,2011,7300,נצרת,14,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,K20|K21|K22|K23|K25,assigned_in_every_supported_election,False,1285,917,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
-stat2011:73000015,2011,7300,נצרת,15,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,K20|K21|K22|K23|K25,assigned_in_every_supported_election,False,6040,4088,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
-stat2011:73000021,2011,7300,נצרת,21,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,K20|K21|K22|K23|K25,assigned_in_every_supported_election,False,2159,1435,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
-stat2011:73000022,2011,7300,נצרת,22,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,K20|K21|K22|K23|K25,assigned_in_every_supported_election,False,3528,2504,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
-stat2011:73000023,2011,7300,נצרת,23,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,K20|K21|K22|K23|K25,assigned_in_every_supported_election,False,3131,2239,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
-stat2011:73000031,2011,7300,נצרת,31,7,6,K19|K20|K21|K22|K23|K24,1,K25,,K20|K21|K22|K23|K25,intermittently_unassigned,False,3593,2252,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
-stat2011:73000032,2011,7300,נצרת,32,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,K20|K21|K22|K23|K25,assigned_in_every_supported_election,False,8582,5416,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
-stat2011:73000033,2011,7300,נצרת,33,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,K20|K21|K22|K23|K25,assigned_in_every_supported_election,False,3807,2438,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
-stat2011:73000034,2011,7300,נצרת,34,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,K20|K21|K22|K23|K25,assigned_in_every_supported_election,False,5572,3551,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
-stat2011:73000035,2011,7300,נצרת,35,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,K20|K21|K22|K23|K25,assigned_in_every_supported_election,False,8354,5634,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
-stat2011:73000041,2011,7300,נצרת,41,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,K20|K21|K22|K23|K25,assigned_in_every_supported_election,False,4923,3453,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
-stat2011:73000042,2011,7300,נצרת,42,7,5,K19|K20|K21|K22|K23,2,K24|K25,,K20|K21|K22|K23|K25,intermittently_unassigned,False,4918,3092,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
-stat2011:73000043,2011,7300,נצרת,43,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,K20|K21|K22|K23|K25,assigned_in_every_supported_election,False,3097,1952,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
-stat2011:73000044,2011,7300,נצרת,44,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,K20|K21|K22|K23|K25,assigned_in_every_supported_election,False,2092,1282,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
-stat2011:73000045,2011,7300,נצרת,45,7,5,K19|K20|K21|K22|K23,2,K24|K25,,K20|K21|K22|K23|K25,intermittently_unassigned,False,2311,1373,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
+stat2011:73000011,2011,7300,נצרת,11,7,6,K19|K20|K21|K22|K23|K24,1,K25,,K20|K21|K22|K23,intermittently_unassigned,False,2286,1712,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
+stat2011:73000012,2011,7300,נצרת,12,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,K20|K21|K22|K23,assigned_in_every_supported_election,False,6447,4290,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
+stat2011:73000013,2011,7300,נצרת,13,7,5,K19|K20|K21|K22|K23,2,K24|K25,,K20|K21|K22|K23,intermittently_unassigned,False,5667,3708,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
+stat2011:73000014,2011,7300,נצרת,14,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,K20|K21|K22|K23,assigned_in_every_supported_election,False,1285,917,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
+stat2011:73000015,2011,7300,נצרת,15,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,K20|K21|K22|K23,assigned_in_every_supported_election,False,6040,4088,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
+stat2011:73000021,2011,7300,נצרת,21,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,K20|K21|K22|K23,assigned_in_every_supported_election,False,2159,1435,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
+stat2011:73000022,2011,7300,נצרת,22,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,K20|K21|K22|K23,assigned_in_every_supported_election,False,3528,2504,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
+stat2011:73000023,2011,7300,נצרת,23,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,K20|K21|K22|K23,assigned_in_every_supported_election,False,3131,2239,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
+stat2011:73000031,2011,7300,נצרת,31,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,K20|K21|K22|K23,assigned_in_every_supported_election,False,3593,2252,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
+stat2011:73000032,2011,7300,נצרת,32,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,K20|K21|K22|K23,assigned_in_every_supported_election,False,8582,5416,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
+stat2011:73000033,2011,7300,נצרת,33,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,K20|K21|K22|K23,assigned_in_every_supported_election,False,3807,2438,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
+stat2011:73000034,2011,7300,נצרת,34,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,K20|K21|K22|K23,assigned_in_every_supported_election,False,5572,3551,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
+stat2011:73000035,2011,7300,נצרת,35,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,K20|K21|K22|K23,assigned_in_every_supported_election,False,8354,5634,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
+stat2011:73000041,2011,7300,נצרת,41,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,K20|K21|K22|K23,assigned_in_every_supported_election,False,4923,3453,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
+stat2011:73000042,2011,7300,נצרת,42,7,5,K19|K20|K21|K22|K23,2,K24|K25,,K20|K21|K22|K23,intermittently_unassigned,False,4918,3092,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
+stat2011:73000043,2011,7300,נצרת,43,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,K20|K21|K22|K23,assigned_in_every_supported_election,False,3097,1952,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
+stat2011:73000044,2011,7300,נצרת,44,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,K20|K21|K22|K23,assigned_in_every_supported_election,False,2092,1282,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
+stat2011:73000045,2011,7300,נצרת,45,7,5,K19|K20|K21|K22|K23,2,K24|K25,,K20|K21|K22|K23,intermittently_unassigned,False,2311,1373,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
 stat2011:7310001,2011,731,מישר,1,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,,assigned_in_every_supported_election,False,807,518,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
 stat2011:7320001,2011,732,משמר הירדן,1,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,,assigned_in_every_supported_election,False,867,0,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries
 stat2011:7340001,2011,734,גן יאשיה,1,7,7,K19|K20|K21|K22|K23|K24|K25,0,,,,assigned_in_every_supported_election,False,1008,663,2020.0,CBS 2020 demographics on 2011 statistical-area boundaries

@@ -72,11 +72,12 @@ Every ballot row exposes:
 - `assignment_is_synthetic_link`;
 - the specific `final_assignment_method` and `final_assignment_source`.
 
-The release contains 148 inferred ballot-to-area links representing 40,752
+The release contains 198 inferred ballot-to-area links representing 58,829
 actual voters: 134 from official CBS stable-ballot evidence, nine from reviewed
-exact ArcGIS residuals, and five reviewed cross-election corrections. The
-ballot identity, electorate, turnout, valid/invalid totals, and party votes
-remain unchanged official source values. Only the area link is synthetic.
+exact ArcGIS residuals, five reviewed cross-election corrections, and 50
+approved high-confidence polling-register continuity links. The ballot
+identity, electorate, turnout, valid/invalid totals, and party votes remain
+unchanged official source values. Only the area link is synthetic.
 
 The separate 74 K23 AGS assignments are direct official evidence and are not
 marked synthetic. Users who require no inferred links can filter
@@ -97,7 +98,7 @@ audit are under
 - [`metadata/coverage.csv`](v1/metadata/coverage.csv?raw=1) reports mapped and
   pending coverage by election.
 - [`metadata/assignment-provenance`](v1/metadata/assignment-provenance/)
-  contains 28 source, decision, conflict, gap, and polygon-audit artifacts.
+  contains 30 source, decision, conflict, gap, and polygon-audit artifacts.
 - [`manifest.csv`](v1/manifest.csv?raw=1) and
   [`manifest.json`](v1/manifest.json?raw=1) contain file sizes, row counts, and
   SHA-256 checksums.
@@ -119,6 +120,12 @@ tribal marker because the available derivative footprints overlap surrounding
 areas and cannot be treated as exclusive geography. The release tables do not
 collapse those records: exact tribe statistical-area identifiers, results, and
 assignment provenance remain available for analysis.
+
+When an election/locality has no supported ballot-to-area assignment, the map
+can show its whole-locality aggregate on a display-only locality boundary with
+an info notice. This does not assign any ballot or change coverage. The 308
+map substitutions and their represented totals are disclosed in
+[`historical_municipality_display_fallbacks.csv`](v1/metadata/assignment-provenance/historical_municipality_display_fallbacks.csv?raw=1).
 
 Original project software and documentation are available under the
 [MIT License](../LICENSE). Official and third-party source data retain their

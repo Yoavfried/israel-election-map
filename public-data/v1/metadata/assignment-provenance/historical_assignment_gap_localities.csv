@@ -114,8 +114,7 @@ K18,2008,entire_locality_omitted_from_official_crosswalk,irreducible_with_curren
 K18,2008,entire_locality_omitted_from_official_crosswalk,irreducible_with_current_sources,8800,שפרעם,32,21599,10509,,
 K18,2008,entire_locality_omitted_from_official_crosswalk,irreducible_with_current_sources,8900,טמרה,25,16498,9607,,
 K18,2008,locality_identity_absent_from_active_historical_vintage,irreducible_with_current_sources,1345,צור יצחק,1,77,70,,
-K18,2008,specific_ballot_omitted_from_official_crosswalk,irreducible_with_current_sources,8300,ראשון לציון,1,613,459,,
-K19,2011,entire_locality_omitted_from_official_crosswalk,irreducible_with_current_sources,1054,תל שבע,8,5717,2512,,
+K19,2011,entire_locality_omitted_from_official_crosswalk,irreducible_with_current_sources,1054,תל שבע,2,1392,674,,
 K19,2011,entire_locality_omitted_from_official_crosswalk,irreducible_with_current_sources,1292,ג'דיידה-מכר,17,11783,6384,,
 K19,2011,entire_locality_omitted_from_official_crosswalk,irreducible_with_current_sources,1327,מעלה עירון,15,7774,4009,,
 K19,2011,entire_locality_omitted_from_official_crosswalk,irreducible_with_current_sources,2720,טירה,23,15168,8924,,
@@ -153,7 +152,6 @@ K20,2011,central_ballot_990_locality_only,intentionally_locality_only,5000,תל 
 K20,2011,entire_locality_omitted_from_official_crosswalk,irreducible_with_current_sources,1192,ערערה-בנגב,10,6558,3773,source_dissolved_locality_aggregate,rejected
 K20,2011,entire_locality_omitted_from_official_crosswalk,irreducible_with_current_sources,1292,ג'דיידה-מכר,19,12533,8669,source_dissolved_locality_aggregate,rejected
 K20,2011,entire_locality_omitted_from_official_crosswalk,irreducible_with_current_sources,1327,מעלה עירון,15,8400,5567,source_dissolved_locality_aggregate,rejected
-K20,2011,entire_locality_omitted_from_official_crosswalk,irreducible_with_current_sources,2710,אום אל-פחם,11,7048,4663,source_dissolved_locality_aggregate,rejected
 K20,2011,entire_locality_omitted_from_official_crosswalk,irreducible_with_current_sources,2720,טירה,23,16091,11682,source_dissolved_locality_aggregate,rejected
 K20,2011,entire_locality_omitted_from_official_crosswalk,irreducible_with_current_sources,2730,טייבה,37,24480,18103,source_dissolved_locality_aggregate,rejected
 K20,2011,entire_locality_omitted_from_official_crosswalk,irreducible_with_current_sources,473,אבו סנאן,12,8363,5798,source_dissolved_locality_aggregate,rejected
@@ -161,7 +159,7 @@ K20,2011,entire_locality_omitted_from_official_crosswalk,irreducible_with_curren
 K20,2011,entire_locality_omitted_from_official_crosswalk,irreducible_with_current_sources,480,בית ג'ן,12,7819,4182,source_dissolved_locality_aggregate,rejected
 K20,2011,entire_locality_omitted_from_official_crosswalk,irreducible_with_current_sources,481,מגאר,21,14173,6687,source_dissolved_locality_aggregate,rejected
 K20,2011,entire_locality_omitted_from_official_crosswalk,irreducible_with_current_sources,490,דייר אל-אסד,10,7130,5715,source_dissolved_locality_aggregate,rejected
-K20,2011,entire_locality_omitted_from_official_crosswalk,irreducible_with_current_sources,494,דאלית אל-כרמל,15,10120,5922,source_dissolved_locality_aggregate,rejected
+K20,2011,entire_locality_omitted_from_official_crosswalk,irreducible_with_current_sources,494,דאלית אל-כרמל,2,1348,760,source_dissolved_locality_aggregate,rejected
 K20,2011,entire_locality_omitted_from_official_crosswalk,irreducible_with_current_sources,498,טורעאן,12,8160,5321,source_dissolved_locality_aggregate,rejected
 K20,2011,entire_locality_omitted_from_official_crosswalk,irreducible_with_current_sources,499,יפיע,17,11578,7493,source_dissolved_locality_aggregate,rejected
 K20,2011,entire_locality_omitted_from_official_crosswalk,irreducible_with_current_sources,502,ירכא,14,9360,6168,source_dissolved_locality_aggregate,rejected
@@ -218,7 +216,6 @@ K21,2011,entire_locality_omitted_from_official_crosswalk,irreducible_with_curren
 K21,2011,entire_locality_omitted_from_official_crosswalk,irreducible_with_current_sources,7500,סח'נין,30,21019,17106,source_dissolved_locality_aggregate,rejected
 K21,2011,entire_locality_omitted_from_official_crosswalk,irreducible_with_current_sources,8800,שפרעם,39,28453,13491,source_dissolved_locality_aggregate,rejected
 K21,2011,entire_locality_omitted_from_official_crosswalk,irreducible_with_current_sources,8900,טמרה,30,22245,13019,source_dissolved_locality_aggregate,rejected
-K21,2011,specific_ballot_omitted_from_official_crosswalk,irreducible_with_current_sources,2710,אום אל-פחם,1,574,235,source_dissolved_locality_aggregate,pending
 K21,2011,specific_ballot_omitted_from_official_crosswalk,irreducible_with_current_sources,7300,נצרת,1,703,226,residual_total_mismatch,pending
 K22,2011,central_ballot_990_locality_only,intentionally_locality_only,2610,בית שמש,1,550,422,,
 K22,2011,entire_locality_omitted_from_official_crosswalk,irreducible_with_current_sources,1292,ג'דיידה-מכר,20,14283,9027,,
@@ -253,7 +250,6 @@ K22,2011,entire_locality_omitted_from_official_crosswalk,irreducible_with_curren
 K22,2011,entire_locality_omitted_from_official_crosswalk,irreducible_with_current_sources,7500,סח'נין,29,20567,14829,,
 K22,2011,entire_locality_omitted_from_official_crosswalk,irreducible_with_current_sources,8800,שפרעם,39,28773,17039,,
 K22,2011,entire_locality_omitted_from_official_crosswalk,irreducible_with_current_sources,8900,טמרה,30,22576,16350,,
-K22,2011,specific_ballot_omitted_from_official_crosswalk,irreducible_with_current_sources,1192,ערערה-בנגב,2,1380,689,,
 K22,2011,specific_ballot_omitted_from_official_crosswalk,irreducible_with_current_sources,7300,נצרת,1,717,363,,
 K23,2011,central_ballot_990_locality_only,intentionally_locality_only,8200,קריית מוצקין,1,338,234,,
 K23,2011,entire_locality_omitted_from_official_crosswalk,irreducible_with_current_sources,1292,ג'דיידה-מכר,20,14464,10059,,
@@ -288,7 +284,6 @@ K23,2011,entire_locality_omitted_from_official_crosswalk,irreducible_with_curren
 K23,2011,entire_locality_omitted_from_official_crosswalk,irreducible_with_current_sources,7500,סח'נין,30,21624,17136,,
 K23,2011,entire_locality_omitted_from_official_crosswalk,irreducible_with_current_sources,8800,שפרעם,39,29120,19200,,
 K23,2011,entire_locality_omitted_from_official_crosswalk,irreducible_with_current_sources,8900,טמרה,31,22876,18354,,
-K23,2011,specific_ballot_omitted_from_official_crosswalk,irreducible_with_current_sources,1192,ערערה-בנגב,2,1399,776,,
 K23,2011,specific_ballot_omitted_from_official_crosswalk,irreducible_with_current_sources,7300,נצרת,1,731,430,,
 K24,2011,central_ballot_990_locality_only,intentionally_locality_only,2550,גדרה,3,1453,957,,
 K24,2011,central_ballot_990_locality_only,intentionally_locality_only,2800,קריית שמונה,4,2585,1478,,
@@ -301,7 +296,6 @@ K24,2011,central_ballot_990_locality_only,intentionally_locality_only,8200,קר�
 K24,2011,central_ballot_990_locality_only,intentionally_locality_only,8500,רמלה,2,710,349,,
 K24,2011,entire_locality_omitted_from_official_crosswalk,irreducible_with_current_sources,1292,ג'דיידה-מכר,26,14820,6162,,
 K24,2011,entire_locality_omitted_from_official_crosswalk,irreducible_with_current_sources,1327,מעלה עירון,18,10221,3212,,
-K24,2011,entire_locality_omitted_from_official_crosswalk,irreducible_with_current_sources,2710,אום אל-פחם,3,1832,545,,
 K24,2011,entire_locality_omitted_from_official_crosswalk,irreducible_with_current_sources,2720,טירה,35,18697,8806,,
 K24,2011,entire_locality_omitted_from_official_crosswalk,irreducible_with_current_sources,2730,טייבה,54,29204,12675,,
 K24,2011,entire_locality_omitted_from_official_crosswalk,irreducible_with_current_sources,473,אבו סנאן,19,9705,5151,,
@@ -368,7 +362,5 @@ K25,2011,entire_locality_omitted_from_official_crosswalk,irreducible_with_curren
 K25,2011,entire_locality_omitted_from_official_crosswalk,irreducible_with_current_sources,7500,סח'נין,38,23207,15877,,
 K25,2011,entire_locality_omitted_from_official_crosswalk,irreducible_with_current_sources,8800,שפרעם,54,30875,15890,,
 K25,2011,entire_locality_omitted_from_official_crosswalk,irreducible_with_current_sources,8900,טמרה,42,24503,15563,,
-K25,2011,specific_ballot_omitted_from_official_crosswalk,irreducible_with_current_sources,1192,ערערה-בנגב,6,3457,1660,,
-K25,2011,specific_ballot_omitted_from_official_crosswalk,irreducible_with_current_sources,1200,מודיעין-מכבים-רעות*,2,1208,1020,,
+K25,2011,specific_ballot_omitted_from_official_crosswalk,irreducible_with_current_sources,1192,ערערה-בנגב,4,2180,1019,,
 K25,2011,specific_ballot_omitted_from_official_crosswalk,irreducible_with_current_sources,494,דאלית אל-כרמל,1,628,372,,
-K25,2011,specific_ballot_omitted_from_official_crosswalk,irreducible_with_current_sources,7300,נצרת,7,4620,2049,,

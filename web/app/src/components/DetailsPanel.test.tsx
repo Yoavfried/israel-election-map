@@ -81,6 +81,27 @@ describe('DetailsPanel', () => {
     expect(hebrew).toContain('aria-label="כולל: דייר ראפאת, גבעת שמש"')
   })
 
+  it('explains a display-only municipality fallback through the info tooltip', () => {
+    const fallbackRecord: ResultRecord = {
+      ...record,
+      id: 'municipality-fallback:2011:loc:10',
+      geographyType: 'municipality-fallback',
+      notice: {
+        en: 'No ballots have a supported statistical-area assignment in this election.',
+        he: 'אין שיוך נתמך של קלפיות לאזורים סטטיסטיים בבחירות האלה.',
+      },
+    }
+
+    const html = renderToStaticMarkup(
+      <DetailsPanel language="en" record={fallbackRecord} parties={parties} />,
+    )
+
+    expect(html).toContain(
+      'aria-label="No ballots have a supported statistical-area assignment in this election."',
+    )
+    expect(html).toContain('class="included-localities-info"')
+  })
+
   it('shows unavailable turnout instead of a false zero', () => {
     const unavailableRecord: ResultRecord = {
       ...record,

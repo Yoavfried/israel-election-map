@@ -1,6 +1,6 @@
 # Data Sources
 
-Last updated: 2026-07-18
+Last updated: 2026-07-19
 
 ## Election Results
 
@@ -96,6 +96,14 @@ after 6,775 of 6,776 comparable existing targets agree and the one conflict is
 withheld. The stable-ballot workbooks add 134 high-confidence inferred links;
 all same-vintage and transition conflicts remain withheld.
 
+A separate reviewed continuity pass compares official CEC polling-place
+reports across elections with official same-vintage CBS crosswalk targets. It
+accepts 50 additional high-confidence links where polling-register identity is
+supported by exact ballot/place continuity or an independently reconcilable
+crosswalk gap. The approved source fingerprints and notes are committed in
+`data/manual/cross_election_stat_area_reviews.csv`. These links are explicitly
+synthetic; polling-place coordinates and address geolocation are not used.
+
 Two downloadable ArcGIS FeatureServer layers provide detailed display
 footprints, 32 explicit exact-ID 2011 geometry supplements, and aggregate
 evidence for K20/K21. Their service descriptions state both that the election
@@ -103,6 +111,31 @@ output is not official and that statistical areas in Arab localities were
 merged. After classifying those dissolved locality totals correctly, the audit
 accepts only nine exact K21 links and no K20 links. They never replace official
 ballot or vote values.
+
+### Kaplan Election-Map Payloads
+
+The supplied Kaplan map applications were traced to five public data payloads:
+
+| Election | Application/source payload | Observed grain |
+|---|---|---|
+| K22 | [September 2019 GeoJSON](https://elections.kaplanopensource.co.il/setl2013_results_2019b.geojson) | One polygon feature per locality |
+| K23 | [2020 Geobuf](https://elections.kaplanopensource.co.il/2020/_6) | One polygon feature per locality |
+| K24 | [2021 Geobuf](https://elections.kaplanopensource.co.il/2021/_7) | One polygon feature per locality |
+| K25 | [2022 locality Geobuf](https://elections.kaplanopensource.co.il/2022/_7) | One polygon feature per locality |
+| K25 | [2022 neighborhood Geobuf](https://elections.kaplanopensource.co.il/2022/ynet/_9) | 403 aggregate points across 15 localities |
+
+`scripts/audit_kaplan_map_sources.py --fetch` downloads these files to the
+ignored raw-data directory, records hashes in
+`data/processed/manifest/kaplan_map_sources.*`, and writes the audit under
+`data/processed/audits/kaplan_map_source_*`. The Geobuf properties are decoded
+by `scripts/geobuf_properties.py` without executing publisher JavaScript.
+
+The four locality layers expose no statistical-area identifier and have exactly
+one feature per locality. The neighborhood layer exposes a neighborhood ID and
+representative point, but no boundary, AGS identifier, or ballot crosswalk. It
+therefore cannot prove a ballot-to-statistical-area assignment. These sources
+are retained as reproducible locality-total cross-checks only; no vote values or
+geometry are imported into production outputs.
 
 Display-only reuse is recorded separately from assignment evidence. The exact
 Hebron footprint is reused for the two reviewed K17/K18 custom assignments, and
@@ -113,6 +146,12 @@ areas. The map therefore uses one combined tribal marker in every election.
 Exact tribe IDs and statistical-area assignments remain separate in the
 downloadable ballot and aggregate tables. None of these display choices creates
 or reallocates votes.
+
+The web map also uses a current locality or reviewed composite footprint when
+an election/locality has no supported statistical-area assignments at all.
+That whole-locality total is labeled as a display-only fallback and is not
+treated as historical assignment evidence. Its election-by-election audit is
+published as `historical_municipality_display_fallbacks.csv`.
 
 `scripts/audit_election_source_geography_fields.py` publishes the complete
 source-schema inventory. The recovered catalog contains no second in-scope

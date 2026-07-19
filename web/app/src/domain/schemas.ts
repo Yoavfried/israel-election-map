@@ -105,8 +105,15 @@ const PartySchema = z.object({
 
 const ResultRecordSchema = z.object({
   id: z.string().min(1),
-  geographyType: z.enum(['statistical-area', 'locality', 'custom', 'envelope']),
+  geographyType: z.enum([
+    'statistical-area',
+    'locality',
+    'custom',
+    'municipality-fallback',
+    'envelope',
+  ]),
   names: LocalizedTextSchema,
+  notice: LocalizedTextSchema.optional(),
   includedNames: z
     .object({
       en: z.array(z.string().min(1)),

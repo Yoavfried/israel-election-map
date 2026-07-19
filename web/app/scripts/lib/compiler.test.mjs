@@ -5,6 +5,7 @@ import {
   buildCompositeMetadataIndex,
   buildDisplayMarkers,
   buildHiddenLocalityIds,
+  buildMunicipalityFallbackDisplay,
   buildPartyRegistryIndex,
   buildResultPayload,
   isPointLikeGeometry,
@@ -198,6 +199,112 @@ describe('web data compiler', () => {
       { type: 'Point', coordinates: [35.35, 31.75] },
       { type: 'Point', coordinates: [34.35, 31.35] },
     ])
+  })
+
+  it('builds display-only municipality results and hides their empty component areas', () => {
+    const localityGeography = {
+      type: 'FeatureCollection',
+      features: [
+        {
+          type: 'Feature',
+          id: 'loc:10',
+          properties: {
+            id: 'loc:10',
+            geographyType: 'locality',
+            localityId: 'loc:10',
+            localityCode: '10',
+            nameHe: 'יישוב',
+            nameEn: 'Locality',
+            displayMode: 'polygon',
+            isComposite: false,
+          },
+          geometry: {
+            type: 'Polygon',
+            coordinates: [[[35, 32], [35.1, 32], [35.1, 32.1], [35, 32]]],
+          },
+        },
+        {
+          type: 'Feature',
+          id: 'composite:test',
+          properties: {
+            id: 'composite:test',
+            geographyType: 'locality',
+            localityId: 'composite:test',
+            localityCode: '20',
+            nameHe: 'יישוב היסטורי',
+            nameEn: 'Historical locality',
+            displayMode: 'polygon',
+            isComposite: true,
+            componentLocalityIds: ['loc:20', 'loc:21'],
+            includedNames: { he: ['מרכיב'], en: ['Component'] },
+          },
+          geometry: {
+            type: 'Polygon',
+            coordinates: [[[35.2, 32], [35.3, 32], [35.3, 32.1], [35.2, 32]]],
+          },
+        },
+      ],
+    }
+    const statisticalGeography = {
+      type: 'FeatureCollection',
+      features: ['loc:10', 'loc:20', 'loc:21'].map((localityId, index) => ({
+        type: 'Feature',
+        id: `stat2011:${index + 1}`,
+        properties: {
+          id: `stat2011:${index + 1}`,
+          geographyType: 'statistical-area',
+          localityId,
+        },
+        geometry: { type: 'Point', coordinates: [35 + index / 10, 32] },
+      })),
+    }
+    const fallbackRow = (id, localityId, localityCode, localityName) => ({
+      election: 'K20',
+      fallback_geography_id: id,
+      stat_area_vintage: '2011',
+      fallback_reason: 'no_ballot_has_a_supported_statistical_area_assignment',
+      boundary_source: 'display_only',
+      locality_id: localityId,
+      locality_code: localityCode,
+      locality_name: localityName,
+    })
+
+    const display = buildMunicipalityFallbackDisplay({
+      electionId: 'K20',
+      vintage: 2011,
+      fallbackRows: [
+        fallbackRow('municipality-fallback:2011:loc:10', 'loc:10', '10', 'יישוב'),
+        fallbackRow(
+          'municipality-fallback:2011:composite:test',
+          'composite:test',
+          '20',
+          'יישוב היסטורי',
+        ),
+      ],
+      localityGeography,
+      statisticalGeography,
+    })
+
+    expect(display.hiddenGeographyIds).toEqual(['stat2011:1', 'stat2011:2', 'stat2011:3'])
+    expect(display.features.map((feature) => feature.properties.geographyType)).toEqual([
+      'municipality-fallback',
+      'municipality-fallback',
+    ])
+    expect(display.features.every((feature) => feature.properties.displayMode === 'polygon')).toBe(
+      true,
+    )
+    expect(display.displayRows[0]).toMatchObject({
+      custom_geography_id: 'municipality-fallback:2011:loc:10',
+      geography_mode: 'statistical-area',
+    })
+    expect(display.metadataById.get('municipality-fallback:2011:loc:10')).toMatchObject({
+      geographyType: 'municipality-fallback',
+      localityId: 'loc:10',
+      notice: { en: expect.stringContaining('No ballots'), he: expect.stringContaining('אין שיוך') },
+    })
+    expect(display.metadataById.get('municipality-fallback:2011:composite:test')).toMatchObject({
+      includedNames: { he: ['מרכיב'], en: ['Component'] },
+    })
   })
 
   it('limits fixed-size official markers to West Bank locality codes', () => {

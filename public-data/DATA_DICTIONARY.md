@@ -64,11 +64,12 @@ handling.
 | `official_stability_inferred_link` | 134 | Official CBS stable-ballot evidence has a unanimous same-vintage target. |
 | `reviewed_exact_aggregate_inferred_link` | 9 | Reviewed unique exact K21 ArcGIS residual partition. |
 | `reviewed_cross_election_inferred_link` | 5 | Reviewed correction supported by independent same-vintage evidence. |
+| `reviewed_polling_register_continuity_inferred_link` | 50 | Approved high-confidence link from exact cross-election polling-register continuity and direct same-vintage targets. |
 | `reviewed_custom_geography` | 92 | Supported custom geography where historical geometry cannot represent the target; the tribal bucket is a marker and Hebron uses a detailed polygon. K19-K25 ballots retain their exact tribe/statistical-area IDs in this package even though the web map combines those results into the same marker. |
 | `non_geographic` | 3,585 | Envelope or other reviewed non-geographic row. |
-| `unresolved` | 5,548 | No defensible historical area under the current evidence. |
+| `unresolved` | 5,498 | No defensible historical area under the current evidence. |
 
-The three inferred classes total 148 rows and 40,752 actual voters. Filter
+The four inferred evidence paths total 198 rows and 58,829 actual voters. Filter
 `assignment_is_synthetic_link=false` when an analysis requires only direct or
 deterministic links.
 
@@ -85,6 +86,9 @@ deterministic links.
 - `arcgis_residual_partition_tier_c` covers six exact Jerusalem rows with
   unrelated source-snapshot deltas documented in the review record.
 - `reviewed_historical_stat_area_override` covers five corrected K19 targets.
+- `reviewed_cross_election_stat_area_assignment` covers 50 approved
+  high-confidence polling-register continuity links. The reviewed table records
+  source-row identity, target, evidence subtype, and source documents.
 - `single_historical_stat_locality` is deterministic only when the active
   historical locality has one area.
 
@@ -124,6 +128,11 @@ Geographic aggregate tables expose `geography_id` and `geography_type` as their
 first join columns. Vote totals and party columns are additive. Never split a
 published aggregate among component polygons without independent evidence.
 
+The web map's whole-locality fallback is not a statistical aggregate or ballot
+assignment. Rows remain in `aggregates/unresolved`; the separate
+`metadata/assignment-provenance/historical_municipality_display_fallbacks.csv`
+audit identifies the 308 display-only substitutions.
+
 The K17 envelope/non-geographic row stores 4,087 eligible voters as a technical
 national-denominator bucket: 518 from three source camp rows plus the separate
 3,569-person Gush Katif register. It is not a geographic split and must not be
@@ -149,7 +158,7 @@ as a fabricated K25 conversion.
 ## Assignment Audit Package
 
 [`v1/metadata/assignment-provenance`](v1/metadata/assignment-provenance/)
-contains 28 inspectable artifacts:
+contains 30 inspectable artifacts:
 
 - official normalized crosswalk and final assignment summary;
 - source-field inventory;
@@ -157,7 +166,9 @@ contains 28 inspectable artifacts:
 - stable-ballot candidates, conflicts, transition audit, and summary;
 - ArcGIS candidates, locality classifications, reviews, and summary;
 - historical overrides;
+- approved cross-election polling-register continuity reviews;
 - unresolved row/locality classifications;
+- display-only whole-locality fallback records;
 - per-election polygon coverage and cross-election persistence.
 
 Population values in the polygon audit are demographic proxies. They are not

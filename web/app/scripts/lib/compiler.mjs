@@ -13,6 +13,10 @@ const DEFAULT_PARTY_SATURATION = 58
 const DEFAULT_PARTY_LIGHTNESS = 46
 const POINT_PROXY_MAX_VERTICES = 12
 const SPECIAL_POINT_PROXY_LOCALITY_CODES = new Set(['1791', '1792', '1793', '1794', '3488'])
+const MUNICIPALITY_FALLBACK_NOTICE = {
+  he: 'אין שיוך נתמך של קלפיות לאזורים סטטיסטיים בבחירות האלה. מוצג סך היישוב כולו בגבול תצוגה בלבד.',
+  en: 'No ballots have a supported statistical-area assignment in this election. The whole-locality total is shown using a display-only boundary.',
+}
 
 export function parseCsv(text, sourceName = 'CSV input') {
   const parsed = Papa.parse(text, {
@@ -327,6 +331,104 @@ export function pruneGeography(
   }
 }
 
+export function buildMunicipalityFallbackDisplay({
+  electionId,
+  vintage,
+  fallbackRows,
+  localityGeography,
+  statisticalGeography,
+}) {
+  assertFeatureCollection(localityGeography, 'municipality fallback locality geography')
+  assertFeatureCollection(statisticalGeography, 'municipality fallback statistical geography')
+
+  const localityFeaturesById = new Map(
+    localityGeography.features.map((feature) => [feature.properties?.localityId || feature.id, feature]),
+  )
+  const statisticalFeatures = statisticalGeography.features.filter(
+    (feature) => feature.properties?.geographyType === 'statistical-area',
+  )
+  const seenFallbackIds = new Set()
+  const displayRows = []
+  const features = []
+  const metadataById = new Map()
+  const hiddenGeographyIds = new Set()
+
+  for (const row of fallbackRows) {
+    const id = String(row.fallback_geography_id ?? '').trim()
+    const localityId = String(row.locality_id ?? '').trim()
+    const rowElection = String(row.election ?? '').trim()
+    const rowVintage = numberValue(row.stat_area_vintage, `${id}.stat_area_vintage`)
+    if (!id || !localityId || rowElection !== electionId || rowVintage !== vintage) {
+      throw new Error(`${electionId} has an invalid municipality display fallback: ${id || '(blank ID)'}`)
+    }
+    if (seenFallbackIds.has(id)) {
+      throw new Error(`${electionId} has a duplicate municipality display fallback: ${id}`)
+    }
+    seenFallbackIds.add(id)
+
+    const localityFeature = localityFeaturesById.get(localityId)
+    if (!localityFeature) {
+      throw new Error(`${electionId} municipality display fallback lacks geometry: ${localityId}`)
+    }
+    const localityProperties = localityFeature.properties ?? {}
+    const componentLocalityIds = localityProperties.isComposite
+      ? localityProperties.componentLocalityIds ?? []
+      : [localityId]
+    const componentIdSet = new Set(componentLocalityIds)
+    for (const feature of statisticalFeatures) {
+      if (componentIdSet.has(feature.properties?.localityId)) {
+        hiddenGeographyIds.add(feature.id)
+      }
+    }
+
+    const nameHe = String(row.locality_name || localityProperties.nameHe || localityId).trim()
+    const nameEn = String(localityProperties.nameEn || nameHe).trim()
+    const localityCode = cleanNumericCode(row.locality_code || localityProperties.localityCode)
+    const includedNames = localityProperties.includedNames
+    metadataById.set(id, {
+      id,
+      geographyType: 'municipality-fallback',
+      localityId,
+      localityCode,
+      customKey: localityCode || id,
+      nameHe,
+      nameEn,
+      includedNames,
+      notice: MUNICIPALITY_FALLBACK_NOTICE,
+    })
+    displayRows.push({
+      ...row,
+      custom_geography_id: id,
+      geography_id: id,
+      geography_mode: 'statistical-area',
+    })
+    features.push({
+      type: 'Feature',
+      id,
+      properties: {
+        ...localityProperties,
+        id,
+        geographyType: 'municipality-fallback',
+        localityId,
+        localityCode,
+        nameHe,
+        nameEn,
+        displayMode: 'polygon',
+        fallbackReason: String(row.fallback_reason ?? '').trim(),
+        boundarySource: String(row.boundary_source ?? '').trim(),
+      },
+      geometry: roundGeometry(localityFeature.geometry),
+    })
+  }
+
+  return {
+    displayRows,
+    features,
+    metadataById,
+    hiddenGeographyIds: [...hiddenGeographyIds].toSorted(),
+  }
+}
+
 export function buildHiddenLocalityIds(featureCollection, electionId) {
   assertFeatureCollection(featureCollection, 'locality display geography')
   const hidden = new Set()
@@ -518,7 +620,9 @@ export function buildResultPayload({
     if (!id || !metadata) {
       throw new Error(`${electionId} custom result has no matching geometry for ${id || '(blank ID)'}`)
     }
-    records.push(buildResultRecord(row, id, 'custom', metadata, partyIds))
+    records.push(
+      buildResultRecord(row, id, metadata.geographyType || 'custom', metadata, partyIds),
+    )
   }
 
   if (envelopeRows.length > 1) {
@@ -697,6 +801,8 @@ function buildResultRecord(row, id, geographyType, metadata, partyColumns) {
       : { he: metadata.nameHe, en: metadata.nameEn }
   const includedNames = metadata.includedNames
   const hasIncludedNames = includedNames?.he?.length > 0 || includedNames?.en?.length > 0
+  const notice = metadata.notice
+  const hasNotice = notice?.he && notice?.en
 
   return {
     id,
@@ -708,6 +814,7 @@ function buildResultRecord(row, id, geographyType, metadata, partyColumns) {
         : metadata.localityCode || metadata.customKey || id,
     localityId: metadata.localityId || null,
     ...(hasIncludedNames ? { includedNames } : {}),
+    ...(hasNotice ? { notice } : {}),
     totals: {
       contributingRows: numberValue(row.contributing_rows, `${id}.contributing_rows`),
       contributingKalpis: numberValue(row.contributing_kalpis, `${id}.contributing_kalpis`),

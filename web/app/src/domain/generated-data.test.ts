@@ -58,6 +58,74 @@ describe('generated web data', () => {
     }
   })
 
+  it('publishes zero-assignment municipalities as documented display-only totals', async () => {
+    const catalog = AppCatalogSchema.parse(await readJson(resolve(dataRoot, 'catalog.json')))
+    const expectedFallbackCounts: Record<string, number> = {
+      K17: 50,
+      K18: 32,
+      K19: 33,
+      K20: 33,
+      K21: 32,
+      K22: 32,
+      K23: 32,
+      K24: 32,
+      K25: 32,
+    }
+
+    for (const election of catalog.elections) {
+      const statisticalPayload = ElectionResultsSchema.parse(
+        await readJson(resolve(dataRoot, election.resultUrls['statistical-area'])),
+      )
+      const localityPayload = ElectionResultsSchema.parse(
+        await readJson(resolve(dataRoot, election.resultUrls.locality)),
+      )
+      const geography = (await readJson(
+        resolve(dataRoot, election.geographiesByMode['statistical-area'].geometryUrl),
+      )) as {
+        features: Array<{
+          id?: string
+          properties?: {
+            geographyType?: string
+            localityId?: string
+            componentLocalityIds?: string[]
+          }
+        }>
+      }
+      const featuresById = new Map(geography.features.map((feature) => [feature.id, feature]))
+      const localityRecordsById = new Map(
+        localityPayload.records.map((record) => [record.id, record]),
+      )
+      const hiddenIds = new Set(statisticalPayload.hiddenGeographyIds)
+      const fallbackRecords = statisticalPayload.records.filter(
+        (record) => record.geographyType === 'municipality-fallback',
+      )
+
+      expect(fallbackRecords, election.id).toHaveLength(expectedFallbackCounts[election.id])
+      for (const record of fallbackRecords) {
+        expect(record.notice?.en, `${election.id}/${record.id}`).toContain('No ballots')
+        const feature = featuresById.get(record.id)
+        expect(feature?.properties?.geographyType, `${election.id}/${record.id}`).toBe(
+          'municipality-fallback',
+        )
+        const localityRecord = localityRecordsById.get(record.localityId ?? '')
+        expect(localityRecord, `${election.id}/${record.localityId}`).toBeDefined()
+        expect(record.totals, `${election.id}/${record.id}`).toEqual(localityRecord?.totals)
+        expect(record.partyVotes, `${election.id}/${record.id}`).toEqual(localityRecord?.partyVotes)
+
+        const componentLocalityIds = feature?.properties?.componentLocalityIds?.length
+          ? feature.properties.componentLocalityIds
+          : [record.localityId]
+        for (const component of geography.features.filter(
+          (candidate) =>
+            candidate.properties?.geographyType === 'statistical-area' &&
+            componentLocalityIds.includes(candidate.properties.localityId ?? null),
+        )) {
+          expect(hiddenIds.has(component.id ?? ''), `${election.id}/${component.id}`).toBe(true)
+        }
+      }
+    }
+  })
+
   it('keeps Maale Adumim historical election areas separate', async () => {
     const catalog = AppCatalogSchema.parse(await readJson(resolve(dataRoot, 'catalog.json')))
     const cases = [

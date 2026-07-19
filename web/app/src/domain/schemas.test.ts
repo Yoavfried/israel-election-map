@@ -104,4 +104,48 @@ describe('web data contracts', () => {
 
     expect(result.success).toBe(false)
   })
+
+  it('accepts a documented display-only municipality result', () => {
+    const parsed = ElectionResultsSchema.parse({
+      schemaVersion: 2,
+      electionId: 'K20',
+      geographyMode: 'statistical-area',
+      coverage,
+      parties: [],
+      records: [
+        {
+          id: 'municipality-fallback:2011:loc:10',
+          geographyType: 'municipality-fallback',
+          names: { en: 'Locality', he: 'יישוב' },
+          notice: {
+            en: 'No ballots have a supported statistical-area assignment.',
+            he: 'אין שיוך נתמך של קלפיות לאזורים סטטיסטיים.',
+          },
+          code: '10',
+          localityId: 'loc:10',
+          totals: {
+            contributingRows: 2,
+            contributingKalpis: 2,
+            eligibleVoters: 100,
+            actualVoters: 80,
+            validVotes: 79,
+            invalidVotes: 1,
+            turnout: 0.8,
+          },
+          winner: {
+            partyId: '',
+            votes: 0,
+            runnerUpVotes: 0,
+            marginVotes: 0,
+            voteShare: 0,
+          },
+          partyVotes: {},
+        },
+      ],
+      envelope: null,
+      hiddenGeographyIds: [],
+    })
+
+    expect(parsed.records[0].geographyType).toBe('municipality-fallback')
+  })
 })

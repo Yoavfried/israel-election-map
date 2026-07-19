@@ -1,6 +1,6 @@
 # Data Pipeline
 
-Last updated: 2026-07-18
+Last updated: 2026-07-19
 
 ## Product Grain
 
@@ -42,7 +42,8 @@ python scripts/run_pipeline.py --skip-geographies
 8. audit and stage direct K23 CEC AGS assignments;
 9. audit K20/K21 ArcGIS residual candidates and reviewed decisions;
 10. audit and stage official CBS stable-ballot assignments;
-11. build final row-level assignments in evidence-precedence order;
+11. build final row-level assignments in evidence-precedence order, including
+    approved cross-election polling-register reviews;
 12. classify every unresolved row and historical polygon coverage state;
 13. aggregate statistical-area, locality, custom, envelope, contribution, and unresolved outputs;
 14. build the committed schema-v2 `public-data/v1` release and validation report.
@@ -57,10 +58,11 @@ python scripts/run_pipeline.py --skip-geographies
 4. direct official K23 CEC AGS;
 5. approved exact ArcGIS residual reconstruction;
 6. official CBS stable-ballot propagation with same-vintage consensus;
-7. reviewed K17/K18 composite polling-register component evidence;
-8. a locality fallback only when one historical area exists;
-9. reviewed custom geography where no supported historical area exists;
-10. unresolved historical assignment.
+7. approved high-confidence cross-election polling-register continuity;
+8. reviewed K17/K18 composite polling-register component evidence;
+9. a locality fallback only when one historical area exists;
+10. reviewed custom geography where no supported historical area exists;
+11. unresolved historical assignment.
 
 The output adds three general provenance fields:
 
@@ -118,9 +120,18 @@ their component locality. It supports an area link only when that component has
 one canonical area in the active historical vintage; otherwise the component
 identity is retained without inventing an area number.
 
+### Reviewed Cross-Election Continuity
+
+`data/manual/cross_election_stat_area_reviews.csv` contains 50 approved
+high-confidence links. Each row fingerprints the election, locality, ballot,
+eligible voters, and actual voters, and cites the official polling-register and
+crosswalk evidence. The build rejects non-approved rows, changed source
+identities, cross-locality targets, missing target geometry, or a vintage
+mismatch. These are labeled synthetic links; no vote value is changed.
+
 ### Gap And Polygon Audit
 
-`scripts/audit_historical_assignment_gaps.py` classifies all 5,548 pending rows,
+`scripts/audit_historical_assignment_gaps.py` classifies all 5,498 pending rows,
 compares K20/K21 detailed ArcGIS polygons where applicable, and writes
 election-level polygon coverage, recurring crosswalk-locality omission, and
 cross-election persistence tables.
@@ -171,6 +182,7 @@ package for current locality display and future direct-crosswalk elections.
 - `data/processed/audits/historical_assignment_gap_*`
 - `data/processed/audits/historical_crosswalk_locality_omission_recurrence.csv`
 - `data/processed/audits/historical_polygon_*`
+- `data/processed/audits/historical_municipality_display_fallbacks.csv`
 - `data/processed/geographies/historical_geography_build_summary.json`
 - `data/processed/public/<mode>/*.csv`
 
@@ -196,14 +208,14 @@ Verified from the offline rebuild on 2026-07-18:
 | Election | Vintage | Supported rows | Pending rows | Supported voter share | Locality share |
 |---|---:|---:|---:|---:|---:|
 | K17 | 1995 | 7,916 | 358 | 95.47% | 100% |
-| K18 | 2008 | 8,740 | 519 | 94.13% | 100% |
-| K19 | 2011 | 9,311 | 564 | 94.08% | 100% |
-| K20 | 2011 | 9,521 | 591 | 93.31% | 100% |
-| K21 | 2011 | 9,854 | 598 | 94.51% | 100% |
-| K22 | 2011 | 9,920 | 611 | 93.64% | 100% |
-| K23 | 2011 | 10,004 | 619 | 93.06% | 100% |
-| K24 | 2011 | 11,248 | 871 | 94.70% | 100% |
-| K25 | 2011 | 10,882 | 817 | 93.92% | 100% |
+| K18 | 2008 | 8,741 | 518 | 94.14% | 100% |
+| K19 | 2011 | 9,317 | 558 | 94.13% | 100% |
+| K20 | 2011 | 9,545 | 567 | 93.55% | 100% |
+| K21 | 2011 | 9,855 | 597 | 94.51% | 100% |
+| K22 | 2011 | 9,922 | 609 | 93.65% | 100% |
+| K23 | 2011 | 10,006 | 617 | 93.08% | 100% |
+| K24 | 2011 | 11,251 | 868 | 94.71% | 100% |
+| K25 | 2011 | 10,893 | 806 | 94.01% | 100% |
 
 ## Other Reviewed Inputs
 
@@ -226,6 +238,8 @@ Verified from the offline rebuild on 2026-07-18:
   target corrections.
 - `data/manual/arcgis_assignment_reconstruction_reviews.csv` records approved
   and rejected ArcGIS decisions.
+- `data/manual/cross_election_stat_area_reviews.csv` records the 50 approved
+  high-confidence polling-register continuity links and their source evidence.
 - `data/manual/party_registry.csv` covers every election-specific result column;
   map colors remain presentation configuration under `web/app/`.
 
@@ -241,3 +255,9 @@ npm run dev
 The compiler writes schema-v3 frontend assets under `web/app/public/data/v2/`.
 That browser schema is separate from the public download release's schema-v2
 ballot tables.
+
+`build_public_outputs.py` also emits a display-only locality aggregate when an
+election/locality has zero supported area assignments. The frontend substitutes
+that locality footprint for its empty component areas and exposes a notice.
+This layer is excluded from assignment coverage and never writes an area ID
+back to a ballot row.

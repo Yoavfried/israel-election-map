@@ -30,11 +30,19 @@ STAT_AREA_METADATA = (
 LOCALITIES_2022_METADATA = (
     PROCESSED_DIR / "geographies" / "localities_2022.metadata.csv"
 )
-HISTORICAL_STAT_AREA_METADATA = (
-    PROCESSED_DIR / "geographies" / "statistical_areas_2011.metadata.csv"
-)
+HISTORICAL_STAT_AREA_METADATA = {
+    vintage: (
+        PROCESSED_DIR
+        / "geographies"
+        / f"statistical_areas_{vintage}.metadata.csv"
+    )
+    for vintage in (1995, 2008, 2011)
+}
 HISTORICAL_STAT_AREA_OVERRIDES = (
     MANUAL_DIR / "historical_stat_area_overrides.csv"
+)
+CROSS_ELECTION_STAT_AREA_REVIEWS = (
+    MANUAL_DIR / "cross_election_stat_area_reviews.csv"
 )
 ARCGIS_RECONSTRUCTION_CANDIDATES = (
     PROCESSED_DIR / "audits" / "arcgis_assignment_reconstruction_candidates.csv"
@@ -130,6 +138,10 @@ def assignment_evidence_metadata(row: dict[str, Any]) -> dict[str, Any]:
         synthetic = True
     elif method == "reviewed_historical_stat_area_override":
         evidence_class = "reviewed_cross_election_inferred_link"
+        confidence = "high"
+        synthetic = True
+    elif method == "reviewed_cross_election_stat_area_assignment":
+        evidence_class = "reviewed_polling_register_continuity_inferred_link"
         confidence = "high"
         synthetic = True
     elif method in {"single_historical_stat_locality", "single_stat_locality"}:
@@ -387,6 +399,26 @@ def historical_override_assignment(
     )
 
 
+def reviewed_cross_election_assignment(
+    row: dict[str, str], review: dict[str, str], stat: dict[str, str]
+) -> dict[str, Any]:
+    return mapped_assignment(
+        row=row,
+        stat_area_id=stat["stat_area_id"],
+        vintage=int_value(stat["stat_area_vintage"]),
+        yishuv_stat=stat["yishuv_stat"],
+        stat_area_number=stat["stat_area_number"],
+        locality_code=stat["locality_code"],
+        locality_name=stat["locality_name_he"],
+        status="reviewed_cross_election_assigned",
+        method="reviewed_cross_election_stat_area_assignment",
+        source=(
+            "data/manual/cross_election_stat_area_reviews.csv;evidence="
+            f"{review['evidence_sources']}"
+        ),
+    )
+
+
 def arcgis_reconstructed_assignment(
     row: dict[str, str],
     candidate: dict[str, str],
@@ -574,6 +606,32 @@ def load_historical_overrides() -> dict[str, dict[str, str]]:
     return output
 
 
+def load_cross_election_reviews() -> dict[str, dict[str, str]]:
+    rows = read_csv(CROSS_ELECTION_STAT_AREA_REVIEWS)
+    if not rows:
+        raise FileNotFoundError(
+            "Missing or empty reviewed cross-election assignment table: "
+            f"{CROSS_ELECTION_STAT_AREA_REVIEWS}"
+        )
+    output: dict[str, dict[str, str]] = {}
+    for row in rows:
+        uid = normalize_spaces(row.get("source_row_uid", ""))
+        if not uid or uid in output:
+            raise ValueError(f"Missing or duplicate cross-election review UID: {uid}")
+        if row.get("decision") != "approved" or row.get("confidence") != "high":
+            raise ValueError(
+                f"Only approved high-confidence cross-election rows may publish: {uid}"
+            )
+        if int_value(row.get("stat_area_vintage")) not in {2008, 2011}:
+            raise ValueError(f"Unsupported cross-election target vintage: {uid}")
+        if not normalize_spaces(row.get("evidence_class", "")):
+            raise ValueError(f"Cross-election review lacks an evidence class: {uid}")
+        if not normalize_spaces(row.get("evidence_sources", "")):
+            raise ValueError(f"Cross-election review lacks evidence sources: {uid}")
+        output[uid] = row
+    return output
+
+
 def load_approved_arcgis_reconstructions() -> dict[str, dict[str, str]]:
     reviews = read_csv(ARCGIS_RECONSTRUCTION_REVIEWS)
     candidates = read_csv(ARCGIS_RECONSTRUCTION_CANDIDATES)
@@ -720,6 +778,7 @@ def main() -> None:
     assignment_rows = read_csv(ASSIGNMENT_PLAN)
     historical_assignments = load_historical_assignments()
     historical_overrides = load_historical_overrides()
+    cross_election_reviews = load_cross_election_reviews()
     k23_cec_ags_assignments = load_k23_cec_ags_assignments()
     arcgis_reconstructions = load_approved_arcgis_reconstructions()
     stable_ballot_assignments = load_stable_ballot_assignments()
@@ -727,7 +786,9 @@ def main() -> None:
         row["stat_area_id"]: row for row in read_csv(STAT_AREA_METADATA)
     }
     historical_stat_metadata = {
-        row["stat_area_id"]: row for row in read_csv(HISTORICAL_STAT_AREA_METADATA)
+        row["stat_area_id"]: row
+        for path in HISTORICAL_STAT_AREA_METADATA.values()
+        for row in read_csv(path)
     }
     if not assignment_rows:
         raise FileNotFoundError(
@@ -851,6 +912,71 @@ def main() -> None:
                 )
             output.append(stable_ballot_assignment(row, stable_candidate, stat))
             continue
+        cross_election_review = cross_election_reviews.get(row["source_row_uid"])
+        if cross_election_review:
+            if (
+                not historical
+                or historical.get("historical_assignment_status")
+                != "no_direct_historical_assignment"
+            ):
+                raise ValueError(
+                    "Cross-election review may only replace a missing direct "
+                    f"historical assignment: {row['source_row_uid']}"
+                )
+            expected_identity = {
+                "election": row["election"],
+                "locality_code": normalize_locality_code(
+                    row["source_locality_code"]
+                ),
+                "source_kalpi": normalize_spaces(row["source_kalpi"]),
+                "eligible_voters": int_value(row["eligible_voters"]),
+                "actual_voters": int_value(row["actual_voters"]),
+            }
+            observed_identity = {
+                "election": cross_election_review.get("election", ""),
+                "locality_code": normalize_locality_code(
+                    cross_election_review.get("locality_code", "")
+                ),
+                "source_kalpi": normalize_spaces(
+                    cross_election_review.get("source_kalpi", "")
+                ),
+                "eligible_voters": int_value(
+                    cross_election_review.get("eligible_voters")
+                ),
+                "actual_voters": int_value(
+                    cross_election_review.get("actual_voters")
+                ),
+            }
+            if observed_identity != expected_identity:
+                raise ValueError(
+                    "Cross-election review source identity changed: "
+                    f"{row['source_row_uid']}"
+                )
+            target_id = cross_election_review["target_stat_area_id"]
+            stat = historical_stat_metadata.get(target_id)
+            if not stat:
+                raise ValueError(
+                    f"Cross-election review target lacks metadata: {target_id}"
+                )
+            if int_value(stat.get("stat_area_vintage")) != int_value(
+                cross_election_review.get("stat_area_vintage")
+            ):
+                raise ValueError(
+                    f"Cross-election review target vintage changed: {target_id}"
+                )
+            if normalize_locality_code(stat.get("locality_code", "")) != (
+                expected_identity["locality_code"]
+            ):
+                raise ValueError(
+                    "Cross-election review crosses locality boundaries: "
+                    f"{row['source_row_uid']}"
+                )
+            output.append(
+                reviewed_cross_election_assignment(
+                    row, cross_election_review, stat
+                )
+            )
+            continue
         if (
             historical
             and historical.get("historical_assignment_status")
@@ -913,6 +1039,21 @@ def main() -> None:
 
     for assignment in output:
         assignment.update(assignment_evidence_metadata(assignment))
+
+    applied_cross_election_reviews = {
+        row["source_row_uid"]
+        for row in output
+        if row["final_assignment_method"]
+        == "reviewed_cross_election_stat_area_assignment"
+    }
+    if applied_cross_election_reviews != set(cross_election_reviews):
+        missing_reviews = sorted(
+            set(cross_election_reviews) - applied_cross_election_reviews
+        )
+        raise ValueError(
+            "Reviewed cross-election rows were not applied: "
+            f"{missing_reviews[:10]}"
+        )
 
     fields = [
         "source_row_uid",

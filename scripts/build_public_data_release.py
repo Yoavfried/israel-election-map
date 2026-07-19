@@ -154,6 +154,11 @@ PROVENANCE_TABLES = [
         "Reviewed replacements for contradicted direct crosswalk rows.",
     ),
     (
+        MANUAL_DIR / "cross_election_stat_area_reviews.csv",
+        "cross_election_stat_area_reviews.csv",
+        "Approved high-confidence synthetic links reconstructed from cross-election polling-register continuity.",
+    ),
+    (
         ARCGIS_RECONSTRUCTION_REVIEWS,
         "arcgis_reconstruction_reviews.csv",
         "Reviewed locality-election decisions for ArcGIS residual reconstruction.",
@@ -252,6 +257,11 @@ PROVENANCE_TABLES = [
         AUDIT_DIR / "historical_polygon_coverage_summary.csv",
         "historical_polygon_coverage_summary.csv",
         "Per-election historical polygon coverage summary.",
+    ),
+    (
+        AUDIT_DIR / "historical_municipality_display_fallbacks.csv",
+        "historical_municipality_display_fallbacks.csv",
+        "Display-only municipality totals used when no ballot has a supported statistical-area assignment.",
     ),
 ]
 

@@ -1,6 +1,6 @@
 # Historical Statistical-Area Assignment
 
-Last updated: 2026-07-18
+Last updated: 2026-07-19
 
 ## Decision
 
@@ -17,14 +17,15 @@ Assignment precedence is:
 4. direct K23 CEC AGS evidence;
 5. reviewed exact ArcGIS residual reconstruction;
 6. official CBS stable-ballot propagation when all same-vintage evidence agrees;
-7. reviewed K17/K18 composite polling-register evidence identifying the
+7. approved high-confidence cross-election polling-register continuity;
+8. reviewed K17/K18 composite polling-register evidence identifying the
    component locality;
-8. election-vintage locality fallback only when one area exists;
-9. reviewed custom geography where no historical area is supported;
-10. unresolved.
+9. election-vintage locality fallback only when one area exists;
+10. reviewed custom geography where no historical area is supported;
+11. unresolved.
 
 No assignment is accepted from a merely similar ballot number, an approximate
-aggregate match, or a polling-place location.
+aggregate match, or a polling-place location alone.
 
 ## Election Vintages
 
@@ -130,6 +131,35 @@ One same-vintage conflict and 105 conflicts crossing a statistical-area
 vintage transition are withheld. Stable-ballot links are high-confidence
 inferences, not direct election-specific crosswalk rows.
 
+### Reviewed Cross-Election Polling-Register Continuity
+
+The CEC polling-register reports can identify an exact recurring polling place
+across elections. Fifty rows were approved only where that register continuity,
+combined with direct CBS targets elsewhere in the same historical vintage,
+supports one unique area. The reviewed table validates the exact source row,
+electorate, turnout, target vintage, target locality, and target geometry before
+the link is applied.
+
+| Election | Rows | Eligible voters | Actual voters |
+|---|---:|---:|---:|
+| K18 | 1 | 613 | 459 |
+| K19 | 6 | 4,325 | 1,838 |
+| K20 | 24 | 15,820 | 9,825 |
+| K21 | 1 | 574 | 235 |
+| K22 | 2 | 1,380 | 689 |
+| K23 | 2 | 1,399 | 776 |
+| K24 | 3 | 1,832 | 545 |
+| K25 | 11 | 7,105 | 3,710 |
+| **Total** | **50** | **33,048** | **18,077** |
+
+Thirty-nine approvals preserve the same ballot number and exact polling place,
+six use an exact place with an otherwise documented register change, three use
+a renumbered exact place, one uses a prior exact ballot/place link, and one
+reconstructs an isolated K18 crosswalk gap from the surrounding official
+evidence. Addresses and geocoded coordinates are not used. The two moderate K19
+Tel Sheva candidates and 15 mixed or unallocated-register candidates are
+withheld.
+
 ### ArcGIS Residual Reconstruction
 
 The 2015 and April 2019 FeatureServer layers can validate or reconstruct some
@@ -158,6 +188,45 @@ Tier B/C approval was permission to use defensible evidence, not permission to
 accept a 1-3 vote discrepancy. No tolerance-based Tier B row is published.
 ArcGIS party vectors and vote totals are never copied into election results.
 
+### Kaplan K22-K25 Source Audit
+
+The supplied Kaplan election maps were traced to their underlying payloads and
+decoded locally. They are aggregate map layers, not hidden ballot crosswalks:
+
+| Source | Features | Unique localities | Target localities present | Exact eligible + actual totals | AGS or ballot crosswalk |
+|---|---:|---:|---:|---:|---|
+| K22 locality polygons | 1,173 | 1,173 | 3 of 3 | 1,165 of 1,172 comparable | No |
+| K23 locality polygons | 1,172 | 1,172 | 3 of 3 | 1,154 of 1,172 comparable | No |
+| K24 locality polygons | 1,214 | 1,214 | 11 of 11 | 1,203 of 1,214 comparable | No |
+| K25 locality polygons | 1,215 | 1,215 | 7 of 7 | 1,213 of 1,215 comparable | No |
+| K25 neighborhood points | 403 | 15 | 1 of 7 | 14 of 15 comparable | No |
+
+After the reviewed continuity approvals, the source-specific target scope
+excludes entirely unmatched municipalities and contains 53 remaining rows
+representing 14,983 actual voters:
+
+| Election | Ballot-base 990 rows | 990 actual voters | Other rows | Other actual voters |
+|---|---:|---:|---:|---:|
+| K22 | 1 | 422 | 1 | 363 |
+| K23 | 1 | 234 | 1 | 430 |
+| K24 | 31 | 8,664 | 4 | 749 |
+| K25 | 9 | 2,730 | 5 | 1,391 |
+| **Total** | **42** | **12,050** | **11** | **2,933** |
+
+Each locality payload supplies only the same whole-locality total already known
+from the official ballot rows, so it provides no smaller target total for an
+exact partition. The K25 neighborhood payload supplies aggregate representative
+points but no neighborhood boundaries, statistical-area IDs, or contributing
+ballot keys. It reaches only Haifa in the remaining target scope, where the
+pending records are two ballot-base 990 rows; a point cannot prove their area.
+
+The audit therefore ran zero partition searches, emitted zero assignment
+candidates, and changed no published data. Small source-snapshot differences in
+turnout or valid/invalid classification remain in the reconciliation output and
+are not copied into the normalized election results. The 50 continuity
+approvals come from independent CEC polling-register and CBS crosswalk evidence,
+not from the Kaplan payloads.
+
 ### Composite Polling-Register Evidence
 
 The K17 scan and K18 official polling-place table identify which component
@@ -185,6 +254,31 @@ distinguish the later 2011 areas: 90 tribal rows use one combined Negev marker,
 while the two Hebron rows use the audited detailed Hebron footprint copied from
 the exact 2011 area geometry.
 
+### Whole-Locality Display Fallback
+
+The web map uses a separate display rule when an election/locality has zero
+supported ballot-to-area assignments. It shows the locality aggregate on a
+current locality or reviewed historical-composite boundary and adds an info
+notice stating that no area-level assignment exists. It never writes a
+`stat_area_id`, changes a ballot row, or increases statistical-area coverage.
+
+| Election | Display records | Represented ballot rows | Actual voters |
+|---|---:|---:|---:|
+| K17 | 50 | 313 | 126,182 |
+| K18 | 32 | 505 | 188,962 |
+| K19 | 33 | 556 | 211,739 |
+| K20 | 33 | 563 | 258,064 |
+| K21 | 32 | 596 | 224,699 |
+| K22 | 32 | 607 | 264,572 |
+| K23 | 32 | 615 | 295,712 |
+| K24 | 32 | 833 | 202,743 |
+| K25 | 32 | 792 | 255,412 |
+| **Total** | **308** | **5,380** | **2,028,085** |
+
+The generated audit records every substituted display boundary and the totals
+shown. These records remain separate from the downloadable statistical-area
+aggregates.
+
 ## Published Provenance Classes
 
 | Evidence class | Rows | Synthetic link |
@@ -195,9 +289,10 @@ the exact 2011 area geometry.
 | `official_stability_inferred_link` | 134 | Yes |
 | `reviewed_exact_aggregate_inferred_link` | 9 | Yes |
 | `reviewed_cross_election_inferred_link` | 5 | Yes |
+| `reviewed_polling_register_continuity_inferred_link` | 50 | Yes |
 | `reviewed_custom_geography` | 92 | No |
 | `non_geographic` | 3,585 | No |
-| `unresolved` | 5,548 | No |
+| `unresolved` | 5,498 | No |
 | **Total** | **96,529** | |
 
 Every public ballot row carries `assignment_evidence_class`,
@@ -214,25 +309,25 @@ denominator.
 | Election | Vintage | Supported rows | Pending rows | Pending actual voters | Supported voter share |
 |---|---:|---:|---:|---:|---:|
 | K17 | 1995 | 7,916 | 358 | 136,480 | 95.47% |
-| K18 | 2008 | 8,740 | 519 | 189,711 | 94.13% |
-| K19 | 2011 | 9,311 | 564 | 214,251 | 94.08% |
-| K20 | 2011 | 9,521 | 591 | 269,029 | 93.31% |
-| K21 | 2011 | 9,854 | 598 | 225,160 | 94.51% |
-| K22 | 2011 | 9,920 | 611 | 266,046 | 93.64% |
-| K23 | 2011 | 10,004 | 619 | 297,152 | 93.06% |
-| K24 | 2011 | 11,248 | 871 | 212,701 | 94.70% |
-| K25 | 2011 | 10,882 | 817 | 263,243 | 93.92% |
+| K18 | 2008 | 8,741 | 518 | 189,252 | 94.14% |
+| K19 | 2011 | 9,317 | 558 | 212,413 | 94.13% |
+| K20 | 2011 | 9,545 | 567 | 259,204 | 93.55% |
+| K21 | 2011 | 9,855 | 597 | 224,925 | 94.51% |
+| K22 | 2011 | 9,922 | 609 | 265,357 | 93.65% |
+| K23 | 2011 | 10,006 | 617 | 296,376 | 93.08% |
+| K24 | 2011 | 11,251 | 868 | 212,156 | 94.71% |
+| K25 | 2011 | 10,893 | 806 | 259,533 | 94.01% |
 
-The 5,548 pending rows are fully classified:
+The 5,498 pending rows are fully classified:
 
-- 5,278 belong to entire localities omitted from an official crosswalk;
+- 5,245 belong to entire localities omitted from an official crosswalk;
 - 55 use an election locality identity absent from the active historical
   vintage;
 - 31 are K17 component-locality rows where the component has multiple 1995
   areas but no component crosswalk;
 - 84 are K18 component-locality rows nested in composite 2008 geometry;
 - 70 are central ballot 990 rows intentionally retained at locality level;
-- 30 are specific ordinary ballots omitted from an otherwise present locality.
+- 13 are specific ordinary ballots omitted from an otherwise present locality.
 
 These labels describe different failures. An "entire locality omitted" row has
 usable historical geometry, but the public election crosswalk contains no
@@ -328,14 +423,18 @@ Working audit outputs include:
 - `data/processed/audits/k23_cec_ags_*`
 - `data/processed/audits/stable_ballot_*`
 - `data/processed/audits/arcgis_assignment_reconstruction_*`
+- `data/processed/audits/kaplan_map_source_*`
 - `data/processed/audits/historical_assignment_gap_*`
+- `data/processed/audits/historical_municipality_display_fallbacks.csv`
 - `data/processed/audits/historical_crosswalk_locality_omission_recurrence.csv`
 - `data/processed/audits/historical_polygon_*`
 - `data/processed/geographies/historical_geography_build_summary.json`
 - `data/processed/assignments/ballot_geography_assignments.csv`
 - `data/processed/assignments/unresolved_statistical_area_assignment_rows.csv`
+- `data/manual/cross_election_stat_area_reviews.csv`
 
-The committed copies are under
-`public-data/v1/metadata/assignment-provenance/`. The release builder validates
-row uniqueness, party totals, geography joins, synthetic-link counts, and
-reviewed decision fingerprints before publishing.
+Assignment provenance used by the release is committed under
+`public-data/v1/metadata/assignment-provenance/`. The Kaplan audit remains a
+reproducible working-source audit because it produces no assignment candidate.
+The release builder validates row uniqueness, party totals, geography joins,
+synthetic-link counts, and reviewed decision fingerprints before publishing.

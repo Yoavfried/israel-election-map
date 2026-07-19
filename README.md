@@ -29,7 +29,7 @@ pipeline run is required.
 The ballot CSVs contain every source result row, party-vote columns, and the
 corresponding statistical-area and locality IDs. Polygon ZIPs expose the same
 `geography_id`, so the join is direct. Assignment method/source fields identify
-148 rows whose area link is inferred rather than copied from a direct official
+198 rows whose area link is inferred rather than copied from a direct official
 crosswalk. Their vote values remain official, and the exact evidence class,
 confidence, source, and synthetic-link flag are published on every row.
 
@@ -51,11 +51,12 @@ Statistical-area assignment precedence is:
 4. direct K23 CEC AGS evidence;
 5. reviewed exact ArcGIS residual reconstruction;
 6. official CBS stable-ballot propagation when all same-vintage evidence agrees;
-7. reviewed K17/K18 polling-register evidence identifying a composite's
+7. reviewed high-confidence polling-register continuity across elections;
+8. reviewed K17/K18 polling-register evidence identifying a composite's
    component locality;
-8. historical locality fallback only when that locality has one published area;
-9. reviewed custom geography where no supported historical area exists;
-10. explicit unresolved status.
+9. historical locality fallback only when that locality has one published area;
+10. reviewed custom geography where no supported historical area exists;
+11. explicit unresolved status.
 
 Statistical mode uses 1995 areas for K17, 2008 for K18, and 2011 for K19-K25.
 K25 remains on 2011 because its official crosswalk targets that vintage;
@@ -66,6 +67,11 @@ ballots. The release keeps these rows explicit rather than assigning them from
 polling-place addresses. Source inventories, recurring-omission tables, and
 component-locality evidence are included under
 `public-data/v1/metadata/assignment-provenance/`.
+
+When an election/locality has no supported ballot-to-area assignment at all,
+the web map shows its whole locality total on a display-only locality boundary
+with an explanatory info icon. This does not assign those ballots, change the
+downloadable tables, or increase the reported statistical-area coverage.
 
 ## Run Locally
 

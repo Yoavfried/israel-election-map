@@ -9,6 +9,9 @@ export function mayHaveDisplayMarker(record: ResultRecord): boolean {
   if (record.geographyType === 'custom') {
     return true
   }
+  if (record.geographyType === 'municipality-fallback') {
+    return false
+  }
 
   const localityCode = Number(record.localityId?.replace(/^loc:/, '') ?? record.code)
   return (
@@ -41,8 +44,11 @@ export function buildPolygonVisibilityFilter(
   records: ResultRecord[] = [],
 ): FilterSpecification {
   const excludedIds = [...new Set(hiddenGeographyIds)].toSorted()
-  const customIdsWithData = records
-    .filter((record) => record.geographyType === 'custom')
+  const conditionalPolygonIdsWithData = records
+    .filter(
+      (record) =>
+        record.geographyType === 'custom' || record.geographyType === 'municipality-fallback',
+    )
     .map((record) => record.id)
     .toSorted()
 
@@ -53,8 +59,12 @@ export function buildPolygonVisibilityFilter(
     ['!', ['in', ['get', 'id'], ['literal', excludedIds]]],
     [
       'any',
-      ['!=', ['get', 'geographyType'], 'custom'],
-      ['in', ['get', 'id'], ['literal', customIdsWithData]],
+      [
+        'all',
+        ['!=', ['get', 'geographyType'], 'custom'],
+        ['!=', ['get', 'geographyType'], 'municipality-fallback'],
+      ],
+      ['in', ['get', 'id'], ['literal', conditionalPolygonIdsWithData]],
     ],
   ]
 }

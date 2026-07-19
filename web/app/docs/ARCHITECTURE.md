@@ -14,6 +14,8 @@ The web app supports:
 - Desktop and mobile layouts.
 - Explicit mapped/unmapped vote coverage.
 - Custom reviewed geographic buckets when they have results in an election.
+- Display-only whole-locality totals when an election/locality has zero
+  supported statistical-area assignments.
 - Election-specific historical composite municipalities and joined polling-register unions in locality mode.
 - Official envelope results as a selectable national, non-map result.
 
@@ -33,6 +35,7 @@ scripts/build-data.mjs
   - merges mode-tagged custom geography results
   - applies election-specific composite visibility and joined-host result aliases
   - applies reviewed historical locality names and no-result visibility
+  - substitutes documented whole-locality fallbacks for entirely unassigned localities
   - attaches envelope aggregates
   - emits mode-specific coverage and provenance
             |
@@ -49,7 +52,7 @@ Zod-validated browser data client
 MapLibre feature state + React detail panels
 ```
 
-The browser loads the catalog first, then only the selected election/mode result file. Each election carries `geographiesByMode`, so statistical geometry changes with the election: K17 loads 1995, K18 loads 2008, and K19-K25 load 2011. Locality mode uses dissolved 2022 geometry. Statistical assets also declare a simplified, non-interactive 2022 land backdrop; MapLibre paints it neutral grey below the historical result polygons so changing vintage does not turn uncovered Israeli land into background. The compiler removes source-only fields and rounds web coordinates to six decimal places. Each geography asset also has marker GeoJSON for marker-capable custom buckets and point-like proxies. The marker layer filters that asset to exact IDs present in the selected result payload, while reviewed detailed settlement and custom footprints remain polygonal.
+The browser loads the catalog first, then only the selected election/mode result file. Each election carries `geographiesByMode`, so statistical geometry changes with the election: K17 loads 1995, K18 loads 2008, and K19-K25 load 2011. Locality mode uses dissolved 2022 geometry. Statistical assets also declare a simplified, non-interactive 2022 land backdrop; MapLibre paints it neutral grey below the historical result polygons so changing vintage does not turn uncovered Israeli land into background. For a locality with zero supported area assignments, the compiler adds a display-only current locality or reviewed composite footprint to the historical asset, hides its empty statistical components only in that election, and attaches the locality aggregate. The compiler removes source-only fields and rounds web coordinates to six decimal places. Each geography asset also has marker GeoJSON for marker-capable custom buckets and point-like proxies. The marker layer filters that asset to exact IDs present in the selected result payload, while reviewed detailed settlement and custom footprints remain polygonal.
 
 Locality geometry retains CBS no-jurisdiction and regional-council display footprints even when they have no election result. MapLibre renders these features with the neutral unmapped fill and does not make them selectable. Both the statistical-area and locality IDs for Kinneret are filtered from polygon rendering, leaving water and non-polygon background areas unfilled.
 
@@ -69,7 +72,7 @@ Each result asset contains:
 - Election and geography identity.
 - Coverage repeated at the asset boundary.
 - Party/ballot-letter definitions with bilingual labels and color-review status.
-- Geography records with totals, nullable turnout, winner/margin, and dynamic ballot-letter vote columns converted into `partyVotes`. A null turnout means the source has no eligible-voter denominator. K17 ordinary geography records now use the recovered ballot-level denominator; its envelope result remains null because no geographic envelope register is published.
+- Geography records with totals, nullable turnout, winner/margin, dynamic ballot-letter vote columns converted into `partyVotes`, and an optional bilingual notice. A null turnout means the source has no eligible-voter denominator. K17 ordinary geography records now use the recovered ballot-level denominator; its envelope result remains null because no geographic envelope register is published.
 - One optional envelope record combining official envelope rows and reviewed `special:envelope_votes` rows; it uses the same validated party-vote contract but has no map feature.
 - `hiddenGeographyIds`, used both to replace component localities with an active composite and to suppress reviewed no-result 2022 features in the relevant election. For a joined polling register, the compiler aliases the one published host result to the union before hiding its components.
 
@@ -81,6 +84,8 @@ Stable feature IDs are the join boundary:
 - `loc:<SEMEL_YISHUV>` for localities.
 - `composite:<key>` for reviewed election-specific historical municipalities and joined-result display unions.
 - `custom:<key>` for reviewed synthetic geographies.
+- `municipality-fallback:<vintage>:<locality-id>` for a display-only
+  whole-locality result in statistical mode.
 - `envelope:official` for the separate national envelope result; this ID intentionally has no geometry.
 
 The browser validates every catalog/result payload before rendering it.
@@ -123,6 +128,10 @@ Move to tiles before public launch if any of these remain true after compression
 
 - A polygon without mapped results remains visible but muted.
 - The UI never interprets an absent polygon result as zero votes.
+- A locality with no supported area assignment can be colored only through a
+  `municipality-fallback` record. The details-panel info icon states that the
+  whole-locality result and boundary are display-only; coverage and ballot
+  assignments remain unchanged.
 - Mapped coverage is shown for every election and is prominent while it remains partial.
 - Coverage is mode-specific: locality result-row coverage is complete;
   historical statistical coverage ranges from 93.06% to 95.47% by election.

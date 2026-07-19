@@ -37,6 +37,10 @@ export function DetailsPanel({ language, record, parties }: DetailsPanelProps) {
   const largestPartyVote = Math.max(orderedParties[0]?.[1] ?? 0, 1)
   const includedNames = record.includedNames?.[language] ?? []
   const includedLabel = `${translate(language, 'includesLocalities')}: ${includedNames.join(', ')}`
+  const notice = record.notice?.[language]
+  const informationLabel = [notice, includedNames.length > 0 ? includedLabel : null]
+    .filter(Boolean)
+    .join(' ')
 
   return (
     <aside className="details-panel">
@@ -49,11 +53,15 @@ export function DetailsPanel({ language, record, parties }: DetailsPanelProps) {
           </p>
           <div className="details-title-row">
             <h2>{record.names[language]}</h2>
-            {includedNames.length > 0 ? (
-              <span className="included-localities-info" tabIndex={0} aria-label={includedLabel}>
+            {informationLabel ? (
+              <span
+                className="included-localities-info"
+                tabIndex={0}
+                aria-label={informationLabel}
+              >
                 <Info size={16} strokeWidth={2} aria-hidden="true" />
                 <span className="included-localities-tooltip" role="tooltip">
-                  {includedLabel}
+                  {informationLabel}
                 </span>
               </span>
             ) : null}

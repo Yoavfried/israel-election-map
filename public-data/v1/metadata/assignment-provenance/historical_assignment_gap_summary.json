@@ -4,13 +4,13 @@
   "central_ballot_990_rows": 70,
   "crosswalk_localities_omitted_in_all_nine_elections": 16,
   "crosswalk_omission_context": "CBS methodology documents incomplete residential address anchoring in 36 of 38 Arab and Druze statistical-area localities. The recurrence table is an observed source-coverage audit, not an ethnicity classifier.",
-  "pending_actual_voters": 2073773,
-  "pending_eligible_voters": 3557206,
-  "pending_rows": 5548,
+  "pending_actual_voters": 2055696,
+  "pending_eligible_voters": 3524158,
+  "pending_rows": 5498,
   "polygon_persistence_status_counts": {
-    "assigned_in_every_supported_election": 7404,
-    "intermittently_unassigned": 358,
-    "never_assigned_with_positive_population_proxy": 279,
+    "assigned_in_every_supported_election": 7408,
+    "intermittently_unassigned": 355,
+    "never_assigned_with_positive_population_proxy": 278,
     "never_assigned_without_positive_population_proxy": 765
   },
   "polygon_summary": [
@@ -33,29 +33,29 @@
       "arcgis_detailed_or_single_area_records": 0,
       "arcgis_dissolved_locality_aggregate_records": 0,
       "arcgis_polygons_matching_special_non_geographic_rows": 0,
-      "assigned_polygons_in_localities_with_pending_ballots": 58,
+      "assigned_polygons_in_localities_with_pending_ballots": 0,
       "election": "K18",
-      "polygons_requiring_assignment_followup": 216,
-      "polygons_with_assigned_ballots": 2632,
-      "polygons_without_assigned_ballots": 398,
+      "polygons_requiring_assignment_followup": 152,
+      "polygons_with_assigned_ballots": 2633,
+      "polygons_without_assigned_ballots": 397,
       "stat_area_vintage": "2008",
       "statistical_area_polygons": 3030,
-      "unassigned_polygons_in_localities_with_pending_ballots": 158,
+      "unassigned_polygons_in_localities_with_pending_ballots": 152,
       "unassigned_polygons_with_official_arcgis_electorate": 0,
-      "unassigned_polygons_with_positive_population_proxy": 204
+      "unassigned_polygons_with_positive_population_proxy": 203
     },
     {
       "arcgis_detailed_or_single_area_records": 0,
       "arcgis_dissolved_locality_aggregate_records": 0,
       "arcgis_polygons_matching_special_non_geographic_rows": 0,
-      "assigned_polygons_in_localities_with_pending_ballots": 2,
+      "assigned_polygons_in_localities_with_pending_ballots": 3,
       "election": "K19",
       "polygons_requiring_assignment_followup": 150,
-      "polygons_with_assigned_ballots": 2691,
-      "polygons_without_assigned_ballots": 424,
+      "polygons_with_assigned_ballots": 2692,
+      "polygons_without_assigned_ballots": 423,
       "stat_area_vintage": "2011",
       "statistical_area_polygons": 3115,
-      "unassigned_polygons_in_localities_with_pending_ballots": 148,
+      "unassigned_polygons_in_localities_with_pending_ballots": 147,
       "unassigned_polygons_with_official_arcgis_electorate": 0,
       "unassigned_polygons_with_positive_population_proxy": 131
     },
@@ -63,29 +63,29 @@
       "arcgis_detailed_or_single_area_records": 2826,
       "arcgis_dissolved_locality_aggregate_records": 35,
       "arcgis_polygons_matching_special_non_geographic_rows": 0,
-      "assigned_polygons_in_localities_with_pending_ballots": 29,
+      "assigned_polygons_in_localities_with_pending_ballots": 23,
       "election": "K20",
-      "polygons_requiring_assignment_followup": 180,
-      "polygons_with_assigned_ballots": 2702,
-      "polygons_without_assigned_ballots": 413,
+      "polygons_requiring_assignment_followup": 168,
+      "polygons_with_assigned_ballots": 2707,
+      "polygons_without_assigned_ballots": 408,
       "stat_area_vintage": "2011",
       "statistical_area_polygons": 3115,
-      "unassigned_polygons_in_localities_with_pending_ballots": 151,
+      "unassigned_polygons_in_localities_with_pending_ballots": 145,
       "unassigned_polygons_with_official_arcgis_electorate": 0,
-      "unassigned_polygons_with_positive_population_proxy": 120
+      "unassigned_polygons_with_positive_population_proxy": 119
     },
     {
       "arcgis_detailed_or_single_area_records": 2655,
       "arcgis_dissolved_locality_aggregate_records": 34,
       "arcgis_polygons_matching_special_non_geographic_rows": 8,
-      "assigned_polygons_in_localities_with_pending_ballots": 29,
+      "assigned_polygons_in_localities_with_pending_ballots": 18,
       "election": "K21",
-      "polygons_requiring_assignment_followup": 172,
+      "polygons_requiring_assignment_followup": 160,
       "polygons_with_assigned_ballots": 2664,
       "polygons_without_assigned_ballots": 451,
       "stat_area_vintage": "2011",
       "statistical_area_polygons": 3115,
-      "unassigned_polygons_in_localities_with_pending_ballots": 143,
+      "unassigned_polygons_in_localities_with_pending_ballots": 142,
       "unassigned_polygons_with_official_arcgis_electorate": 0,
       "unassigned_polygons_with_positive_population_proxy": 161
     },
@@ -93,9 +93,9 @@
       "arcgis_detailed_or_single_area_records": 0,
       "arcgis_dissolved_locality_aggregate_records": 0,
       "arcgis_polygons_matching_special_non_geographic_rows": 0,
-      "assigned_polygons_in_localities_with_pending_ballots": 21,
+      "assigned_polygons_in_localities_with_pending_ballots": 18,
       "election": "K22",
-      "polygons_requiring_assignment_followup": 163,
+      "polygons_requiring_assignment_followup": 160,
       "polygons_with_assigned_ballots": 2656,
       "polygons_without_assigned_ballots": 459,
       "stat_area_vintage": "2011",
@@ -108,9 +108,9 @@
       "arcgis_detailed_or_single_area_records": 0,
       "arcgis_dissolved_locality_aggregate_records": 0,
       "arcgis_polygons_matching_special_non_geographic_rows": 0,
-      "assigned_polygons_in_localities_with_pending_ballots": 21,
+      "assigned_polygons_in_localities_with_pending_ballots": 18,
       "election": "K23",
-      "polygons_requiring_assignment_followup": 163,
+      "polygons_requiring_assignment_followup": 160,
       "polygons_with_assigned_ballots": 2659,
       "polygons_without_assigned_ballots": 456,
       "stat_area_vintage": "2011",
@@ -123,14 +123,14 @@
       "arcgis_detailed_or_single_area_records": 0,
       "arcgis_dissolved_locality_aggregate_records": 0,
       "arcgis_polygons_matching_special_non_geographic_rows": 0,
-      "assigned_polygons_in_localities_with_pending_ballots": 13,
+      "assigned_polygons_in_localities_with_pending_ballots": 3,
       "election": "K24",
-      "polygons_requiring_assignment_followup": 157,
-      "polygons_with_assigned_ballots": 2571,
-      "polygons_without_assigned_ballots": 544,
+      "polygons_requiring_assignment_followup": 145,
+      "polygons_with_assigned_ballots": 2572,
+      "polygons_without_assigned_ballots": 543,
       "stat_area_vintage": "2011",
       "statistical_area_polygons": 3115,
-      "unassigned_polygons_in_localities_with_pending_ballots": 144,
+      "unassigned_polygons_in_localities_with_pending_ballots": 142,
       "unassigned_polygons_with_official_arcgis_electorate": 0,
       "unassigned_polygons_with_positive_population_proxy": 256
     },
@@ -138,16 +138,16 @@
       "arcgis_detailed_or_single_area_records": 0,
       "arcgis_dissolved_locality_aggregate_records": 0,
       "arcgis_polygons_matching_special_non_geographic_rows": 0,
-      "assigned_polygons_in_localities_with_pending_ballots": 39,
+      "assigned_polygons_in_localities_with_pending_ballots": 8,
       "election": "K25",
-      "polygons_requiring_assignment_followup": 188,
-      "polygons_with_assigned_ballots": 2564,
-      "polygons_without_assigned_ballots": 551,
+      "polygons_requiring_assignment_followup": 150,
+      "polygons_with_assigned_ballots": 2565,
+      "polygons_without_assigned_ballots": 550,
       "stat_area_vintage": "2011",
       "statistical_area_polygons": 3115,
-      "unassigned_polygons_in_localities_with_pending_ballots": 149,
+      "unassigned_polygons_in_localities_with_pending_ballots": 142,
       "unassigned_polygons_with_official_arcgis_electorate": 0,
-      "unassigned_polygons_with_positive_population_proxy": 261
+      "unassigned_polygons_with_positive_population_proxy": 260
     }
   ],
   "population_proxy_warning": "Population and age-20-plus fields are reference-year resident proxies, not election-specific eligible-voter counts.",
@@ -209,18 +209,11 @@
       "rows": 1
     },
     {
-      "actual_voters": 459,
-      "election": "K18",
-      "eligible_voters": 613,
-      "gap_reason_code": "specific_ballot_omitted_from_official_crosswalk",
-      "rows": 1
-    },
-    {
-      "actual_voters": 214251,
+      "actual_voters": 212413,
       "election": "K19",
-      "eligible_voters": 367706,
+      "eligible_voters": 363381,
       "gap_reason_code": "entire_locality_omitted_from_official_crosswalk",
-      "rows": 564
+      "rows": 558
     },
     {
       "actual_voters": 56,
@@ -230,11 +223,11 @@
       "rows": 1
     },
     {
-      "actual_voters": 268649,
+      "actual_voters": 258824,
       "election": "K20",
-      "eligible_voters": 398356,
+      "eligible_voters": 382536,
       "gap_reason_code": "entire_locality_omitted_from_official_crosswalk",
-      "rows": 589
+      "rows": 565
     },
     {
       "actual_voters": 324,
@@ -251,11 +244,11 @@
       "rows": 596
     },
     {
-      "actual_voters": 461,
+      "actual_voters": 226,
       "election": "K21",
-      "eligible_voters": 1277,
+      "eligible_voters": 703,
       "gap_reason_code": "specific_ballot_omitted_from_official_crosswalk",
-      "rows": 2
+      "rows": 1
     },
     {
       "actual_voters": 422,
@@ -272,11 +265,11 @@
       "rows": 607
     },
     {
-      "actual_voters": 1052,
+      "actual_voters": 363,
       "election": "K22",
-      "eligible_voters": 2097,
+      "eligible_voters": 717,
       "gap_reason_code": "specific_ballot_omitted_from_official_crosswalk",
-      "rows": 3
+      "rows": 1
     },
     {
       "actual_voters": 234,
@@ -293,11 +286,11 @@
       "rows": 615
     },
     {
-      "actual_voters": 1206,
+      "actual_voters": 430,
       "election": "K23",
-      "eligible_voters": 2130,
+      "eligible_voters": 731,
       "gap_reason_code": "specific_ballot_omitted_from_official_crosswalk",
-      "rows": 3
+      "rows": 1
     },
     {
       "actual_voters": 8664,
@@ -307,11 +300,11 @@
       "rows": 31
     },
     {
-      "actual_voters": 203288,
+      "actual_voters": 202743,
       "election": "K24",
-      "eligible_voters": 446543,
+      "eligible_voters": 444711,
       "gap_reason_code": "entire_locality_omitted_from_official_crosswalk",
-      "rows": 836
+      "rows": 833
     },
     {
       "actual_voters": 749,
@@ -335,11 +328,11 @@
       "rows": 792
     },
     {
-      "actual_voters": 5101,
+      "actual_voters": 1391,
       "election": "K25",
-      "eligible_voters": 9913,
+      "eligible_voters": 2808,
       "gap_reason_code": "specific_ballot_omitted_from_official_crosswalk",
-      "rows": 16
+      "rows": 5
     }
   ],
   "status": "complete"

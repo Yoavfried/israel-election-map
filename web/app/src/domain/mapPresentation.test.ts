@@ -21,6 +21,16 @@ describe('map presentation rules', () => {
       ),
     ).toBe(true)
     expect(mayHaveDisplayMarker(record('loc:3000', 'locality', 'loc:3000', '3000'))).toBe(false)
+    expect(
+      mayHaveDisplayMarker(
+        record(
+          'municipality-fallback:2011:loc:3616',
+          'municipality-fallback',
+          'loc:3616',
+          '3616',
+        ),
+      ),
+    ).toBe(false)
   })
 
   it('includes only markers with data and excludes election-hidden markers', () => {
@@ -46,6 +56,12 @@ describe('map presentation rules', () => {
         ['loc:628', 'loc:9920'],
         [
           record('custom:hebron', 'custom', null, 'HEBRON'),
+          record(
+            'municipality-fallback:2011:loc:3400',
+            'municipality-fallback',
+            'loc:3400',
+            '3400',
+          ),
           record('stat2011:34000001', 'statistical-area', 'loc:3400', '1'),
         ],
       ),
@@ -56,8 +72,19 @@ describe('map presentation rules', () => {
       ['!', ['in', ['get', 'id'], ['literal', ['loc:628', 'loc:9920']]]],
       [
         'any',
-        ['!=', ['get', 'geographyType'], 'custom'],
-        ['in', ['get', 'id'], ['literal', ['custom:hebron']]],
+        [
+          'all',
+          ['!=', ['get', 'geographyType'], 'custom'],
+          ['!=', ['get', 'geographyType'], 'municipality-fallback'],
+        ],
+        [
+          'in',
+          ['get', 'id'],
+          [
+            'literal',
+            ['custom:hebron', 'municipality-fallback:2011:loc:3400'],
+          ],
+        ],
       ],
     ])
   })

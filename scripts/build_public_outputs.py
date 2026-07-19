@@ -34,6 +34,17 @@ NUMERIC_CORE = ["eligible_voters", "actual_voters", "valid_votes", "invalid_vote
 K17_GUSH_KATIF_ELIGIBLE_REGISTER = 3_569
 K17_ORDINARY_ELIGIBLE_REGISTER = 5_011_053
 K17_NATIONAL_ELIGIBLE_REGISTER = 5_014_622
+STAT_AREA_VINTAGE_BY_ELECTION = {
+    "K17": 1995,
+    "K18": 2008,
+    "K19": 2011,
+    "K20": 2011,
+    "K21": 2011,
+    "K22": 2011,
+    "K23": 2011,
+    "K24": 2011,
+    "K25": 2011,
+}
 
 
 def bool_series(series: pd.Series) -> pd.Series:
@@ -152,6 +163,7 @@ def main() -> None:
 
     manifest: dict[str, Any] = {"elections": [], "outputs": {}}
     summary_rows: list[dict[str, Any]] = []
+    municipality_fallback_audit_rows: list[dict[str, Any]] = []
 
     for election_number in sorted(ELECTIONS.keys(), reverse=True):
         election = ELECTIONS[election_number]["key"]
@@ -226,6 +238,62 @@ def main() -> None:
             ["election", "locality_id", "locality_code", "locality_name"],
             parties,
         )
+        mapped_locality_geography_ids = set(
+            geographic_rows["locality_geography_id"].astype(str)
+        )
+        municipality_fallback_agg = locality_agg[
+            ~locality_agg["locality_id"].isin(mapped_locality_geography_ids)
+        ].copy()
+        stat_area_vintage = STAT_AREA_VINTAGE_BY_ELECTION[election]
+        if not municipality_fallback_agg.empty:
+            municipality_fallback_agg.insert(
+                1,
+                "fallback_geography_id",
+                municipality_fallback_agg["locality_id"].map(
+                    lambda locality_id: (
+                        f"municipality-fallback:{stat_area_vintage}:{locality_id}"
+                    )
+                ),
+            )
+            municipality_fallback_agg.insert(
+                2, "stat_area_vintage", stat_area_vintage
+            )
+            municipality_fallback_agg.insert(
+                3,
+                "fallback_reason",
+                "no_ballot_has_a_supported_statistical_area_assignment",
+            )
+            municipality_fallback_agg.insert(
+                4,
+                "boundary_source",
+                municipality_fallback_agg["locality_id"].map(
+                    lambda locality_id: (
+                        "reviewed_historical_composite_geometry"
+                        if str(locality_id).startswith("composite:")
+                        else "cbs_2022_locality_geometry_display_only"
+                    )
+                ),
+            )
+            municipality_fallback_audit_rows.extend(
+                municipality_fallback_agg[
+                    [
+                        "election",
+                        "stat_area_vintage",
+                        "fallback_geography_id",
+                        "locality_id",
+                        "locality_code",
+                        "locality_name",
+                        "contributing_rows",
+                        "contributing_kalpis",
+                        "eligible_voters",
+                        "actual_voters",
+                        "valid_votes",
+                        "invalid_votes",
+                        "fallback_reason",
+                        "boundary_source",
+                    ]
+                ].to_dict("records")
+            )
         statistical_custom_agg = aggregate(
             statistical_custom_rows,
             ["election", "custom_geography_id", "geography_id", "locality_name"],
@@ -305,6 +373,11 @@ def main() -> None:
             "envelope_results": OUT_DIR / "envelope_results" / f"{election.lower()}.csv",
             "ballot_contributions": OUT_DIR / "ballot_contributions" / f"{election.lower()}.csv",
             "unmapped_rows": OUT_DIR / "unmapped_rows" / f"{election.lower()}.csv",
+            "municipality_display_fallbacks": (
+                OUT_DIR
+                / "municipality_display_fallbacks"
+                / f"{election.lower()}.csv"
+            ),
         }
         write_df(stat_agg, outputs["statistical_area_results"])
         write_df(locality_agg, outputs["locality_results"])
@@ -312,6 +385,10 @@ def main() -> None:
         write_df(envelope_agg, outputs["envelope_results"])
         write_df(geographic_rows[contribution_columns], outputs["ballot_contributions"])
         write_df(unmapped_rows[unmapped_columns], outputs["unmapped_rows"])
+        write_df(
+            municipality_fallback_agg,
+            outputs["municipality_display_fallbacks"],
+        )
 
         total_actual = int(merged["actual_voters"].sum())
         mapped_actual = int(geographic_rows["actual_voters"].sum())
@@ -368,6 +445,15 @@ def main() -> None:
                         merged["locality_geography_type"] == "non_geographic", "actual_voters"
                     ].sum()
                 ),
+                "municipality_display_fallback_records": len(
+                    municipality_fallback_agg
+                ),
+                "municipality_display_fallback_ballot_rows": int(
+                    municipality_fallback_agg["contributing_rows"].sum()
+                ),
+                "municipality_display_fallback_actual_voters": int(
+                    municipality_fallback_agg["actual_voters"].sum()
+                ),
             }
         )
         manifest["elections"].append(election)
@@ -376,6 +462,28 @@ def main() -> None:
     write_csv(OUT_DIR / "election_summary.csv", summary_rows, list(summary_rows[0].keys()) if summary_rows else [])
     write_json(OUT_DIR / "election_summary.json", summary_rows)
     write_json(OUT_DIR / "manifest.json", manifest)
+    write_csv(
+        PROCESSED_DIR
+        / "audits"
+        / "historical_municipality_display_fallbacks.csv",
+        municipality_fallback_audit_rows,
+        [
+            "election",
+            "stat_area_vintage",
+            "fallback_geography_id",
+            "locality_id",
+            "locality_code",
+            "locality_name",
+            "contributing_rows",
+            "contributing_kalpis",
+            "eligible_voters",
+            "actual_voters",
+            "valid_votes",
+            "invalid_votes",
+            "fallback_reason",
+            "boundary_source",
+        ],
+    )
 
     print(f"public_output_elections={len(summary_rows)}")
     for row in summary_rows:

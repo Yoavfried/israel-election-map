@@ -36,6 +36,15 @@ content license. The project therefore makes no broader licensing claim for
 those source geometries or aggregates. Every derivative use is labeled in
 geography metadata or row-level assignment provenance.
 
+## Kaplan Open Source Election Maps
+
+The optional source audit can download public election-map payloads from
+`elections.kaplanopensource.co.il` for source-grain and aggregate
+reconciliation checks. Those raw payloads are ignored by Git and are not
+redistributed in the public data release. The project makes no licensing claim
+over that third-party content and does not import its vote values or geometry
+into production outputs.
+
 ## Software Dependencies
 
 Packages installed through Python and npm remain under their respective

@@ -434,10 +434,10 @@ select:focus-visible {
   position: absolute;
   z-index: 5;
   inset-block-start: calc(100% + 7px);
-  inset-inline-start: 0;
+  inset-inline-end: 0;
   visibility: hidden;
   inline-size: max-content;
-  max-inline-size: min(240px, calc(100vw - 56px));
+  max-inline-size: min(220px, calc(100vw - 56px));
   padding: 7px 9px;
   border-radius: 6px;
   background: #171a17;

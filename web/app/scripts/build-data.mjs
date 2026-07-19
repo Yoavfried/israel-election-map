@@ -10,6 +10,7 @@ import {
   buildDisplayMarkers,
   buildHiddenLocalityIds,
   buildMetadataIndex,
+  buildMunicipalityFallbackDisplay,
   buildPartyRegistryIndex,
   buildResultPayload,
   parseCsv,
@@ -152,6 +153,69 @@ async function main() {
       customGeographies,
       compositeLocalities,
     )
+    const electionSourceDataById = new Map(
+      await Promise.all(
+        electionConfig.map(async (election) => {
+          const electionSlug = election.id.toLowerCase()
+          const [statisticalRows, localityRows, customRows, envelopeRows, fallbackRows] =
+            await Promise.all([
+              readCsv(
+                resolve(sourceRoot, 'public', 'statistical_area_results', `${electionSlug}.csv`),
+              ),
+              readCsv(resolve(sourceRoot, 'public', 'locality_results', `${electionSlug}.csv`)),
+              readCsv(
+                resolve(sourceRoot, 'public', 'custom_geography_results', `${electionSlug}.csv`),
+              ),
+              readCsv(resolve(sourceRoot, 'public', 'envelope_results', `${electionSlug}.csv`)),
+              readCsv(
+                resolve(
+                  sourceRoot,
+                  'public',
+                  'municipality_display_fallbacks',
+                  `${electionSlug}.csv`,
+                ),
+              ),
+            ])
+          return [
+            election.id,
+            { statisticalRows, localityRows, customRows, envelopeRows, fallbackRows },
+          ]
+        }),
+      ),
+    )
+    const fallbackFeaturesByVintage = new Map()
+    for (const election of electionConfig) {
+      const sourceData = electionSourceDataById.get(election.id)
+      const vintage = Number(election.statisticalAreaVintage)
+      const statisticalGeography = prunedStatisticalAreasByVintage.get(vintage)
+      if (!sourceData || !statisticalGeography) {
+        throw new Error(`${election.id} is missing municipality fallback build inputs`)
+      }
+      const fallbackDisplay = buildMunicipalityFallbackDisplay({
+        electionId: election.id,
+        vintage,
+        fallbackRows: sourceData.fallbackRows,
+        localityGeography: prunedLocalities,
+        statisticalGeography,
+      })
+      electionSourceDataById.set(election.id, { ...sourceData, fallbackDisplay })
+
+      let fallbackFeatures = fallbackFeaturesByVintage.get(vintage)
+      if (!fallbackFeatures) {
+        fallbackFeatures = new Map()
+        fallbackFeaturesByVintage.set(vintage, fallbackFeatures)
+      }
+      for (const feature of fallbackDisplay.features) {
+        const existing = fallbackFeatures.get(feature.id)
+        if (existing && JSON.stringify(existing) !== JSON.stringify(feature)) {
+          throw new Error(`Municipality fallback geometry changed across elections: ${feature.id}`)
+        }
+        fallbackFeatures.set(feature.id, feature)
+      }
+    }
+    for (const [vintage, featuresById] of fallbackFeaturesByVintage) {
+      prunedStatisticalAreasByVintage.get(vintage)?.features.push(...featuresById.values())
+    }
     const statisticalAreaBackdropUrl = 'geographies/statistical-area-backdrop.geojson'
     const statisticalMarkersByVintage = new Map(
       [...prunedStatisticalAreasByVintage].map(([vintage, geography]) => [
@@ -224,12 +288,17 @@ async function main() {
           `${election.id} references unavailable statistical-area vintage ${election.statisticalAreaVintage}`,
         )
       }
-      const [statisticalRows, localityRows, customRows, envelopeRows] = await Promise.all([
-        readCsv(resolve(sourceRoot, 'public', 'statistical_area_results', `${electionSlug}.csv`)),
-        readCsv(resolve(sourceRoot, 'public', 'locality_results', `${electionSlug}.csv`)),
-        readCsv(resolve(sourceRoot, 'public', 'custom_geography_results', `${electionSlug}.csv`)),
-        readCsv(resolve(sourceRoot, 'public', 'envelope_results', `${electionSlug}.csv`)),
-      ])
+      const sourceData = electionSourceDataById.get(election.id)
+      if (!sourceData) {
+        throw new Error(`${election.id} is missing compiled source data`)
+      }
+      const {
+        statisticalRows,
+        localityRows,
+        customRows,
+        envelopeRows,
+        fallbackDisplay,
+      } = sourceData
       const coverageByMode = coverageByElection.get(election.id)
       const displayOverrides = localityDisplayOverrides.get(election.id) ?? new Map()
       const statisticalDisplayOverrides =
@@ -274,6 +343,7 @@ async function main() {
         ...new Set([
           ...configuredHiddenStatisticalIds,
           ...statisticalDisplay.hiddenGeographyIds,
+          ...fallbackDisplay.hiddenGeographyIds,
         ]),
       ].toSorted()
       const overrides = partyOverrideConfig.elections[election.id] ?? {}
@@ -285,10 +355,17 @@ async function main() {
         electionId: election.id,
         mode: 'statistical-area',
         primaryRows: statisticalDisplay.primaryRows,
-        customRows: [...statisticalCustomRows, ...statisticalDisplay.displayRows],
+        customRows: [
+          ...statisticalCustomRows,
+          ...statisticalDisplay.displayRows,
+          ...fallbackDisplay.displayRows,
+        ],
         envelopeRows,
         metadataById: electionStatisticalMetadata,
-        customMetadataById: customMetadata,
+        customMetadataById: new Map([
+          ...customMetadata,
+          ...fallbackDisplay.metadataById,
+        ]),
         coverage: coverageByMode['statistical-area'],
         hiddenGeographyIds: hiddenStatisticalIds,
         partyRegistry,
